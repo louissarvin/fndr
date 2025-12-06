@@ -281,7 +281,7 @@ contract FullFlowIntegrationTest is Test {
         console.log("Larger withdrawal correctly rejected:", rejectReason);
         
         // Verify that attempting the invalid withdrawal actually reverts
-        vm.expectRevert("Exceeds 2% monthly withdrawal limit");
+        vm.expectRevert(abi.encodeWithSelector(CampaignManager.InvalidOperation.selector, "Exceeds 2% monthly withdrawal limit"));
         campaign.founderWithdraw(invalidAmount);
         vm.stopPrank();
 

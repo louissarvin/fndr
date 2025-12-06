@@ -125,7 +125,6 @@ contract StartupEquityToken {
         
         partitions.push(DEFAULT_PARTITION);
         
-        // Still maintain local whitelist for campaign and founder (special cases)
         isWhitelisted[_founder] = true;
         isWhitelisted[_campaign] = true;
         
@@ -225,7 +224,6 @@ contract StartupEquityToken {
         bool canTransferTokens,
         string memory reason
     ) {
-        // Check basic conditions
         if (!transfersEnabled) {
             return (false, "Transfers are disabled");
         }
@@ -236,7 +234,6 @@ contract StartupEquityToken {
             return (false, "Recipient is blacklisted");
         }
         
-        // Check verification status
         if (!_isValidSender(from)) {
             return (false, "Sender not verified in FndrIdentity");
         }
@@ -294,10 +291,6 @@ contract StartupEquityToken {
         emit WhitelistAdded(_secondaryMarket);
     }
     
-    /**
-     * @notice Initialize holding period for an investor (called by campaign manager)
-     * @param investor Address of the investor
-     */
     function initializeInvestorHoldingPeriod(address investor) external {
         require(msg.sender == campaign, "Only campaign manager can initialize");
         if (secondaryMarket != address(0)) {
@@ -311,7 +304,6 @@ contract StartupEquityToken {
         uint256 amount,
         bytes memory data
     ) internal returns (bool) {
-        // Provide detailed validation with specific error messages
         _validateTransferWithErrors(from, to, amount);
 
         _transferByPartition(DEFAULT_PARTITION, msg.sender, from, to, amount, data, "");
@@ -396,9 +388,7 @@ contract StartupEquityToken {
         balanceOf[from] -= value;
         balanceOf[to] += value;
         
-        // Notify secondary market about new token acquisition for holding period tracking
         if (secondaryMarket != address(0) && from != address(0) && balanceOf[to] == value) {
-            // This is the recipient's first time receiving this token
             try ISecondaryMarket(secondaryMarket).initializeHoldingPeriod(to, address(this)) {} catch {}
         }
         
