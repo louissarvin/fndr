@@ -1,0 +1,146 @@
+{
+  "version": "1.0",
+  "basic": {
+    "companyName": "TechStartup Inc",
+    "description": "Revolutionary AI-powered productivity platform that helps remote teams collaborate more effectively using advanced machine learning algorithms and real-time data synchronization.",
+    "category": "AI/ML",
+    "location": "San Francisco, CA",
+    "founded": "2024-01-15",
+    "stage": "Seed"
+  },
+  "media": {
+    "logo": "ipfs://QmTechStartupLogo123456789abcdefghijklmnop",
+    "banner": "ipfs://QmTechStartupBanner987654321zyxwvutsrqponm",
+    "pitch": "ipfs://QmTechStartupPitch555666777888999000aaabbb",
+    "demo": "ipfs://QmTechStartupDemo111222333444555666777888",
+    "screenshots": [
+      "ipfs://QmScreenshot1aaaaabbbbbcccccdddddeeeeeffff",
+      "ipfs://QmScreenshot2ggggghhhhhiiiiijjjjjkkkkkllll", 
+      "ipfs://QmScreenshot3mmmmmnnnnnooooopppppqqqqqrrrr"
+    ]
+  },
+  "documents": {
+    "whitepaper": "ipfs://QmWhitepaper123456789abcdefghijklmnopqrst",
+    "businessPlan": "ipfs://QmBusinessPlan987654321zyxwvutsrqponmlk",
+    "financials": "ipfs://QmFinancials111222333444555666777888999",
+    "legalDocs": [
+      {
+        "name": "Articles of Incorporation",
+        "hash": "ipfs://QmLegal1aaaaabbbbbcccccdddddeeeeeffffff"
+      },
+      {
+        "name": "Shareholders Agreement",
+        "hash": "ipfs://QmLegal2ggggghhhhhiiiiijjjjjkkkkklllll"
+      }
+    ]
+  },
+  "team": [
+    {
+      "name": "Alice Johnson",
+      "role": "CEO & Co-Founder",
+      "bio": "Former VP of Engineering at Google with 10+ years experience in AI/ML. PhD in Computer Science from Stanford. Led teams of 100+ engineers.",
+      "avatar": "ipfs://QmAliceAvatar123456789abcdefghijklmnop",
+      "linkedin": "https://linkedin.com/in/alicejohnson",
+      "twitter": "@alice_johnson"
+    },
+    {
+      "name": "Bob Smith",
+      "role": "CTO & Co-Founder", 
+      "bio": "Ex-Principal Engineer at Microsoft Azure. Specialized in distributed systems and machine learning infrastructure. 15+ years in tech.",
+      "avatar": "ipfs://QmBobAvatar987654321zyxwvutsrqponmlkjh",
+      "linkedin": "https://linkedin.com/in/bobsmith",
+      "twitter": "@bob_smith_dev"
+    },
+    {
+      "name": "Carol Davis",
+      "role": "Head of Product",
+      "bio": "Former Product Manager at Slack and Notion. Expert in user experience design and product strategy for B2B SaaS platforms.",
+      "avatar": "ipfs://QmCarolAvatar111222333444555666777888",
+      "linkedin": "https://linkedin.com/in/caroldavis"
+    }
+  ],
+  "roadmap": [
+    {
+      "quarter": "Q1",
+      "year": 2024,
+      "milestone": "Complete MVP development and alpha testing",
+      "status": "completed"
+    },
+    {
+      "quarter": "Q2",
+      "year": 2024,
+      "milestone": "Launch beta with 100+ enterprise customers",
+      "status": "completed"
+    },
+    {
+      "quarter": "Q3",
+      "year": 2024,
+      "milestone": "Achieve product-market fit and $50K MRR",
+      "status": "in-progress"
+    },
+    {
+      "quarter": "Q4",
+      "year": 2024,
+      "milestone": "Scale to $200K MRR and expand team to 25 people",
+      "status": "planned"
+    },
+    {
+      "quarter": "Q1",
+      "year": 2025,
+      "milestone": "International expansion and Series A preparation",
+      "status": "planned"
+    }
+  ],
+  "social": {
+    "website": "https://techstartup.com",
+    "twitter": "@techstartup_ai",
+    "linkedin": "https://linkedin.com/company/techstartup-inc",
+    "discord": "https://discord.gg/techstartup",
+    "github": "https://github.com/techstartup"
+  },
+  "metrics": {
+    "users": 2500,
+    "revenue": 45000,
+    "growth": 25.5,
+    "lastUpdated": "2024-12-05"
+  },
+  "useOfFunds": [
+    {
+      "category": "Development", 
+      "percentage": 40,
+      "description": "Expand engineering team and accelerate product development"
+    },
+    {
+      "category": "Marketing",
+      "percentage": 30, 
+      "description": "Customer acquisition and brand awareness campaigns"
+    },
+    {
+      "category": "Hiring",
+      "percentage": 20,
+      "description": "Recruit key positions: Head of Sales, Senior Engineers"
+    },
+    {
+      "category": "Operations",
+      "percentage": 10,
+      "description": "Infrastructure, legal, and administrative costs"
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Competitive pressure from established players",
+      "mitigation": "Focus on superior user experience and faster innovation cycles",
+      "severity": "medium"
+    },
+    {
+      "risk": "Technical scalability challenges",
+      "mitigation": "Proven cloud-native architecture with auto-scaling capabilities",
+      "severity": "low"
+    },
+    {
+      "risk": "Customer acquisition cost increases",
+      "mitigation": "Diversified marketing channels and strong product-led growth",
+      "severity": "medium"
+    }
+  ]
+}

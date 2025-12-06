@@ -1,0 +1,284 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fndr Campaign Metadata Schema",
+  "description": "IPFS metadata schema for startup fundraising campaigns",
+  "type": "object",
+  "required": ["version", "basic"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version for compatibility",
+      "enum": ["1.0"]
+    },
+    "basic": {
+      "type": "object",
+      "required": ["companyName", "description"],
+      "properties": {
+        "companyName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Full company name"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Company description and mission"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["AI/ML", "FinTech", "HealthTech", "EdTech", "CleanTech", "GameFi", "DeFi", "Web3", "SaaS", "E-commerce", "Other"],
+          "description": "Business category"
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Company headquarters location"
+        },
+        "founded": {
+          "type": "string",
+          "format": "date",
+          "description": "Company founding date"
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["Pre-seed", "Seed", "Series A", "Series B", "Series C+"],
+          "description": "Funding stage"
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "description": "Visual and multimedia assets",
+      "properties": {
+        "logo": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Company logo (IPFS hash)"
+        },
+        "banner": {
+          "type": "string", 
+          "pattern": "^ipfs://.*",
+          "description": "Campaign banner image (IPFS hash)"
+        },
+        "pitch": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Video pitch (IPFS hash)"
+        },
+        "demo": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Product demo video (IPFS hash)"
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^ipfs://.*"
+          },
+          "maxItems": 10,
+          "description": "Product screenshots (IPFS hashes)"
+        }
+      }
+    },
+    "documents": {
+      "type": "object",
+      "description": "Legal and business documents",
+      "properties": {
+        "whitepaper": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Technical whitepaper (IPFS hash)"
+        },
+        "businessPlan": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Business plan document (IPFS hash)"
+        },
+        "financials": {
+          "type": "string",
+          "pattern": "^ipfs://.*",
+          "description": "Financial projections (IPFS hash)"
+        },
+        "legalDocs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "hash": {"type": "string", "pattern": "^ipfs://.*"}
+            }
+          },
+          "description": "Legal documents"
+        }
+      }
+    },
+    "team": {
+      "type": "array",
+      "description": "Founding team members",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "avatar": {
+            "type": "string",
+            "pattern": "^ipfs://.*",
+            "description": "Profile picture (IPFS hash)"
+          },
+          "linkedin": {
+            "type": "string",
+            "format": "uri"
+          },
+          "twitter": {
+            "type": "string",
+            "pattern": "^@.*"
+          }
+        }
+      }
+    },
+    "roadmap": {
+      "type": "array",
+      "description": "Product and business milestones",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["quarter", "year", "milestone"],
+        "properties": {
+          "quarter": {
+            "type": "string",
+            "enum": ["Q1", "Q2", "Q3", "Q4"]
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2024,
+            "maximum": 2030
+          },
+          "milestone": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "status": {
+            "type": "string",
+            "enum": ["completed", "in-progress", "planned"],
+            "default": "planned"
+          }
+        }
+      }
+    },
+    "social": {
+      "type": "object",
+      "description": "Social media and web presence",
+      "properties": {
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "twitter": {
+          "type": "string",
+          "pattern": "^@.*"
+        },
+        "linkedin": {
+          "type": "string",
+          "format": "uri"
+        },
+        "discord": {
+          "type": "string",
+          "format": "uri"
+        },
+        "telegram": {
+          "type": "string",
+          "format": "uri"
+        },
+        "github": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Current business metrics",
+      "properties": {
+        "users": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total user count"
+        },
+        "revenue": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Monthly revenue in USD"
+        },
+        "growth": {
+          "type": "number",
+          "description": "Monthly growth rate as percentage"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date",
+          "description": "When metrics were last updated"
+        }
+      }
+    },
+    "useOfFunds": {
+      "type": "array",
+      "description": "How raised funds will be used",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["category", "percentage", "description"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["Development", "Marketing", "Hiring", "Operations", "Legal", "Other"]
+          },
+          "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300
+          }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "description": "Business and investment risks",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["risk", "mitigation"],
+        "properties": {
+          "risk": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "mitigation": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          }
+        }
+      }
+    }
+  }
+}
