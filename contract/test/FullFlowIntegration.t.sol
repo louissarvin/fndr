@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/FndrIdentity.sol";
-import "../src/CampaignFactory.sol";
-import "../src/CampaignManager.sol";
+import "../src/RoundFactory.sol";
+import "../src/RoundManager.sol";
 import "../src/StartupEquityToken.sol";
 import "../src/StartupSecondaryMarket.sol";
 import "../src/MockVault.sol";
@@ -51,28 +51,27 @@ contract MockUSDC {
 contract FullFlowIntegrationTest is Test {
     // Core contracts
     FndrIdentity identity;
-    CampaignFactory factory;
+    RoundFactory factory;
     MockVault sharedVault;
     MockUSDC usdc;
     StartupSecondaryMarket secondaryMarket;
-    
+
     // Test accounts
     address founder = address(0x1);
     address investor1 = address(0x2);
     address investor2 = address(0x3);
     address investor3 = address(0x4);
     address platformWallet = address(0x999);
-    
-    // Campaign variables
-    address campaignAddress;
+
+    // Round variables
+    address roundAddress;
     StartupEquityToken equityToken;
-    CampaignManager campaign;
+    RoundManager round;
     
     // Test constants
     uint256 constant TARGET_RAISE = 100000 * 1e6; // $100K
     uint256 constant SHARE_PRICE = 2 * 1e6; // $2 per token
     uint256 constant EQUITY_PERCENTAGE = 1000; // 10%
-    string constant IPFS_HASH = "QmTestCampaignMetadata123456789";
     
     event TestPhase(string phase);
     
@@ -83,7 +82,7 @@ contract FullFlowIntegrationTest is Test {
         usdc = new MockUSDC();
         sharedVault = new MockVault(address(usdc), "Shared Yield Vault", "sUSDC");
         identity = new FndrIdentity();
-        factory = new CampaignFactory(address(usdc), address(sharedVault), address(identity));
+        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity));
         secondaryMarket = new StartupSecondaryMarket(address(identity), address(usdc), platformWallet);
         
         // Pre-fund vault for yield generation (simulates existing liquidity)
@@ -98,7 +97,7 @@ contract FullFlowIntegrationTest is Test {
         console.log("Infrastructure deployed successfully");
         console.log("USDC:", address(usdc));
         console.log("FndrIdentity:", address(identity));
-        console.log("CampaignFactory:", address(factory));
+        console.log("RoundFactory:", address(factory));
         console.log("SecondaryMarket:", address(secondaryMarket));
     }
     
@@ -141,46 +140,44 @@ contract FullFlowIntegrationTest is Test {
         console.log("All users verified successfully");
         
         // ==========================================
-        // PHASE 2: CAMPAIGN CREATION
+        // PHASE 2: ROUND CREATION
         // ==========================================
-        emit TestPhase("=== PHASE 2: Campaign Creation ===");
-        
-        console.log("Phase 2: Creating startup campaign...");
-        
-        CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-            targetRaise: TARGET_RAISE,
-            equityPercentage: EQUITY_PERCENTAGE,
-            sharePrice: SHARE_PRICE,
-            deadline: block.timestamp + 365 days,
-            ipfsMetadata: IPFS_HASH
-        });
-        
+        emit TestPhase("=== PHASE 2: Round Creation ===");
+
+        console.log("Phase 2: Creating funding round...");
+
         vm.startPrank(founder);
         // Pay creation fee
         usdc.approve(address(factory), 10 * 1e6);
-        campaignAddress = factory.createCampaign(config, "TECH");
+        roundAddress = factory.createRound(
+            TARGET_RAISE,
+            EQUITY_PERCENTAGE,
+            SHARE_PRICE,
+            block.timestamp + 365 days,
+            "TECH"
+        );
         vm.stopPrank();
-        
-        // Get campaign and token contracts
-        campaign = CampaignManager(campaignAddress);
-        equityToken = StartupEquityToken(campaign.getEquityToken());
+
+        // Get round and token contracts
+        round = RoundManager(roundAddress);
+        equityToken = StartupEquityToken(round.getEquityToken());
         
         // Set secondary market in equity token (automatically whitelists it)
         vm.prank(founder);
         equityToken.setSecondaryMarket(address(secondaryMarket));
         
-        // Verify campaign creation
-        assertEq(factory.getTotalCampaignsCount(), 1, "Campaign count incorrect");
-        assertEq(factory.getCampaignByFounder(founder), campaignAddress, "Founder mapping incorrect");
-        
+        // Verify round creation
+        assertEq(factory.getTotalRoundsCount(), 1, "Round count incorrect");
+        assertEq(factory.getRoundByFounder(founder), roundAddress, "Founder mapping incorrect");
+
         // Verify equity token properties
         (string memory tokenName, string memory tokenSymbol, , , , address tokenFounder) = equityToken.getTokenInfo();
         assertEq(tokenFounder, founder, "Token founder incorrect");
         assertTrue(bytes(tokenName).length > 0, "Token name empty");
         assertTrue(bytes(tokenSymbol).length > 0, "Token symbol empty");
-        
-        console.log("Campaign created successfully");
-        console.log("Campaign Address:", campaignAddress);
+
+        console.log("Round created successfully");
+        console.log("Round Address:", roundAddress);
         console.log("Equity Token:", address(equityToken));
         console.log("Token Name:", tokenName);
         console.log("Token Symbol:", tokenSymbol);
@@ -195,22 +192,22 @@ contract FullFlowIntegrationTest is Test {
         // Investment 1: investor1 invests $30K
         vm.startPrank(investor1);
         uint256 investment1 = 30000 * 1e6;
-        usdc.approve(campaignAddress, investment1);
-        campaign.invest(investment1);
+        usdc.approve(roundAddress, investment1);
+        round.invest(investment1);
         vm.stopPrank();
         
         // Investment 2: investor2 invests $50K  
         vm.startPrank(investor2);
         uint256 investment2 = 50000 * 1e6;
-        usdc.approve(campaignAddress, investment2);
-        campaign.invest(investment2);
+        usdc.approve(roundAddress, investment2);
+        round.invest(investment2);
         vm.stopPrank();
         
-        // Investment 3: investor3 invests $20K (completes the campaign)
+        // Investment 3: investor3 invests $20K (completes the round)
         vm.startPrank(investor3);
         uint256 investment3 = 20000 * 1e6;
-        usdc.approve(campaignAddress, investment3);
-        campaign.invest(investment3);
+        usdc.approve(roundAddress, investment3);
+        round.invest(investment3);
         vm.stopPrank();
         
         // Verify investments and token balances
@@ -222,9 +219,9 @@ contract FullFlowIntegrationTest is Test {
         assertEq(equityToken.balanceOf(investor2), expectedTokens2, "Investor2 token balance incorrect");
         assertEq(equityToken.balanceOf(investor3), expectedTokens3, "Investor3 token balance incorrect");
         
-        // Verify campaign state
-        (CampaignManager.CampaignState state, uint256 totalRaised, , uint256 tokensIssued, uint256 investorCount,) = campaign.getCampaignInfo();
-        assertEq(uint(state), uint(CampaignManager.CampaignState.COMPLETED), "Campaign should be completed");
+        // Verify round state
+        (RoundManager.RoundState state, uint256 totalRaised, , uint256 tokensIssued, uint256 investorCount,) = round.getRoundInfo();
+        assertEq(uint(state), uint(RoundManager.RoundState.COMPLETED), "Round should be completed");
         assertEq(totalRaised, TARGET_RAISE, "Total raised incorrect");
         assertEq(tokensIssued, TARGET_RAISE / SHARE_PRICE, "Total tokens issued incorrect");
         assertEq(investorCount, 3, "Investor count incorrect");
@@ -245,23 +242,23 @@ contract FullFlowIntegrationTest is Test {
         
         // Fast forward time to generate yield (30 days)
         vm.warp(block.timestamp + 30 days);
-        
+
         // Trigger yield update
-        campaign.updateYield();
-        
+        round.updateYield();
+
         // Check yield info
-        (uint256 totalVaultBalance, uint256 totalYieldAccrued, uint256 currentAPY) = campaign.getYieldInfo();
-        
+        (uint256 totalVaultBalance, uint256 totalYieldAccrued, uint256 currentAPY) = round.getYieldInfo();
+
         console.log("Yield generated successfully");
         console.log("Vault Balance: $", totalVaultBalance);
         console.log("Total Yield Accrued: $", totalYieldAccrued);
         console.log("Current APY:", currentAPY, "%");
-        
+
         // Test investor yield claiming
         vm.startPrank(investor1);
-        (,, uint256 yieldBalance1,) = campaign.getInvestorInfo(investor1);
+        (,, uint256 yieldBalance1,) = round.getInvestorInfo(investor1);
         if (yieldBalance1 > 0) {
-            campaign.claimYield();
+            round.claimYield();
             console.log("Investor1 claimed yield: $", yieldBalance1 / 1e6);
         }
         vm.stopPrank();
@@ -276,31 +273,30 @@ contract FullFlowIntegrationTest is Test {
         // Test that larger withdrawal fails (exceeds 2% monthly limit)
         vm.startPrank(founder);
         uint256 invalidAmount = 5000 * 1e6; // $5K (5% - exceeds limit)
-        (bool canWithdrawMore, string memory rejectReason) = campaign.canFounderWithdraw(invalidAmount);
+        (bool canWithdrawMore, string memory rejectReason) = round.canFounderWithdraw(invalidAmount);
         assertFalse(canWithdrawMore, "Should reject withdrawal exceeding 2% limit");
         console.log("Larger withdrawal correctly rejected:", rejectReason);
-        
+
         // Verify that attempting the invalid withdrawal actually reverts
-        vm.expectRevert(abi.encodeWithSelector(CampaignManager.InvalidOperation.selector, "Exceeds 2% monthly withdrawal limit"));
-        campaign.founderWithdraw(invalidAmount);
+        vm.expectRevert(abi.encodeWithSelector(RoundManager.InvalidOperation.selector, "Exceeds 2% monthly withdrawal limit"));
+        round.founderWithdraw(invalidAmount);
         vm.stopPrank();
 
-        
         // Calculate exact 2% of current vault balance (including yield)
-        (uint256 currentVaultBalance,,) = campaign.getYieldInfo();
+        (uint256 currentVaultBalance,,) = round.getYieldInfo();
         uint256 maxAllowedWithdrawal = (currentVaultBalance * 200) / 10000; // 2%
         uint256 withdrawAmount = maxAllowedWithdrawal; // Use exact 2% amount
-        
+
         console.log("Current Vault Balance: $", currentVaultBalance / 1e6);
         console.log("Max Allowed (2%): $", maxAllowedWithdrawal / 1e6);
-        
-        (bool canWithdraw, string memory reason) = campaign.canFounderWithdraw(withdrawAmount);
+
+        (bool canWithdraw, string memory reason) = round.canFounderWithdraw(withdrawAmount);
         assertTrue(canWithdraw, reason);
-        
+
         // Execute withdrawal
         vm.startPrank(founder);
         uint256 founderUSDCBefore = usdc.balanceOf(founder);
-        campaign.founderWithdraw(withdrawAmount);
+        round.founderWithdraw(withdrawAmount);
         uint256 founderUSDCAfter = usdc.balanceOf(founder);
         vm.stopPrank();
         
@@ -318,7 +314,7 @@ contract FullFlowIntegrationTest is Test {
         console.log("Phase 6: Preparing for secondary market...");
         
         // Fast forward to meet holding period (180 days from investment)
-        // Note: Our CampaignManager.invest() fix should have initialized holding periods during investment
+        // Note: Our RoundManager.invest() fix should have initialized holding periods during investment
         vm.warp(block.timestamp + 180 days);
         
         // Check if tokens can be sold
@@ -485,7 +481,7 @@ contract FullFlowIntegrationTest is Test {
         console.log("=== COMPREHENSIVE FLOW TEST COMPLETED ===");
         console.log("All phases completed successfully!");
         console.log("User verification and registration");
-        console.log("Campaign creation and configuration");
+        console.log("Round creation and configuration");
         console.log("Investment processing and token issuance");
         console.log("Yield generation and distribution");
         console.log("Founder capital deployment");
@@ -499,30 +495,30 @@ contract FullFlowIntegrationTest is Test {
     
     function testErrorConditions() public {
         emit TestPhase("=== ERROR CONDITION TESTING ===");
-        
+
         // Test unverified user attempting operations
         address unverified = address(0x6666);
         usdc.transfer(unverified, 50000 * 1e6);
-        
-        // Should fail campaign creation
+
+        // Should fail round creation
         vm.startPrank(unverified);
-        CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-            targetRaise: 50000 * 1e6,
-            equityPercentage: 1000,
-            sharePrice: 1 * 1e6,
-            deadline: block.timestamp + 365 days,
-            ipfsMetadata: "QmTest123"
-        });
-        
+        usdc.approve(address(factory), 10 * 1e6);
+
         vm.expectRevert();
-        factory.createCampaign(config, "FAIL");
+        factory.createRound(
+            50000 * 1e6,
+            1000,
+            1 * 1e6,
+            block.timestamp + 365 days,
+            "FAIL"
+        );
         vm.stopPrank();
-        
-        console.log("Unverified user campaign creation blocked");
-        
+
+        console.log("Unverified user round creation blocked");
+
         // Test various other error conditions...
         // (Additional error testing can be added here)
-        
+
         console.log("Error condition testing completed");
     }
 }

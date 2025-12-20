@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/FndrIdentity.sol";
-import "../src/CampaignFactory.sol";
-import "../src/CampaignManager.sol";
+import "../src/RoundFactory.sol";
+import "../src/RoundManager.sol";
 import "../src/StartupEquityToken.sol";
 import "../src/StartupSecondaryMarket.sol";
 import "../src/MockVault.sol";
@@ -14,25 +14,25 @@ contract MockUSDC {
     string public symbol = "USDC";
     uint8 public decimals = 6;
     uint256 public totalSupply = 100000000 * 1e6;
-    
+
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
-    
+
     constructor() {
         balanceOf[msg.sender] = totalSupply;
     }
-    
+
     function transfer(address to, uint256 amount) external returns (bool) {
         balanceOf[msg.sender] -= amount;
         balanceOf[to] += amount;
         return true;
     }
-    
+
     function approve(address spender, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender] = amount;
         return true;
     }
-    
+
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         if (allowance[from][msg.sender] != type(uint256).max) {
             allowance[from][msg.sender] -= amount;
@@ -45,113 +45,111 @@ contract MockUSDC {
 
 contract CoreFlowTest is Test {
     FndrIdentity identity;
-    CampaignFactory factory;
+    RoundFactory factory;
     MockVault sharedVault;
     MockUSDC usdc;
     StartupSecondaryMarket secondaryMarket;
-    
+
     address founder = address(0x1);
     address investor1 = address(0x2);
     address investor2 = address(0x3);
     address platformWallet = address(0x999);
-    
+
     function setUp() public {
         // Deploy infrastructure
         usdc = new MockUSDC();
         sharedVault = new MockVault(address(usdc), "Shared Yield Vault", "sUSDC");
         identity = new FndrIdentity();
-        factory = new CampaignFactory(address(usdc), address(sharedVault), address(identity));
+        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity));
         secondaryMarket = new StartupSecondaryMarket(address(identity), address(usdc), platformWallet);
-        
+
         // Fund vault and users
         usdc.transfer(address(sharedVault), 1000000 * 1e6);
         usdc.transfer(founder, 50000 * 1e6);
         usdc.transfer(investor1, 100000 * 1e6);
         usdc.transfer(investor2, 100000 * 1e6);
-        
+
         // Register users
         vm.prank(founder);
         identity.registerZKPassportUser(bytes32("founder_id"));
         vm.prank(founder);
         identity.registerUserRole(FndrIdentity.UserRole.Founder);
-        
+
         vm.prank(investor1);
         identity.registerZKPassportUser(bytes32("investor1_id"));
         vm.prank(investor1);
         identity.registerUserRole(FndrIdentity.UserRole.Investor);
-        
+
         vm.prank(investor2);
         identity.registerZKPassportUser(bytes32("investor2_id"));
         vm.prank(investor2);
         identity.registerUserRole(FndrIdentity.UserRole.Investor);
     }
-    
+
     function testCompleteFlow() public {
-        // 1. Create campaign
+        // 1. Create round
         vm.startPrank(founder);
         usdc.approve(address(factory), 10 * 1e6);
-        
-        CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-            targetRaise: 50000 * 1e6,
-            equityPercentage: 1000,
-            sharePrice: 1 * 1e6,
-            deadline: block.timestamp + 365 days,
-            ipfsMetadata: "QmTest123"
-        });
-        
-        address campaignAddr = factory.createCampaign(config, "TEST");
+
+        address roundAddr = factory.createRound(
+            50000 * 1e6,      // targetRaise
+            1000,             // equityPercentage
+            1 * 1e6,          // sharePrice
+            block.timestamp + 365 days,  // deadline
+            "TEST"            // companySymbol
+        );
         vm.stopPrank();
-        
-        CampaignManager campaign = CampaignManager(campaignAddr);
-        StartupEquityToken token = StartupEquityToken(campaign.getEquityToken());
-        
+
+        RoundManager round = RoundManager(roundAddr);
+        StartupEquityToken token = StartupEquityToken(round.getEquityToken());
+
         // Set secondary market (automatically whitelists it)
         vm.prank(founder);
         token.setSecondaryMarket(address(secondaryMarket));
-        
+
         // 2. Investments
         vm.startPrank(investor1);
-        usdc.approve(campaignAddr, 30000 * 1e6);
-        campaign.invest(30000 * 1e6);
+        usdc.approve(roundAddr, 30000 * 1e6);
+        round.invest(30000 * 1e6);
         vm.stopPrank();
-        
+
         vm.startPrank(investor2);
-        usdc.approve(campaignAddr, 20000 * 1e6);
-        campaign.invest(20000 * 1e6);
+        usdc.approve(roundAddr, 20000 * 1e6);
+        round.invest(20000 * 1e6);
         vm.stopPrank();
-        
+
         // Verify investments (tokens have 6 decimals, so no need for * 1e6)
         assertEq(token.balanceOf(investor1), 30000);
         assertEq(token.balanceOf(investor2), 20000);
-        
-        // 3. Campaign completion check
-        (CampaignManager.CampaignState state, uint256 totalRaised,,,,) = campaign.getCampaignInfo();
-        assertEq(uint(state), uint(CampaignManager.CampaignState.COMPLETED));
+
+        // 3. Round completion check
+        (RoundManager.RoundState state, uint256 totalRaised,,,,) = round.getRoundInfo();
+        assertEq(uint(state), uint(RoundManager.RoundState.COMPLETED));
         assertEq(totalRaised, 50000 * 1e6);
-        
+
         // 4. Yield generation
         vm.warp(block.timestamp + 30 days);
-        campaign.updateYield();
-        (uint256 vaultBalance,,) = campaign.getYieldInfo();
+        round.updateYield();
+        (uint256 vaultBalance,,) = round.getYieldInfo();
         assertTrue(vaultBalance > 49500 * 1e6); // Should have generated some yield
-        
+
         // 5. Founder withdrawal (calculate exact 2% of current vault balance)
         vm.startPrank(founder);
-        (uint256 currentVaultBalance,,) = campaign.getYieldInfo();
+        (uint256 currentVaultBalance,,) = round.getYieldInfo();
         uint256 validWithdrawal = (currentVaultBalance * 200) / 10000; // Exact 2%
-        (bool canWithdraw,) = campaign.canFounderWithdraw(validWithdrawal);
+        (bool canWithdraw,) = round.canFounderWithdraw(validWithdrawal);
         assertTrue(canWithdraw);
-        campaign.founderWithdraw(validWithdrawal);
-        
+        round.founderWithdraw(validWithdrawal);
+
         // Test that larger withdrawal fails (use 5% of original balance as invalid amount)
         uint256 invalidWithdrawal = (currentVaultBalance * 500) / 10000; // 5% - exceeds 2% limit
-        (bool canWithdrawMore, string memory reason) = campaign.canFounderWithdraw(invalidWithdrawal);
+        (bool canWithdrawMore,) = round.canFounderWithdraw(invalidWithdrawal);
         assertFalse(canWithdrawMore);
         vm.stopPrank();
-        
+
         // 6. Secondary market (after holding period)
         vm.warp(block.timestamp + 180 days);
-        
+
         vm.startPrank(investor1);
         uint256 sellAmount = 10000; // 10,000 tokens (no * 1e6 since tokens already have 6 decimals)
         token.approve(address(secondaryMarket), sellAmount);
@@ -162,7 +160,7 @@ contract CoreFlowTest is Test {
             24
         );
         vm.stopPrank();
-        
+
         // Buy from secondary market
         vm.startPrank(investor2);
         uint256 buyAmount = 5000; // 5,000 tokens
@@ -170,105 +168,101 @@ contract CoreFlowTest is Test {
         usdc.approve(address(secondaryMarket), totalCost);
         secondaryMarket.buyTokens(orderId, buyAmount);
         vm.stopPrank();
-        
+
         // Verify secondary market trade
         assertTrue(token.balanceOf(investor2) > 20000); // Original + bought tokens
         assertTrue(token.balanceOf(investor1) < 30000); // Original - sold + escrowed tokens
-        
+
         // Test complete!
         assertTrue(true);
     }
-    
+
     function testTransferRestrictions() public {
-        // Create a simple campaign and token
+        // Create a simple round and token
         vm.startPrank(founder);
         usdc.approve(address(factory), 10 * 1e6);
-        
-        CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-            targetRaise: 10000 * 1e6,
-            equityPercentage: 1000,
-            sharePrice: 1 * 1e6,
-            deadline: block.timestamp + 365 days,
-            ipfsMetadata: "QmTest456"
-        });
-        
-        address campaignAddr = factory.createCampaign(config, "RESTRICT");
+
+        address roundAddr = factory.createRound(
+            10000 * 1e6,
+            1000,
+            1 * 1e6,
+            block.timestamp + 365 days,
+            "RESTRICT"
+        );
         vm.stopPrank();
-        
-        CampaignManager campaign = CampaignManager(campaignAddr);
-        StartupEquityToken token = StartupEquityToken(campaign.getEquityToken());
-        
+
+        RoundManager round = RoundManager(roundAddr);
+        StartupEquityToken token = StartupEquityToken(round.getEquityToken());
+
         // Invest
         vm.startPrank(investor1);
-        usdc.approve(campaignAddr, 10000 * 1e6);
-        campaign.invest(10000 * 1e6);
+        usdc.approve(roundAddr, 10000 * 1e6);
+        round.invest(10000 * 1e6);
         vm.stopPrank();
-        
+
         // Test restriction: unverified recipient
         address unverified = address(0x4444);
         vm.startPrank(investor1);
         vm.expectRevert();
         token.transfer(unverified, 1000); // 1,000 tokens
         vm.stopPrank();
-        
+
         // Test allowed: verified recipient
         vm.startPrank(investor1);
         bool success = token.transfer(investor2, 1000); // 1,000 tokens
         vm.stopPrank();
-        
+
         assertTrue(success);
         assertEq(token.balanceOf(investor2), 1000);
         assertEq(token.balanceOf(investor1), 9000);
     }
-    
+
     function testYieldDistribution() public {
-        // Create campaign and invest
+        // Create round and invest
         vm.startPrank(founder);
         usdc.approve(address(factory), 10 * 1e6);
-        
-        CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-            targetRaise: 20000 * 1e6,
-            equityPercentage: 1000,
-            sharePrice: 1 * 1e6,
-            deadline: block.timestamp + 365 days,
-            ipfsMetadata: "QmYieldTest"
-        });
-        
-        address campaignAddr = factory.createCampaign(config, "YIELD");
+
+        address roundAddr = factory.createRound(
+            20000 * 1e6,
+            1000,
+            1 * 1e6,
+            block.timestamp + 365 days,
+            "YIELD"
+        );
         vm.stopPrank();
-        
-        CampaignManager campaign = CampaignManager(campaignAddr);
-        
+
+        RoundManager round = RoundManager(roundAddr);
+
         // Two investors with different amounts
         vm.startPrank(investor1);
-        usdc.approve(campaignAddr, 15000 * 1e6); // 75% of campaign
-        campaign.invest(15000 * 1e6);
+        usdc.approve(roundAddr, 15000 * 1e6); // 75% of round
+        round.invest(15000 * 1e6);
         vm.stopPrank();
-        
+
         vm.startPrank(investor2);
-        usdc.approve(campaignAddr, 5000 * 1e6); // 25% of campaign
-        campaign.invest(5000 * 1e6);
+        usdc.approve(roundAddr, 5000 * 1e6); // 25% of round
+        round.invest(5000 * 1e6);
         vm.stopPrank();
-        
+
         // Generate yield
         vm.warp(block.timestamp + 60 days); // 2 months
-        campaign.updateYield();
-        
+        round.updateYield();
+
         // Check investor yield balances
-        (,, uint256 yield1,) = campaign.getInvestorInfo(investor1);
-        (,, uint256 yield2,) = campaign.getInvestorInfo(investor2);
-        
+        (,, uint256 yield1,) = round.getInvestorInfo(investor1);
+        (,, uint256 yield2,) = round.getInvestorInfo(investor2);
+
         // investor1 should get ~75% of investor yield share
         // investor2 should get ~25% of investor yield share
         assertTrue(yield1 > 0);
         assertTrue(yield2 > 0);
         assertTrue(yield1 > yield2 * 2); // Roughly 3:1 ratio (75:25)
-        
+
         // Test yield claiming
         vm.startPrank(investor1);
         if (yield1 > 0) {
             uint256 balanceBefore = usdc.balanceOf(investor1);
-            campaign.claimYield();
+            round.claimYield();
             uint256 balanceAfter = usdc.balanceOf(investor1);
             assertEq(balanceAfter - balanceBefore, yield1);
         }
