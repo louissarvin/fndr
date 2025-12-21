@@ -147,19 +147,14 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
       <DialogContent className="bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#1F1F1F] rounded-2xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
-            <div className="p-2 bg-[#A2D5C6]/20 rounded-xl">
+            <div>
               <UserCheck className="h-6 w-6 text-[#A2D5C6]" />
             </div>
             Identity Verification
           </DialogTitle>
-          <DialogDescription className="text-white/60">
-            {!isZKVerified
-              ? 'Verify your identity with ZKPassport, then choose your role.'
-              : 'Select your role to participate in the FNDR ecosystem.'}
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-4 space-y-6">
           {/* Step Indicator */}
           {!isRegistered && currentRole === UserRole.None && isConnected && (
             <div className="flex items-center justify-center gap-2">
@@ -193,39 +188,11 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
 
           {/* Already Registered Status */}
           {isRegistered && currentRole !== UserRole.None && (
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/20">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-[#A2D5C6]/20 rounded-xl">
-                  {currentRole === UserRole.Founder ? (
-                    <Briefcase className="h-8 w-8 text-[#A2D5C6]" />
-                  ) : (
-                    <TrendingUp className="h-8 w-8 text-[#A2D5C6]" />
-                  )}
-                </div>
-                <div>
+            <div>
+                <div className="text-center">
                   <p className="text-white/50 text-sm mb-1">Registered As</p>
-                  <p className="text-xl font-bold text-white">{roleLabels[currentRole]}</p>
+                  <p className="text-4xl font-bold text-white">{roleLabels[currentRole]}</p>
                 </div>
-                <div className="ml-auto">
-                  <BadgeCheck className="h-8 w-8 text-[#A2D5C6]" />
-                </div>
-              </div>
-
-              {/* Verification Status */}
-              <div className="mt-4 pt-4 border-t border-[#A2D5C6]/20 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Shield className={`h-4 w-4 ${isZKVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`} />
-                  <span className={`text-sm ${isZKVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`}>
-                    {isZKVerified ? 'ZKPassport Verified' : 'ZKPassport Not Verified'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className={`h-4 w-4 ${isVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`} />
-                  <span className={`text-sm ${isVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`}>
-                    {isVerified ? 'Fully Verified' : 'Verification Incomplete'}
-                  </span>
-                </div>
-              </div>
             </div>
           )}
 

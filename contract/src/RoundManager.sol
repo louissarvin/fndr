@@ -79,13 +79,16 @@ contract RoundManager {
     uint256 public constant MAX_WITHDRAWAL_RATE = 200;
     uint256 public immutable FOUNDER_YIELD_SHARE = 5000;
 
+    string public metadataURI;
+
     // Events
     event RoundCreated(
         address indexed founder,
         address indexed equityToken,
         string companyName,
         uint256 targetRaise,
-        uint256 equityPercentage
+        uint256 equityPercentage,
+        string metadataURI
     );
 
     event InvestmentMade(
@@ -167,7 +170,8 @@ contract RoundManager {
         RoundConfig memory _config,
         string memory _companySymbol,
         address _founder,
-        address _fndrIdentity
+        address _fndrIdentity,
+        string memory _metadataURI
     ) {
         if(_usdc == address(0)) {
             revert InvalidUSDCAddress();
@@ -197,6 +201,7 @@ contract RoundManager {
         usdc = IERC20(_usdc);
         vault = MockVault(_vault);
         config = _config;
+        metadataURI = _metadataURI;
 
         round.founder = _founder;
         round.state = RoundState.FUNDRAISING;
@@ -220,7 +225,8 @@ contract RoundManager {
             address(round.equityToken),
             _companySymbol,
             _config.targetRaise,
-            _config.equityPercentage
+            _config.equityPercentage,
+            _metadataURI
         );
     }
 

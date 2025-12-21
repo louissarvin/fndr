@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { Link } from 'react-router-dom';
 import SparkleBackground from '@/components/3d/SparkleBackground';
 import FloatingTokensArc from '@/components/3d/FloatingTokensArc';
 
@@ -31,12 +32,12 @@ const CTASection = forwardRef<HTMLElement, CTASectionProps>(
               Join thousands of investors already earning yield while supporting the next generation of startups.
             </p>
             <div className="flex justify-center gap-4 pointer-events-auto">
-              <button className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(162,213,198,0.6)] transition-all duration-300">
+              <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(162,213,198,0.6)] transition-all duration-300">
                 Launch App
-              </button>
-              <button className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(162,213,198,0.4)] transition-all duration-300">
+              </Link>
+              <Link to="/browse" className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(162,213,198,0.4)] transition-all duration-300">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
         </div>

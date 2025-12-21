@@ -1,50 +1,80 @@
 import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import { formatUnits } from 'viem';
+import { useAccount } from 'wagmi';
 import Layout from '@/components/layout/Layout';
-import {
-  MOCK_MARKET_TOKENS,
-  MOCK_SELL_ORDERS,
-  formatCurrency,
-  formatNumber,
-  formatTimeRemaining,
-  calculatePlatformFee,
-  type MarketToken,
-  type SellOrder
-} from '@/lib/web3-config';
+import { useActiveSellOrders, useRecentTrades, usePlatformStats, type SellOrder } from '@/hooks/usePonderData';
 import {
   TrendingUp,
-  TrendingDown,
   Clock,
-  Users,
-  BadgeCheck,
   ArrowUpRight,
   Tag,
-  Layers
+  Layers,
+  Wifi,
+  WifiOff,
+  Loader2,
+  Wallet,
+  ExternalLink,
+  ShoppingCart
 } from 'lucide-react';
-import BuyOrderModal from '@/components/marketplace/BuyOrderModal';
-import CreateSellOrderModal from '@/components/marketplace/CreateSellOrderModal';
+import IndexedBuyModal from '@/components/marketplace/IndexedBuyModal';
+import IndexedSellModal from '@/components/marketplace/IndexedSellModal';
+import MyOrders from '@/components/marketplace/MyOrders';
+
+const USDC_DECIMALS = 6;
+
+function formatUSDC(value: string): string {
+  const num = Number(formatUnits(BigInt(value), USDC_DECIMALS));
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+function formatTokenAmount(value: string): string {
+  const num = Number(formatUnits(BigInt(value), 18));
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+function shortenAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function getTimeRemaining(expiryTimestamp: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = Number(expiryTimestamp);
+  const diff = expiry - now;
+
+  if (diff <= 0) return 'Expired';
+
+  const days = Math.floor(diff / (60 * 60 * 24));
+  const hours = Math.floor((diff % (60 * 60 * 24)) / (60 * 60));
+
+  if (days > 0) return `${days}d ${hours}h`;
+  return `${hours}h`;
+}
 
 export default function Marketplace() {
-  const [selectedToken, setSelectedToken] = useState<MarketToken | null>(null);
+  const { isConnected } = useAccount();
   const [selectedOrder, setSelectedOrder] = useState<SellOrder | null>(null);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'orders' | 'my-orders'>('orders');
+
+  // Fetch indexed data
+  const { data: orders, isLoading, error } = useActiveSellOrders();
+  const { data: recentTrades } = useRecentTrades(10);
+  const { data: platformStats } = usePlatformStats();
 
   // Animation refs
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
-  const tokensRef = useRef<HTMLDivElement>(null);
   const ordersRef = useRef<HTMLDivElement>(null);
-
-  // Filter orders by selected token
-  const filteredOrders = selectedToken
-    ? MOCK_SELL_ORDERS.filter(order => order.token.id === selectedToken.id)
-    : MOCK_SELL_ORDERS;
-
-  // Calculate market stats
-  const totalVolume = MOCK_MARKET_TOKENS.reduce((acc, t) => acc + t.volume24h, 0);
-  const totalListings = MOCK_SELL_ORDERS.filter(o => o.isActive).length;
 
   // Entrance animations
   useEffect(() => {
@@ -56,7 +86,6 @@ export default function Marketplace() {
       gsap.set(titleWords, { y: 100, opacity: 0 });
       gsap.set(subtitleRef.current, { y: 20, opacity: 0 });
       gsap.set(statsRef.current, { y: 30, opacity: 0 });
-      gsap.set(tokensRef.current, { y: 30, opacity: 0 });
       gsap.set(ordersRef.current, { y: 40, opacity: 0 });
 
       tl.to(titleWords, {
@@ -79,12 +108,6 @@ export default function Marketplace() {
         duration: 0.5,
       }, '-=0.3');
 
-      tl.to(tokensRef.current, {
-        y: 0,
-        opacity: 1,
-        duration: 0.5,
-      }, '-=0.2');
-
       tl.to(ordersRef.current, {
         y: 0,
         opacity: 1,
@@ -98,10 +121,6 @@ export default function Marketplace() {
   const handleBuyClick = (order: SellOrder) => {
     setSelectedOrder(order);
     setIsBuyModalOpen(true);
-  };
-
-  const handleSellClick = () => {
-    setIsSellModalOpen(true);
   };
 
   return (
@@ -120,216 +139,226 @@ export default function Marketplace() {
             </p>
           </div>
 
+          {/* Connection Status */}
+          <div className="flex justify-center mb-6">
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-white/60 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading orders...
+              </div>
+            ) : error && (
+              <div className="flex items-center gap-2 text-red-400 text-sm">
+                <WifiOff className="h-4 w-4" />
+                Failed to connect to indexer
+              </div>
+            )}
+          </div>
+
           {/* Market Stats */}
           <div ref={statsRef} className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <p className="text-white/50 text-sm mb-1">24h Volume</p>
-              <p className="text-2xl font-bold text-white">{formatCurrency(totalVolume)}</p>
+              <p className="text-white/50 text-sm mb-1">Total Trades</p>
+              <p className="text-2xl font-bold text-white">{platformStats?.totalTrades || 0}</p>
             </div>
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-1">Active Listings</p>
-              <p className="text-2xl font-bold text-white">{totalListings}</p>
+              <p className="text-2xl font-bold text-white">{orders?.length || 0}</p>
             </div>
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <p className="text-white/50 text-sm mb-1">Tokens Listed</p>
-              <p className="text-2xl font-bold text-white">{MOCK_MARKET_TOKENS.length}</p>
-            </div>
-          </div>
-
-          {/* Token Selector - Horizontal Scroll */}
-          <div ref={tokensRef} className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Tokens</h2>
-              <button
-                onClick={handleSellClick}
-                className="px-5 py-2.5 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center gap-2"
-              >
-                <Tag className="h-4 w-4" />
-                List for Sale
-              </button>
-            </div>
-
-            {/* Horizontal Scrollable Container */}
-            <div className="relative">
-              {/* "All" button */}
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                <button
-                  onClick={() => setSelectedToken(null)}
-                  className={`flex-shrink-0 bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl px-4 py-3 text-left transition-all duration-300 border-2 ${
-                    selectedToken === null
-                      ? 'border-[#A2D5C6] bg-[#A2D5C6]/20'
-                      : 'border-transparent hover:border-[#A2D5C6]/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#A2D5C6]/20 flex items-center justify-center">
-                      <Layers className="h-5 w-5 text-[#A2D5C6]" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-white text-sm">All Tokens</p>
-                      <p className="text-xs text-white/50">{MOCK_SELL_ORDERS.filter(o => o.isActive).length} orders</p>
-                    </div>
-                  </div>
-                </button>
-
-                {MOCK_MARKET_TOKENS.map((token) => {
-                  const isSelected = selectedToken?.id === token.id;
-                  const orderCount = MOCK_SELL_ORDERS.filter(o => o.token.id === token.id && o.isActive).length;
-
-                  return (
-                    <button
-                      key={token.id}
-                      onClick={() => setSelectedToken(isSelected ? null : token)}
-                      className={`flex-shrink-0 bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl px-4 py-3 text-left transition-all duration-300 border-2 min-w-[200px] ${
-                        isSelected
-                          ? 'border-[#A2D5C6] bg-[#A2D5C6]/20'
-                          : 'border-transparent hover:border-[#A2D5C6]/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={token.image}
-                          alt={token.name}
-                          className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-white text-sm">{token.symbol}</p>
-                            <div className={`flex items-center gap-0.5 text-xs ${
-                              token.priceChange24h >= 0 ? 'text-[#A2D5C6]' : 'text-red-400'
-                            }`}>
-                              {token.priceChange24h >= 0 ? (
-                                <TrendingUp className="h-3 w-3" />
-                              ) : (
-                                <TrendingDown className="h-3 w-3" />
-                              )}
-                              <span>{token.priceChange24h >= 0 ? '+' : ''}{token.priceChange24h}%</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-white/50">
-                            <span>${token.lastTradePrice.toFixed(2)}</span>
-                            <span>•</span>
-                            <span>{orderCount} orders</span>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Fade edges for scroll indication */}
-              <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-[#000000] to-transparent pointer-events-none" />
+              <p className="text-white/50 text-sm mb-1">Trade Volume</p>
+              <p className="text-2xl font-bold text-white">
+                {platformStats?.totalTradeVolume ? formatUSDC(platformStats.totalTradeVolume) : '$0.00'}
+              </p>
             </div>
           </div>
 
           {/* Order Book */}
           <div ref={ordersRef}>
+            {/* Header with tabs */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Layers className="h-5 w-5 text-[#A2D5C6]" />
-                {selectedToken ? `${selectedToken.symbol} Orders` : 'All Orders'}
-              </h2>
-              {selectedToken && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setSelectedToken(null)}
-                  className="text-sm text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors"
+                  onClick={() => setActiveTab('orders')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === 'orders'
+                      ? 'bg-[#A2D5C6] text-black'
+                      : 'bg-white/10 text-white/60 hover:text-white'
+                  }`}
                 >
-                  View All
+                  <Layers className="h-4 w-4" />
+                  All Orders
+                </button>
+                {isConnected && (
+                  <button
+                    onClick={() => setActiveTab('my-orders')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === 'my-orders'
+                        ? 'bg-[#A2D5C6] text-black'
+                        : 'bg-white/10 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    My Orders
+                  </button>
+                )}
+              </div>
+              {isConnected && (
+                <button
+                  onClick={() => setIsSellModalOpen(true)}
+                  className="px-5 py-2.5 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors flex items-center gap-2"
+                >
+                  <Tag className="h-4 w-4" />
+                  List for Sale
                 </button>
               )}
             </div>
 
-            {filteredOrders.length === 0 ? (
-              <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
-                <p className="text-white/50">No active orders for this token.</p>
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="h-12 w-12 animate-spin text-[#A2D5C6] mb-4" />
+                <p className="text-white/60">Loading orders...</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 hover:bg-[#A2D5C6]/15 transition-colors"
-                  >
-                    {/* Token Info */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <img
-                        src={order.token.image}
-                        alt={order.token.name}
-                        className="w-10 h-10 rounded-2xl object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white">{order.token.symbol}</h3>
-                        <p className="text-sm text-white/50">{order.token.campaign.name}</p>
-                      </div>
-                      <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatTimeRemaining(order.expiresAt)}
-                      </span>
-                    </div>
+            )}
 
-                    {/* Seller Info */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <img
-                        src={order.seller.avatar}
-                        alt={order.seller.name}
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      <span className="text-sm text-white/70">{order.seller.name}</span>
-                      {order.seller.verified && (
-                        <BadgeCheck className="h-4 w-4 text-[#A2D5C6]" />
-                      )}
-                      <span className="text-xs text-white/40 font-mono">{order.seller.address}</span>
-                    </div>
+            {/* Content */}
+            {!isLoading && (
+              <>
+                {/* My Orders Tab */}
+                {activeTab === 'my-orders' && isConnected && (
+                  <MyOrders />
+                )}
 
-                    {/* Order Details */}
-                    <div className="grid grid-cols-3 gap-4 mb-4 items-start">
-                      <div>
-                        <p className="text-xs text-white/40 mb-1">Amount</p>
-                        <p className="font-semibold text-white">
-                          {formatNumber(order.amount)}
-                          {order.amount !== order.originalAmount && (
-                            <span className="text-xs text-white/40 font-normal ml-1">of {formatNumber(order.originalAmount)}</span>
-                          )}
-                        </p>
+                {/* All Orders Tab */}
+                {activeTab === 'orders' && (
+                  <>
+                    {!orders || orders.length === 0 ? (
+                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                        <Tag className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                        <p className="text-white/50 mb-2">No active sell orders yet.</p>
+                        <p className="text-white/30 text-sm">Create a sell order to list your equity tokens.</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-white/40 mb-1">Price/Token</p>
-                        <p className="font-semibold text-white">${order.pricePerToken.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-white/40 mb-1">Total Value</p>
-                        <p className="font-semibold text-[#A2D5C6]">{formatCurrency(order.amount * order.pricePerToken)}</p>
-                      </div>
-                    </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {orders.map((order: SellOrder) => (
+                          <div
+                            key={order.id}
+                            className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 hover:bg-[#A2D5C6]/15 transition-colors"
+                          >
+                            {/* Token Contract */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 rounded-2xl bg-[#A2D5C6]/20 flex items-center justify-center">
+                                <Tag className="h-5 w-5 text-[#A2D5C6]" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-white truncate">Order #{order.orderId}</p>
+                                <p className="text-sm text-white/50 truncate">{shortenAddress(order.tokenContract)}</p>
+                              </div>
+                              <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {getTimeRemaining(order.expiryTime)}
+                              </span>
+                            </div>
 
-                    {/* Buy Button */}
-                    <button
-                      onClick={() => handleBuyClick(order)}
-                      className="w-full py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center justify-center gap-2"
-                    >
-                      Buy Tokens
-                      <ArrowUpRight className="h-4 w-4" />
-                    </button>
+                            {/* Seller Info */}
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-6 h-6 rounded-full bg-[#A2D5C6]/20 flex items-center justify-center">
+                                <Wallet className="h-3 w-3 text-[#A2D5C6]" />
+                              </div>
+                              <span className="text-sm text-white/70">{shortenAddress(order.seller)}</span>
+                            </div>
+
+                            {/* Order Details */}
+                            <div className="grid grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <p className="text-xs text-white/40 mb-1">Amount</p>
+                                <p className="font-semibold text-white">{formatTokenAmount(order.amount)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-white/40 mb-1">Price/Token</p>
+                                <p className="font-semibold text-white">{formatUSDC(order.pricePerToken)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-white/40 mb-1">Total Value</p>
+                                <p className="font-semibold text-[#A2D5C6]">
+                                  {formatUSDC((BigInt(order.amount) * BigInt(order.pricePerToken) / BigInt(10 ** 18)).toString())}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleBuyClick(order)}
+                                className="flex-1 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center justify-center gap-2"
+                              >
+                                Buy Tokens
+                                <ArrowUpRight className="h-4 w-4" />
+                              </button>
+                              <a
+                                href={`https://sepolia.mantlescan.xyz/tx/${order.transactionHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-shrink-0 p-3 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Recent Trades Section */}
+                {activeTab === 'orders' && recentTrades && recentTrades.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-[#A2D5C6]" />
+                      Recent Trades
+                    </h3>
+                    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left text-xs text-white/50 font-medium p-4">Buyer</th>
+                            <th className="text-left text-xs text-white/50 font-medium p-4">Seller</th>
+                            <th className="text-right text-xs text-white/50 font-medium p-4">Amount</th>
+                            <th className="text-right text-xs text-white/50 font-medium p-4">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recentTrades.slice(0, 5).map((trade) => (
+                            <tr key={trade.id} className="border-b border-white/5 last:border-0">
+                              <td className="p-4 text-sm text-white">{shortenAddress(trade.buyer)}</td>
+                              <td className="p-4 text-sm text-white/70">{shortenAddress(trade.seller)}</td>
+                              <td className="p-4 text-sm text-white text-right">{formatTokenAmount(trade.amount)}</td>
+                              <td className="p-4 text-sm text-[#A2D5C6] text-right">{formatUSDC(trade.totalPrice)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Buy Modal */}
-      <BuyOrderModal
+      <IndexedBuyModal
+        isOpen={isBuyModalOpen}
+        onClose={() => setIsBuyModalOpen(false)}
         order={selectedOrder}
-        open={isBuyModalOpen}
-        onOpenChange={setIsBuyModalOpen}
       />
 
       {/* Sell Modal */}
-      <CreateSellOrderModal
-        open={isSellModalOpen}
-        onOpenChange={setIsSellModalOpen}
+      <IndexedSellModal
+        isOpen={isSellModalOpen}
+        onClose={() => setIsSellModalOpen(false)}
       />
     </Layout>
   );

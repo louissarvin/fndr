@@ -16,11 +16,11 @@ export const mantleSepolia = defineChain({
 
 // Contract Addresses on Mantle Sepolia
 export const CONTRACTS = {
-  MockUSDC: '0x3C0A3Eb807Df9409979A5eCBD97DCb3B157bcC3B',
-  MockVault: '0xCAcb144151DB5442caA05258673Faf6f1BB6Ba02',
-  FndrIdentity: '0x6a38d5C2ad241934E1FB3B4589AC4D13BB3927Fa',
-  RoundFactory: '0xb8F35a014562c81f8EC99307439094A15916B281',
-  StartupSecondaryMarket: '0x91A3cc97AE1d24B8f88c217A0Cf595277cdA63e7',
+  MockUSDC: '0xFFCEaa5F520c3b40d4A5A81422Aa6Ed32C978d81',
+  MockVault: '0x0a4010b637f77bA89B89b6d182b114242bBe78B1',
+  FndrIdentity: '0x88A684C010B9286bd0b0c71738Df673c4A733fF3',
+  RoundFactory: '0x456967939D5b14Ee0dEe8C7c05b1424132d5DDC8',
+  StartupSecondaryMarket: '0x24F62664f2055DC220156D4d263fd5590Af96e53',
 } as const;
 
 // ABIs
@@ -149,8 +149,16 @@ export const RoundFactoryABI = [
     type: "constructor",
     inputs: [
       { name: "_usdc", type: "address", internalType: "address" },
-      { name: "_sharedYieldVault", type: "address", internalType: "address" },
-      { name: "_fndrIdentity", type: "address", internalType: "address" },
+      {
+        name: "_sharedYieldVault",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_fndrIdentity",
+        type: "address",
+        internalType: "address",
+      },
     ],
     stateMutability: "nonpayable",
   },
@@ -166,7 +174,11 @@ export const RoundFactoryABI = [
     name: "createRound",
     inputs: [
       { name: "targetRaise", type: "uint256", internalType: "uint256" },
-      { name: "equityPercentage", type: "uint256", internalType: "uint256" },
+      {
+        name: "equityPercentage",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "sharePrice", type: "uint256", internalType: "uint256" },
       { name: "deadline", type: "uint256", internalType: "uint256" },
       { name: "companySymbol", type: "string", internalType: "string" },
@@ -206,7 +218,13 @@ export const RoundFactoryABI = [
     type: "function",
     name: "identity",
     inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "contract FndrIdentity" }],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "contract FndrIdentity",
+      },
+    ],
     stateMutability: "view",
   },
   {
@@ -219,7 +237,9 @@ export const RoundFactoryABI = [
   {
     type: "function",
     name: "markRoundInactive",
-    inputs: [{ name: "roundAddress", type: "address", internalType: "address" }],
+    inputs: [
+      { name: "roundAddress", type: "address", internalType: "address" },
+    ],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -241,7 +261,9 @@ export const RoundFactoryABI = [
     type: "function",
     name: "sharedYieldVault",
     inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "contract MockVault" }],
+    outputs: [
+      { name: "", type: "address", internalType: "contract MockVault" },
+    ],
     stateMutability: "view",
   },
   {
@@ -255,9 +277,24 @@ export const RoundFactoryABI = [
     type: "event",
     name: "RoundDeployed",
     inputs: [
-      { name: "roundAddress", type: "address", indexed: true, internalType: "address" },
-      { name: "founder", type: "address", indexed: true, internalType: "address" },
-      { name: "targetRaise", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "roundAddress",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "founder",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "targetRaise",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -278,15 +315,35 @@ export const RoundManagerABI = [
         type: "tuple",
         internalType: "struct RoundManager.RoundConfig",
         components: [
-          { name: "targetRaise", type: "uint256", internalType: "uint256" },
-          { name: "equityPercentage", type: "uint256", internalType: "uint256" },
-          { name: "sharePrice", type: "uint256", internalType: "uint256" },
+          {
+            name: "targetRaise",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "equityPercentage",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "sharePrice",
+            type: "uint256",
+            internalType: "uint256",
+          },
           { name: "deadline", type: "uint256", internalType: "uint256" },
         ],
       },
-      { name: "_companySymbol", type: "string", internalType: "string" },
+      {
+        name: "_companySymbol",
+        type: "string",
+        internalType: "string",
+      },
       { name: "_founder", type: "address", internalType: "address" },
-      { name: "_fndrIdentity", type: "address", internalType: "address" },
+      {
+        name: "_fndrIdentity",
+        type: "address",
+        internalType: "address",
+      },
     ],
     stateMutability: "nonpayable",
   },
@@ -358,7 +415,11 @@ export const RoundManagerABI = [
     inputs: [],
     outputs: [
       { name: "targetRaise", type: "uint256", internalType: "uint256" },
-      { name: "equityPercentage", type: "uint256", internalType: "uint256" },
+      {
+        name: "equityPercentage",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "sharePrice", type: "uint256", internalType: "uint256" },
       { name: "deadline", type: "uint256", internalType: "uint256" },
     ],
@@ -397,9 +458,21 @@ export const RoundManagerABI = [
     name: "getInvestorInfo",
     inputs: [{ name: "investor", type: "address", internalType: "address" }],
     outputs: [
-      { name: "contribution", type: "uint256", internalType: "uint256" },
-      { name: "equityTokens", type: "uint256", internalType: "uint256" },
-      { name: "yieldBalance", type: "uint256", internalType: "uint256" },
+      {
+        name: "contribution",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "equityTokens",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "yieldBalance",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "yieldClaimed", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "nonpayable",
@@ -409,9 +482,21 @@ export const RoundManagerABI = [
     name: "getInvestorInfoView",
     inputs: [{ name: "investor", type: "address", internalType: "address" }],
     outputs: [
-      { name: "contribution", type: "uint256", internalType: "uint256" },
-      { name: "equityTokens", type: "uint256", internalType: "uint256" },
-      { name: "yieldBalance", type: "uint256", internalType: "uint256" },
+      {
+        name: "contribution",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "equityTokens",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "yieldBalance",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "yieldClaimed", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "view",
@@ -421,11 +506,27 @@ export const RoundManagerABI = [
     name: "getRoundInfo",
     inputs: [],
     outputs: [
-      { name: "state", type: "uint8", internalType: "enum RoundManager.RoundState" },
+      {
+        name: "state",
+        type: "uint8",
+        internalType: "enum RoundManager.RoundState",
+      },
       { name: "totalRaised", type: "uint256", internalType: "uint256" },
-      { name: "totalWithdrawn", type: "uint256", internalType: "uint256" },
-      { name: "tokensIssued", type: "uint256", internalType: "uint256" },
-      { name: "investorCount", type: "uint256", internalType: "uint256" },
+      {
+        name: "totalWithdrawn",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "tokensIssued",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "investorCount",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "vaultBalance", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "nonpayable",
@@ -435,11 +536,27 @@ export const RoundManagerABI = [
     name: "getRoundInfoView",
     inputs: [],
     outputs: [
-      { name: "state", type: "uint8", internalType: "enum RoundManager.RoundState" },
+      {
+        name: "state",
+        type: "uint8",
+        internalType: "enum RoundManager.RoundState",
+      },
       { name: "totalRaised", type: "uint256", internalType: "uint256" },
-      { name: "totalWithdrawn", type: "uint256", internalType: "uint256" },
-      { name: "tokensIssued", type: "uint256", internalType: "uint256" },
-      { name: "investorCount", type: "uint256", internalType: "uint256" },
+      {
+        name: "totalWithdrawn",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "tokensIssued",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "investorCount",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "vaultBalance", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "view",
@@ -449,8 +566,16 @@ export const RoundManagerABI = [
     name: "getYieldInfo",
     inputs: [],
     outputs: [
-      { name: "totalVaultBalance", type: "uint256", internalType: "uint256" },
-      { name: "totalYieldAccrued", type: "uint256", internalType: "uint256" },
+      {
+        name: "totalVaultBalance",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "totalYieldAccrued",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "currentAPY", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "nonpayable",
@@ -460,8 +585,16 @@ export const RoundManagerABI = [
     name: "getYieldInfoView",
     inputs: [],
     outputs: [
-      { name: "totalVaultBalance", type: "uint256", internalType: "uint256" },
-      { name: "totalYieldAccrued", type: "uint256", internalType: "uint256" },
+      {
+        name: "totalVaultBalance",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "totalYieldAccrued",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "currentAPY", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "view",
@@ -506,14 +639,38 @@ export const RoundManagerABI = [
     name: "round",
     inputs: [],
     outputs: [
-      { name: "state", type: "uint8", internalType: "enum RoundManager.RoundState" },
+      {
+        name: "state",
+        type: "uint8",
+        internalType: "enum RoundManager.RoundState",
+      },
       { name: "founder", type: "address", internalType: "address" },
-      { name: "equityToken", type: "address", internalType: "contract StartupEquityToken" },
+      {
+        name: "equityToken",
+        type: "address",
+        internalType: "contract StartupEquityToken",
+      },
       { name: "totalRaised", type: "uint256", internalType: "uint256" },
-      { name: "totalWithdrawn", type: "uint256", internalType: "uint256" },
-      { name: "lastWithdrawal", type: "uint256", internalType: "uint256" },
-      { name: "tokensIssued", type: "uint256", internalType: "uint256" },
-      { name: "completionTime", type: "uint256", internalType: "uint256" },
+      {
+        name: "totalWithdrawn",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "lastWithdrawal",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "tokensIssued",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "completionTime",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     stateMutability: "view",
   },
@@ -542,17 +699,39 @@ export const RoundManagerABI = [
     type: "function",
     name: "vault",
     inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "contract MockVault" }],
+    outputs: [
+      { name: "", type: "address", internalType: "contract MockVault" },
+    ],
     stateMutability: "view",
   },
   {
     type: "event",
     name: "FounderWithdrawal",
     inputs: [
-      { name: "founder", type: "address", indexed: true, internalType: "address" },
-      { name: "principalAmount", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "yieldAmount", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "totalAmount", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "founder",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "principalAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "yieldAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "totalAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -560,10 +739,30 @@ export const RoundManagerABI = [
     type: "event",
     name: "InvestmentMade",
     inputs: [
-      { name: "investor", type: "address", indexed: true, internalType: "address" },
-      { name: "usdcAmount", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "tokensReceived", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "totalRaised", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "investor",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "usdcAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "tokensReceived",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "totalRaised",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -571,8 +770,18 @@ export const RoundManagerABI = [
     type: "event",
     name: "InvestorYieldClaimed",
     inputs: [
-      { name: "investor", type: "address", indexed: true, internalType: "address" },
-      { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "investor",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -580,9 +789,24 @@ export const RoundManagerABI = [
     type: "event",
     name: "PlatformFeeCollected",
     inputs: [
-      { name: "platformWallet", type: "address", indexed: true, internalType: "address" },
-      { name: "feeAmount", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "totalRaised", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "platformWallet",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "feeAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "totalRaised",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -590,9 +814,24 @@ export const RoundManagerABI = [
     type: "event",
     name: "RoundCompleted",
     inputs: [
-      { name: "totalRaised", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "completionTime", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "completionReason", type: "string", indexed: false, internalType: "string" },
+      {
+        name: "totalRaised",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "completionTime",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "completionReason",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
     ],
     anonymous: false,
   },
@@ -600,11 +839,36 @@ export const RoundManagerABI = [
     type: "event",
     name: "RoundCreated",
     inputs: [
-      { name: "founder", type: "address", indexed: true, internalType: "address" },
-      { name: "equityToken", type: "address", indexed: true, internalType: "address" },
-      { name: "companyName", type: "string", indexed: false, internalType: "string" },
-      { name: "targetRaise", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "equityPercentage", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "founder",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "equityToken",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "companyName",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+      {
+        name: "targetRaise",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "equityPercentage",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -612,9 +876,24 @@ export const RoundManagerABI = [
     type: "event",
     name: "YieldDistributed",
     inputs: [
-      { name: "totalYield", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "founderYield", type: "uint256", indexed: false, internalType: "uint256" },
-      { name: "investorYield", type: "uint256", indexed: false, internalType: "uint256" },
+      {
+        name: "totalYield",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "founderYield",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "investorYield",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
     ],
     anonymous: false,
   },
@@ -627,7 +906,11 @@ export const RoundManagerABI = [
   { type: "error", name: "InvalidFndrIdentity", inputs: [] },
   { type: "error", name: "InvalidFndrIdentityAddress", inputs: [] },
   { type: "error", name: "InvalidFounderAddress", inputs: [] },
-  { type: "error", name: "InvalidOperation", inputs: [{ name: "reason", type: "string", internalType: "string" }] },
+  {
+    type: "error",
+    name: "InvalidOperation",
+    inputs: [{ name: "reason", type: "string", internalType: "string" }],
+  },
   { type: "error", name: "InvalidPlatformWalletAddress", inputs: [] },
   { type: "error", name: "InvalidRoundConfig", inputs: [] },
   { type: "error", name: "InvalidRoundState", inputs: [] },
@@ -637,14 +920,22 @@ export const RoundManagerABI = [
   { type: "error", name: "InvalidVaultAddress", inputs: [] },
   { type: "error", name: "InvestmentExceedsTargetRaise", inputs: [] },
   { type: "error", name: "InvestmentTooSmall", inputs: [] },
-  { type: "error", name: "MultipleWithdrawalsWithinMonthExceedLimit", inputs: [] },
+  {
+    type: "error",
+    name: "MultipleWithdrawalsWithinMonthExceedLimit",
+    inputs: [],
+  },
   { type: "error", name: "OnlyFounderCanCall", inputs: [] },
   { type: "error", name: "RoundDeadlinePassed", inputs: [] },
   { type: "error", name: "RoundNotCompleted", inputs: [] },
   { type: "error", name: "RoundNotInFundraisingState", inputs: [] },
   { type: "error", name: "USDCTransferFailed", inputs: [] },
   { type: "error", name: "Unauthorized", inputs: [] },
-  { type: "error", name: "WithdrawalAmountMustBeGreaterThanZero", inputs: [] },
+  {
+    type: "error",
+    name: "WithdrawalAmountMustBeGreaterThanZero",
+    inputs: [],
+  },
 ] as const;
 
 export const StartupEquityTokenABI = [
@@ -1197,11 +1488,11 @@ export const MockUSDCABI = [
   },
 ] as const;
 
-// User Role Enum (matches contract)
+// User Role Enum (matches contract: enum UserRole { None, Founder, Investor })
 export enum UserRole {
   None = 0,
-  Investor = 1,
-  Founder = 2,
+  Founder = 1,
+  Investor = 2,
 }
 
 // Round State Enum (matches contract)

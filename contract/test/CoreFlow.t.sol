@@ -96,7 +96,8 @@ contract CoreFlowTest is Test {
             1000,             // equityPercentage
             1 * 1e6,          // sharePrice
             block.timestamp + 365 days,  // deadline
-            "TEST"            // companySymbol
+            "TEST",           // companySymbol
+            "ipfs://QmTestMetadata"  // metadataURI
         );
         vm.stopPrank();
 
@@ -187,7 +188,8 @@ contract CoreFlowTest is Test {
             1000,
             1 * 1e6,
             block.timestamp + 365 days,
-            "RESTRICT"
+            "RESTRICT",
+            ""
         );
         vm.stopPrank();
 
@@ -227,7 +229,8 @@ contract CoreFlowTest is Test {
             1000,
             1 * 1e6,
             block.timestamp + 365 days,
-            "YIELD"
+            "YIELD",
+            ""
         );
         vm.stopPrank();
 

@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { Link } from 'react-router-dom';
 
 const LandingNavbar = forwardRef<HTMLElement>((_, ref) => {
   return (
@@ -12,9 +13,9 @@ const LandingNavbar = forwardRef<HTMLElement>((_, ref) => {
           <a href="/marketplace" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Marketplace</a>
           <a href="/dashboard" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Dashboard</a>
           <a href="#how-it-works" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">How it Works</a>
-          <button className="bg-[#A2D5C6] text-[#000000] px-4 py-2 rounded-full font-semibold text-sm hover:bg-[#CFFFE2] transition-colors">
+          <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-4 py-2 rounded-full font-semibold text-sm hover:bg-[#CFFFE2] transition-colors">
             Launch App
-          </button>
+          </Link>
         </div>
       </div>
     </nav>

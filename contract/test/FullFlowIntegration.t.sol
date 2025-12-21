@@ -154,7 +154,8 @@ contract FullFlowIntegrationTest is Test {
             EQUITY_PERCENTAGE,
             SHARE_PRICE,
             block.timestamp + 365 days,
-            "TECH"
+            "TECH",
+            "ipfs://QmExampleMetadataHash"
         );
         vm.stopPrank();
 
@@ -510,7 +511,8 @@ contract FullFlowIntegrationTest is Test {
             1000,
             1 * 1e6,
             block.timestamp + 365 days,
-            "FAIL"
+            "FAIL",
+            ""
         );
         vm.stopPrank();
 

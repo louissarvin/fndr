@@ -182,13 +182,14 @@ export function useCreateRound() {
     equityPercentage: bigint,
     sharePrice: bigint,
     deadline: bigint,
-    companySymbol: string
+    companySymbol: string,
+    metadataURI: string
   ) => {
     writeContract({
       address: CONTRACTS.RoundFactory as `0x${string}`,
       abi: RoundFactoryABI,
       functionName: 'createRound',
-      args: [targetRaise, equityPercentage, sharePrice, deadline, companySymbol],
+      args: [targetRaise, equityPercentage, sharePrice, deadline, companySymbol, metadataURI],
     });
   };
 

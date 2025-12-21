@@ -26,7 +26,8 @@ contract RoundFactory {
     event RoundDeployed(
         address indexed roundAddress,
         address indexed founder,
-        uint256 targetRaise
+        uint256 targetRaise,
+        string metadataURI
     );
 
     constructor(address _usdc, address _sharedYieldVault, address _fndrIdentity) {
@@ -43,7 +44,8 @@ contract RoundFactory {
         uint256 equityPercentage,
         uint256 sharePrice,
         uint256 deadline,
-        string calldata companySymbol
+        string calldata companySymbol,
+        string calldata metadataURI
     ) external returns (address) {
         if (!identity.isFounder(msg.sender)) revert NotVerifiedFounder();
         if (founderToRound[msg.sender] != address(0)) revert RoundExists();
@@ -66,7 +68,8 @@ contract RoundFactory {
             config,
             companySymbol,
             msg.sender,
-            address(identity)
+            address(identity),
+            metadataURI
         );
 
         address roundAddress = address(newRound);
@@ -74,7 +77,7 @@ contract RoundFactory {
         isActiveRound[roundAddress] = true;
         founderToRound[msg.sender] = roundAddress;
 
-        emit RoundDeployed(roundAddress, msg.sender, targetRaise);
+        emit RoundDeployed(roundAddress, msg.sender, targetRaise, metadataURI);
         return roundAddress;
     }
 

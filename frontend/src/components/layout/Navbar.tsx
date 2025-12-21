@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Wallet, ChevronDown, Search, Droplets, UserCheck } from 'lucide-react';
+import { Menu, Wallet, ChevronDown, Search, Droplets, UserCheck, Briefcase } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,12 +10,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useUserRole } from '@/hooks/useContracts';
+import { UserRole } from '@/lib/contracts';
 import FaucetModal from '@/components/wallet/FaucetModal';
 import IdentityModal from '@/components/wallet/IdentityModal';
 
 export default function Navbar() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+  const { data: userRole } = useUserRole(address as `0x${string}` | undefined);
+  const isFounder = Number(userRole) === UserRole.Founder;
   const [isOpen, setIsOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
@@ -128,6 +132,17 @@ export default function Navbar() {
                     <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
                   </Link>
                 </DropdownMenuItem>
+                {isFounder && (
+                  <DropdownMenuItem asChild className="text-black hover:bg-transparent focus:bg-transparent focus:text-black cursor-pointer relative overflow-hidden group">
+                    <Link to="/founder">
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Briefcase className="h-3 w-3" />
+                        Founder Dashboard
+                      </span>
+                      <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 hover:bg-transparent focus:bg-transparent focus:text-red-600 cursor-pointer relative overflow-hidden group">
                   <span className="relative z-10">Disconnect</span>
                   <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-red-600 transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
@@ -156,22 +171,45 @@ export default function Navbar() {
             </button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px] bg-[#0A0A0A] border-[#1F1F1F]">
-            <div className="flex flex-col gap-6 mt-6">
-              {/* Mobile Search */}
-              <div className="flex items-center bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-3 py-2 gap-2">
-                <Search className="h-4 w-4 text-[#666666]" />
-                <input
-                  type="text"
-                  placeholder="Search markets..."
-                  className="bg-transparent text-sm text-white placeholder-[#666666] outline-none flex-1"
-                />
-              </div>
+            <div className="flex flex-col gap-4 mt-6">
+              {/* Mobile Navigation Links */}
+              <nav className="flex flex-col gap-2">
+                <Link
+                  to="/browse"
+                  onClick={() => setIsOpen(false)}
+                  className="text-white/70 hover:text-white px-4 py-3 rounded-lg hover:bg-[#1A1A1A] transition-colors"
+                >
+                  Browse
+                </Link>
+                <Link
+                  to="/marketplace"
+                  onClick={() => setIsOpen(false)}
+                  className="text-white/70 hover:text-white px-4 py-3 rounded-lg hover:bg-[#1A1A1A] transition-colors"
+                >
+                  Marketplace
+                </Link>
+                {isConnected && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="text-white/70 hover:text-white px-4 py-3 rounded-lg hover:bg-[#1A1A1A] transition-colors"
+                  >
+                    Portfolio
+                  </Link>
+                )}
+                {isConnected && isFounder && (
+                  <Link
+                    to="/founder"
+                    onClick={() => setIsOpen(false)}
+                    className="text-[#A2D5C6] hover:text-[#CFFFE2] px-4 py-3 rounded-lg hover:bg-[#A2D5C6]/10 transition-colors flex items-center gap-2"
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    Founder Dashboard
+                  </Link>
+                )}
+              </nav>
 
-              {/* Mobile Testnet */}
-              <button className="flex items-center justify-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-sm text-white font-medium">
-                <span className="w-2 h-2 rounded-full bg-[#A2D5C6]"></span>
-                Testnet
-              </button>
+              <div className="border-t border-[#2A2A2A] my-2" />
 
               {/* Mobile Faucet - only when connected */}
               {isConnected && (
@@ -203,7 +241,7 @@ export default function Navbar() {
 
               {/* Mobile Connect Wallet */}
               {isConnected && address ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center justify-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-sm text-white font-mono">
                     {shortenAddress(address)}
                   </div>
