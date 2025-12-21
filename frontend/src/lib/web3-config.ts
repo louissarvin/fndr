@@ -1,24 +1,13 @@
-import { http, createConfig } from 'wagmi';
-import { mainnet, base, arbitrum, polygon } from 'wagmi/chains';
-import { getDefaultConfig } from 'connectkit';
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { mantleSepolia } from './contracts';
 
 // Fndr Web3 Configuration
-export const config = createConfig(
-  getDefaultConfig({
-    chains: [mainnet, base, arbitrum, polygon],
-    transports: {
-      [mainnet.id]: http(),
-      [base.id]: http(),
-      [arbitrum.id]: http(),
-      [polygon.id]: http(),
-    },
-    walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
-    appName: 'Fndr',
-    appDescription: 'Yield-Enhanced Startup Fundraising Platform',
-    appUrl: 'https://fndr.app',
-    appIcon: 'https://fndr.app/logo.png',
-  })
-);
+export const config = getDefaultConfig({
+  appName: 'Fndr',
+  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
+  chains: [mantleSepolia],
+  ssr: false,
+});
 
 // Mock data for demo purposes
 export const MOCK_CAMPAIGNS = [

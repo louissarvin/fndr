@@ -283,3 +283,151 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* RainbowKit Custom Styling - Glassmorphism Theme */
+[data-rk] {
+  --rk-colors-accentColor: #A2D5C6 !important;
+  --rk-colors-accentColorForeground: #000000 !important;
+}
+
+/* Modal Overlay - blurred background */
+[data-rk] [data-testid="rk-modal-overlay"],
+[data-rk] [class*="ModalOverlay"] {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Modal Container - Glassmorphism */
+[data-rk] [role="dialog"],
+[data-rk] [class*="ModalContent"],
+[data-rk] [data-testid="rk-modal-content"] {
+  background: rgba(10, 10, 10, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(31, 31, 31, 0.8) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(162, 213, 198, 0.05) !important;
+}
+
+/* Modal inner box */
+[data-rk] [class*="ModalBody"],
+[data-rk] [class*="DialogContent"] {
+  background: transparent !important;
+}
+
+/* Wallet List Container */
+[data-rk] [class*="WalletList"],
+[data-rk] ul {
+  background: transparent !important;
+}
+
+/* Wallet Option Buttons - Glass style */
+[data-rk] [class*="WalletButton"],
+[data-rk] button[data-testid*="wallet"],
+[data-rk] [role="dialog"] button {
+  background: rgba(26, 26, 26, 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(42, 42, 42, 0.8) !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-rk] [class*="WalletButton"]:hover,
+[data-rk] button[data-testid*="wallet"]:hover,
+[data-rk] [role="dialog"] button:hover {
+  background: rgba(162, 213, 198, 0.15) !important;
+  border-color: rgba(162, 213, 198, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Modal Title */
+[data-rk] [class*="ModalTitle"],
+[data-rk] h1 {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+}
+
+/* Section Labels (Popular, etc.) */
+[data-rk] [class*="SectionHeader"],
+[data-rk] [role="dialog"] span[class*="Label"] {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Wallet Names */
+[data-rk] [class*="WalletName"],
+[data-rk] [role="dialog"] button span {
+  color: #FFFFFF !important;
+}
+
+/* Close Button */
+[data-rk] [class*="CloseButton"],
+[data-rk] button[aria-label="Close"] {
+  background: rgba(42, 42, 42, 0.6) !important;
+  border: 1px solid rgba(42, 42, 42, 0.8) !important;
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-rk] [class*="CloseButton"]:hover,
+[data-rk] button[aria-label="Close"]:hover {
+  background: rgba(162, 213, 198, 0.15) !important;
+  border-color: rgba(162, 213, 198, 0.3) !important;
+  color: #FFFFFF !important;
+}
+
+/* Footer Links */
+[data-rk] [class*="ModalFooter"],
+[data-rk] a {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-rk] a:hover {
+  color: #A2D5C6 !important;
+}
+
+/* "Learn More" accent link */
+[data-rk] [class*="LearnMore"],
+[data-rk] a[href*="learn"] {
+  color: #A2D5C6 !important;
+}
+
+/* Recent tag */
+[data-rk] [class*="RecentBadge"],
+[data-rk] [class*="recent"] {
+  background: rgba(162, 213, 198, 0.2) !important;
+  color: #A2D5C6 !important;
+  border-radius: 6px !important;
+}
+
+/* QR Code container (for WalletConnect) */
+[data-rk] [class*="QRCode"] {
+  background: rgba(26, 26, 26, 0.8) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+}
+
+/* Scrollbar inside modal */
+[data-rk] [role="dialog"] ::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-rk] [role="dialog"] ::-webkit-scrollbar-track {
+  background: rgba(26, 26, 26, 0.5);
+  border-radius: 3px;
+}
+
+[data-rk] [role="dialog"] ::-webkit-scrollbar-thumb {
+  background: rgba(162, 213, 198, 0.3);
+  border-radius: 3px;
+}
+
+[data-rk] [role="dialog"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(162, 213, 198, 0.5);
+}

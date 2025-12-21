@@ -1,0 +1,442 @@
+import { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import QRCode from 'react-qr-code';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  UserCheck,
+  Briefcase,
+  TrendingUp,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  BadgeCheck,
+  Shield,
+  QrCode,
+  ArrowRight,
+} from 'lucide-react';
+import {
+  useIsUserRegistered,
+  useUserRole,
+  useIsVerifiedUser,
+  useIsZKPassportVerified,
+  useRegisterUserRole,
+} from '@/hooks/useContracts';
+import { useZKPassportVerification } from '@/hooks/useZKPassportVerification';
+import { UserRole } from '@/lib/contracts';
+
+interface IdentityModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const roleLabels: Record<number, string> = {
+  [UserRole.None]: 'Not Registered',
+  [UserRole.Investor]: 'Investor',
+  [UserRole.Founder]: 'Founder',
+};
+
+type Step = 'zkpass' | 'role';
+
+export default function IdentityModal({ open, onOpenChange }: IdentityModalProps) {
+  const { address, isConnected } = useAccount();
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [currentStep, setCurrentStep] = useState<Step>('zkpass');
+
+  // Contract reads
+  const { data: isRegistered, refetch: refetchRegistered } = useIsUserRegistered(address);
+  const { data: userRole, refetch: refetchRole } = useUserRole(address);
+  const { data: isVerified } = useIsVerifiedUser(address);
+  const { data: isZKVerified, refetch: refetchZKVerified } = useIsZKPassportVerified(address);
+
+  // ZKPassport verification hook
+  const {
+    message: zkMessage,
+    queryUrl,
+    isLoading: isZKLoading,
+    isConfirmed: isZKConfirmed,
+    createVerificationRequest,
+    resetVerification,
+    loadingStates,
+  } = useZKPassportVerification();
+
+  // Contract write for role registration
+  const {
+    registerRole,
+    isPending: isRolePending,
+    isConfirming: isRoleConfirming,
+    isSuccess: isRoleSuccess,
+    error: roleError,
+  } = useRegisterUserRole();
+
+  // Determine current step based on ZK verification status
+  useEffect(() => {
+    if (isZKVerified) {
+      setCurrentStep('role');
+    } else {
+      setCurrentStep('zkpass');
+    }
+  }, [isZKVerified]);
+
+  // Handle ZK verification success
+  useEffect(() => {
+    if (isZKConfirmed) {
+      refetchZKVerified();
+      // Auto-advance to role selection after a short delay
+      setTimeout(() => {
+        setCurrentStep('role');
+      }, 1500);
+    }
+  }, [isZKConfirmed, refetchZKVerified]);
+
+  // Handle successful role registration
+  useEffect(() => {
+    if (isRoleSuccess) {
+      setShowSuccess(true);
+      setSelectedRole(null);
+      refetchRegistered();
+      refetchRole();
+
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isRoleSuccess, refetchRegistered, refetchRole]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      resetVerification();
+      setSelectedRole(null);
+      setShowSuccess(false);
+    }
+  }, [open, resetVerification]);
+
+  const handleRegister = () => {
+    if (selectedRole !== null && !isRolePending && !isRoleConfirming) {
+      registerRole(selectedRole);
+    }
+  };
+
+  const handleStartZKVerification = () => {
+    createVerificationRequest();
+  };
+
+  const isRoleLoading = isRolePending || isRoleConfirming;
+  const currentRole = userRole !== undefined ? Number(userRole) : UserRole.None;
+
+  // Get loading message for ZK process
+  const getZKLoadingMessage = () => {
+    if (loadingStates.generatingProofs) return 'Generating proof...';
+    if (loadingStates.backendVerifying) return 'Verifying proof...';
+    if (loadingStates.contractPending) return 'Confirm in wallet...';
+    if (loadingStates.contractConfirming) return 'Confirming on blockchain...';
+    return zkMessage || 'Processing...';
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#1F1F1F] rounded-2xl max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="p-2 bg-[#A2D5C6]/20 rounded-xl">
+              <UserCheck className="h-6 w-6 text-[#A2D5C6]" />
+            </div>
+            Identity Verification
+          </DialogTitle>
+          <DialogDescription className="text-white/60">
+            {!isZKVerified
+              ? 'Verify your identity with ZKPassport, then choose your role.'
+              : 'Select your role to participate in the FNDR ecosystem.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-6 space-y-6">
+          {/* Step Indicator */}
+          {!isRegistered && currentRole === UserRole.None && isConnected && (
+            <div className="flex items-center justify-center gap-2">
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                currentStep === 'zkpass' ? 'bg-[#A2D5C6]/20' : 'bg-[#1A1A1A]'
+              }`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  isZKVerified ? 'bg-[#A2D5C6] text-black' : currentStep === 'zkpass' ? 'bg-[#A2D5C6] text-black' : 'bg-[#2A2A2A] text-white/50'
+                }`}>
+                  {isZKVerified ? <CheckCircle2 className="h-4 w-4" /> : '1'}
+                </div>
+                <span className={`text-sm ${currentStep === 'zkpass' || isZKVerified ? 'text-white' : 'text-white/50'}`}>
+                  ZKPassport
+                </span>
+              </div>
+              <ArrowRight className="h-4 w-4 text-white/30" />
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                currentStep === 'role' ? 'bg-[#A2D5C6]/20' : 'bg-[#1A1A1A]'
+              }`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  currentStep === 'role' ? 'bg-[#A2D5C6] text-black' : 'bg-[#2A2A2A] text-white/50'
+                }`}>
+                  2
+                </div>
+                <span className={`text-sm ${currentStep === 'role' ? 'text-white' : 'text-white/50'}`}>
+                  Role
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Already Registered Status */}
+          {isRegistered && currentRole !== UserRole.None && (
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#A2D5C6]/20 rounded-xl">
+                  {currentRole === UserRole.Founder ? (
+                    <Briefcase className="h-8 w-8 text-[#A2D5C6]" />
+                  ) : (
+                    <TrendingUp className="h-8 w-8 text-[#A2D5C6]" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-white/50 text-sm mb-1">Registered As</p>
+                  <p className="text-xl font-bold text-white">{roleLabels[currentRole]}</p>
+                </div>
+                <div className="ml-auto">
+                  <BadgeCheck className="h-8 w-8 text-[#A2D5C6]" />
+                </div>
+              </div>
+
+              {/* Verification Status */}
+              <div className="mt-4 pt-4 border-t border-[#A2D5C6]/20 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Shield className={`h-4 w-4 ${isZKVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`} />
+                  <span className={`text-sm ${isZKVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`}>
+                    {isZKVerified ? 'ZKPassport Verified' : 'ZKPassport Not Verified'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className={`h-4 w-4 ${isVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`} />
+                  <span className={`text-sm ${isVerified ? 'text-[#A2D5C6]' : 'text-white/40'}`}>
+                    {isVerified ? 'Fully Verified' : 'Verification Incomplete'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Success Messages */}
+          {showSuccess && (
+            <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">Successfully registered!</p>
+            </div>
+          )}
+
+          {isZKConfirmed && currentStep === 'zkpass' && (
+            <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">ZKPassport verified! Proceeding to role selection...</p>
+            </div>
+          )}
+
+          {/* Error Messages */}
+          {roleError && (
+            <div className="flex items-center gap-3 bg-red-500/20 text-red-400 rounded-xl p-4">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">
+                {roleError.message?.includes('already registered')
+                  ? 'You are already registered.'
+                  : roleError.message?.includes('UserNotVerified')
+                  ? 'You need to verify with ZKPassport first.'
+                  : 'Registration failed. Please try again.'}
+              </p>
+            </div>
+          )}
+
+          {/* Registration Flow */}
+          {!isConnected ? (
+            <div className="text-center py-4">
+              <p className="text-white/50 text-sm">Connect your wallet to register.</p>
+            </div>
+          ) : !isRegistered || currentRole === UserRole.None ? (
+            <>
+              {/* Step 1: ZKPassport Verification */}
+              {currentStep === 'zkpass' && !isZKVerified && (
+                <div className="space-y-4">
+                  <div className="bg-[#1A1A1A]/60 rounded-xl p-4 border border-[#2A2A2A]">
+                    <div className="flex items-center gap-3 mb-3">
+                      <QrCode className="h-5 w-5 text-[#A2D5C6]" />
+                      <h3 className="font-semibold text-white">ZKPassport Verification</h3>
+                    </div>
+                    <p className="text-sm text-white/60 mb-4">
+                      Scan the QR code with the ZKPassport app to verify your identity anonymously.
+                    </p>
+
+                    {queryUrl ? (
+                      <div className="space-y-4">
+                        {/* QR Code Display */}
+                        <div className="bg-white p-4 rounded-xl mx-auto w-fit">
+                          <QRCode value={queryUrl} size={180} />
+                        </div>
+
+                        {/* Status Message */}
+                        {isZKLoading && (
+                          <div className="flex items-center justify-center gap-2 text-[#A2D5C6]">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">{getZKLoadingMessage()}</span>
+                          </div>
+                        )}
+
+                        {zkMessage && !isZKLoading && (
+                          <p className="text-center text-sm text-white/60">{zkMessage}</p>
+                        )}
+
+                        {/* Reset Button */}
+                        <button
+                          onClick={resetVerification}
+                          className="w-full py-2 text-sm text-white/50 hover:text-white transition-colors"
+                        >
+                          Cancel and try again
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleStartZKVerification}
+                        disabled={isZKLoading}
+                        className="w-full py-4 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isZKLoading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Initializing...
+                          </>
+                        ) : (
+                          <>
+                            <QrCode className="h-5 w-5" />
+                            Start ZKPassport Verification
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Role Selection */}
+              {(currentStep === 'role' || isZKVerified) && (
+                <div className="space-y-4">
+                  {/* ZK Verified Badge */}
+                  <div className="flex items-center gap-2 bg-[#A2D5C6]/10 rounded-lg px-3 py-2">
+                    <Shield className="h-4 w-4 text-[#A2D5C6]" />
+                    <span className="text-sm text-[#A2D5C6]">ZKPassport Verified</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-white/70 text-sm font-medium">Choose your role:</p>
+
+                    {/* Investor Option */}
+                    <button
+                      onClick={() => setSelectedRole(UserRole.Investor)}
+                      className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                        selectedRole === UserRole.Investor
+                          ? 'border-[#A2D5C6] bg-[#A2D5C6]/15'
+                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#A2D5C6]/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl ${
+                          selectedRole === UserRole.Investor ? 'bg-[#A2D5C6]/30' : 'bg-[#2A2A2A]'
+                        }`}>
+                          <TrendingUp className={`h-6 w-6 ${
+                            selectedRole === UserRole.Investor ? 'text-[#A2D5C6]' : 'text-white/60'
+                          }`} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">Investor</p>
+                          <p className="text-sm text-white/50">
+                            Invest in startups and earn yield on your capital
+                          </p>
+                        </div>
+                        {selectedRole === UserRole.Investor && (
+                          <CheckCircle2 className="h-5 w-5 text-[#A2D5C6] ml-auto" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Founder Option */}
+                    <button
+                      onClick={() => setSelectedRole(UserRole.Founder)}
+                      className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                        selectedRole === UserRole.Founder
+                          ? 'border-[#A2D5C6] bg-[#A2D5C6]/15'
+                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#A2D5C6]/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl ${
+                          selectedRole === UserRole.Founder ? 'bg-[#A2D5C6]/30' : 'bg-[#2A2A2A]'
+                        }`}>
+                          <Briefcase className={`h-6 w-6 ${
+                            selectedRole === UserRole.Founder ? 'text-[#A2D5C6]' : 'text-white/60'
+                          }`} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">Founder</p>
+                          <p className="text-sm text-white/50">
+                            Raise funds for your startup with yield-enhanced rounds
+                          </p>
+                        </div>
+                        {selectedRole === UserRole.Founder && (
+                          <CheckCircle2 className="h-5 w-5 text-[#A2D5C6] ml-auto" />
+                        )}
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Register Button */}
+                  <button
+                    onClick={handleRegister}
+                    disabled={selectedRole === null || isRoleLoading}
+                    className="w-full py-4 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isRoleLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {isRolePending ? 'Confirm in Wallet...' : 'Registering...'}
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-5 w-5" />
+                        Register as {selectedRole !== null ? roleLabels[selectedRole] : '...'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-white/50 text-sm">
+                You are already registered as {roleLabels[currentRole]}.
+              </p>
+            </div>
+          )}
+
+          {/* Info */}
+          <div className="text-center">
+            <p className="text-white/40 text-xs">
+              {currentStep === 'zkpass' && !isZKVerified
+                ? 'ZKPassport verification ensures you are a real person without revealing personal data.'
+                : 'Your role determines what actions you can perform on the platform.'}
+            </p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

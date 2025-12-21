@@ -1,26 +1,33 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Wallet, ChevronDown, Search } from 'lucide-react';
+import { Menu, Wallet, ChevronDown, Search, Droplets, UserCheck } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useDisconnect } from 'wagmi';
+import FaucetModal from '@/components/wallet/FaucetModal';
+import IdentityModal from '@/components/wallet/IdentityModal';
 
 export default function Navbar() {
-  const [isConnected, setIsConnected] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const [isOpen, setIsOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
-
-  const handleConnect = () => {
-    setIsConnected(true);
-  };
+  const [faucetModalOpen, setFaucetModalOpen] = useState(false);
+  const [identityModalOpen, setIdentityModalOpen] = useState(false);
 
   const handleDisconnect = () => {
-    setIsConnected(false);
+    disconnect();
+  };
+
+  const shortenAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
   // Handle keyboard shortcut ⌘K
@@ -82,20 +89,35 @@ export default function Navbar() {
             </div>
           </div>
 
+          {/* Faucet Button - only when connected */}
+          {isConnected && (
+            <button
+              onClick={() => setFaucetModalOpen(true)}
+              className="flex items-center gap-2 bg-transparent text-[#A2D5C6] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#A2D5C6] hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 transition-all duration-300"
+            >
+              <Droplets className="h-4 w-4" />
+              Faucet
+            </button>
+          )}
+
           {/* Verify Identity Button - only when connected */}
           {isConnected && (
-            <button className="bg-transparent text-[#A2D5C6] px-5 py-2 rounded-2xl text-sm font-semibold border border-[#A2D5C6] hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 transition-all duration-300">
-              Verify Identity
+            <button
+              onClick={() => setIdentityModalOpen(true)}
+              className="flex items-center gap-2 bg-transparent text-[#A2D5C6] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#A2D5C6] hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 transition-all duration-300"
+            >
+              <UserCheck className="h-4 w-4" />
+              Identity
             </button>
           )}
 
           {/* Connect Wallet Button */}
-          {isConnected ? (
+          {isConnected && address ? (
             <DropdownMenu open={walletDropdownOpen} onOpenChange={setWalletDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <button className={`flex items-center gap-2 bg-[#A2D5C6] text-black px-5 py-2.5 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#CFFFE2] hover:border-[#CFFFE2] transition-all duration-200 ${walletDropdownOpen ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'}`}>
                   <Wallet className="h-4 w-4" />
-                  <span className="font-mono text-xs">0x7a...3f9d</span>
+                  <span className="font-mono text-xs">{shortenAddress(address)}</span>
                   <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${walletDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
               </DropdownMenuTrigger>
@@ -113,12 +135,16 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <button
-              onClick={handleConnect}
-              className="flex items-center gap-2 bg-[#A2D5C6] text-black rounded-2xl px-5 py-2.5 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#CFFFE2] hover:border-[#CFFFE2] transition-colors"
-            >
-              Connect Wallet
-            </button>
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="flex items-center gap-2 bg-[#A2D5C6] text-black rounded-2xl px-5 py-2.5 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#CFFFE2] hover:border-[#CFFFE2] transition-colors"
+                >
+                  Connect Wallet
+                </button>
+              )}
+            </ConnectButton.Custom>
           )}
         </div>
 
@@ -147,33 +173,67 @@ export default function Navbar() {
                 Testnet
               </button>
 
+              {/* Mobile Faucet - only when connected */}
+              {isConnected && (
+                <button
+                  onClick={() => {
+                    setFaucetModalOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 bg-transparent text-[#A2D5C6] rounded-lg px-4 py-3 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all duration-300"
+                >
+                  <Droplets className="h-4 w-4" />
+                  Get Test USDC
+                </button>
+              )}
+
               {/* Mobile Verify Identity - only when connected */}
               {isConnected && (
-                <button className="flex items-center justify-center gap-2 bg-transparent text-[#A2D5C6] rounded-lg px-4 py-3 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all duration-300">
+                <button
+                  onClick={() => {
+                    setIdentityModalOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 bg-transparent text-[#A2D5C6] rounded-lg px-4 py-3 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all duration-300"
+                >
+                  <UserCheck className="h-4 w-4" />
                   Verify Identity
                 </button>
               )}
 
               {/* Mobile Connect Wallet */}
-              {isConnected ? (
-                <button
-                  onClick={handleDisconnect}
-                  className="flex items-center justify-center gap-2 bg-red-500/20 text-red-400 rounded-lg px-4 py-3 text-sm font-medium border border-red-500/30"
-                >
-                  Disconnect Wallet
-                </button>
+              {isConnected && address ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-sm text-white font-mono">
+                    {shortenAddress(address)}
+                  </div>
+                  <button
+                    onClick={handleDisconnect}
+                    className="flex items-center justify-center gap-2 bg-red-500/20 text-red-400 rounded-lg px-4 py-3 text-sm font-medium border border-red-500/30"
+                  >
+                    Disconnect Wallet
+                  </button>
+                </div>
               ) : (
-                <button
-                  onClick={handleConnect}
-                  className="flex items-center justify-center gap-2 bg-white text-black rounded-lg px-4 py-3 text-sm font-medium"
-                >
-                  Connect Wallet
-                </button>
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <button
+                      onClick={openConnectModal}
+                      className="flex items-center justify-center gap-2 bg-white text-black rounded-lg px-4 py-3 text-sm font-medium"
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
+                </ConnectButton.Custom>
               )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Modals */}
+      <FaucetModal open={faucetModalOpen} onOpenChange={setFaucetModalOpen} />
+      <IdentityModal open={identityModalOpen} onOpenChange={setIdentityModalOpen} />
     </header>
   );
 }
