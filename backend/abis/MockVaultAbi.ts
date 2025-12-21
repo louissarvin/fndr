@@ -1,0 +1,81 @@
+export const MockVaultABI = [
+  {
+    type: "constructor",
+    inputs: [
+      { name: "assetAddress", type: "address", internalType: "address" },
+      { name: "_name", type: "string", internalType: "string" },
+      { name: "_symbol", type: "string", internalType: "string" },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "ANNUAL_YIELD_RATE",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "asset",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "convertToAssets",
+    inputs: [{ name: "shares", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "convertToShares",
+    inputs: [{ name: "assets", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "deposit",
+    inputs: [
+      { name: "assets", type: "uint256", internalType: "uint256" },
+      { name: "receiver", type: "address", internalType: "address" },
+    ],
+    outputs: [{ name: "shares", type: "uint256", internalType: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getCurrentAPY",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "pure",
+  },
+  {
+    type: "function",
+    name: "totalAssets",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    inputs: [
+      { name: "assets", type: "uint256", internalType: "uint256" },
+      { name: "receiver", type: "address", internalType: "address" },
+      { name: "owner", type: "address", internalType: "address" },
+    ],
+    outputs: [{ name: "shares", type: "uint256", internalType: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+] as const;
