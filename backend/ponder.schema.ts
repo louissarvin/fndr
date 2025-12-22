@@ -22,6 +22,7 @@ export const round = onchainTable("round", (t) => ({
   founder: t.text().notNull(),
   equityToken: t.text(),
   companyName: t.text(),
+  metadataURI: t.text(), // IPFS URI for metadata (ipfs://...)
   targetRaise: t.bigint().notNull(),
   equityPercentage: t.bigint(),
   totalRaised: t.bigint().notNull().default(0n),

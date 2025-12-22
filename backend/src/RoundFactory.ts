@@ -6,6 +6,7 @@ ponder.on("RoundFactory:RoundDeployed", async ({ event, context }) => {
   const roundId = event.args.roundAddress.toLowerCase();
   const founder = event.args.founder.toLowerCase();
   const targetRaise = event.args.targetRaise;
+  const metadataURI = event.args.metadataURI;
   const timestamp = event.block.timestamp;
 
   // Create new round entry
@@ -13,6 +14,7 @@ ponder.on("RoundFactory:RoundDeployed", async ({ event, context }) => {
     id: roundId,
     founder: founder,
     targetRaise: targetRaise,
+    metadataURI: metadataURI,
     totalRaised: 0n,
     totalWithdrawn: 0n,
     tokensIssued: 0n,

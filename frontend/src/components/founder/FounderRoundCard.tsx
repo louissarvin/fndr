@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { formatUnits, parseUnits } from 'viem';
-import { useRoundInfo, useRoundConfig, useFounderWithdraw, formatUSDCDisplay, USDC_DECIMALS } from '@/hooks/useContracts';
+import { formatUnits } from 'viem';
+import { useRoundInfo, useRoundConfig, useRoundData, useFounderWithdraw, useCompleteRound, USDC_DECIMALS, SECONDS_PER_MONTH } from '@/hooks/useContracts';
 import type { Round } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   Users,
-  Clock,
   TrendingUp,
-  Wallet,
   DollarSign,
   ArrowDownToLine,
   Loader2,
@@ -15,10 +14,25 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  Rocket,
+  Clock,
 } from 'lucide-react';
 
 interface FounderRoundCardProps {
   round: Round;
+}
+
+const MAX_WITHDRAWAL_RATE = 200; // 2% in basis points
+const BASIS_POINTS = 10000;
+
+function formatUSDCValue(value: bigint): string {
+  const num = Number(formatUnits(value, USDC_DECIMALS));
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
 }
 
 function formatUSDC(value: string): string {
@@ -38,27 +52,53 @@ function calculateProgress(raised: string, target: string): number {
   return Math.min(Math.round((raisedNum / targetNum) * 100), 100);
 }
 
-function getRoundStateLabel(state: number): { label: string; color: string } {
+function formatTimeRemaining(seconds: number): string {
+  if (seconds <= 0) return '';
+
+  const days = Math.floor(seconds / (24 * 60 * 60));
+  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((seconds % (60 * 60)) / 60);
+
+  if (days > 0) {
+    return `${days}d ${hours}h remaining`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  } else {
+    return `${minutes}m remaining`;
+  }
+}
+
+function getRoundStateLabel(state: number, progress: number): { label: string; color: string } {
+  // If 100% funded but state is still 0, show "Ready to Complete"
+  if (state === 0 && progress >= 100) {
+    return { label: 'Ready to Complete', color: 'bg-[#A2D5C6] text-black' };
+  }
+
   switch (state) {
     case 0:
       return { label: 'Fundraising', color: 'bg-[#A2D5C6] text-black' };
     case 1:
-      return { label: 'Completed', color: 'bg-blue-500 text-white' };
+      return { label: 'Completed', color: 'bg-[#A2D5C6] text-black' };
     case 2:
-      return { label: 'Cancelled', color: 'bg-red-500 text-white' };
+      return { label: 'Fully Deployed', color: 'bg-[#A2D5C6] text-black' };
     default:
-      return { label: 'Unknown', color: 'bg-gray-500 text-white' };
+      return { label: 'Unknown', color: 'bg-[#A2D5C6] text-black' };
   }
 }
 
 export default function FounderRoundCard({ round }: FounderRoundCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+
+  // Fetch IPFS metadata
+  const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round.metadataURI);
+
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const companyName = metadata?.name || round.companyName || `Round ${round.id.slice(0, 8)}...`;
 
   // Get real-time round info from contract
   const { data: roundInfo } = useRoundInfo(round.id as `0x${string}`);
   const { data: roundConfig } = useRoundConfig(round.id as `0x${string}`);
+  const { data: roundData } = useRoundData(round.id as `0x${string}`);
 
   // Withdraw hook
   const {
@@ -69,21 +109,50 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
     error: withdrawError,
   } = useFounderWithdraw(round.id as `0x${string}`);
 
+  // Complete round hook
+  const {
+    completeRound,
+    isPending: isCompletePending,
+    isConfirming: isCompleteConfirming,
+    isSuccess: isCompleteSuccess,
+    error: completeError,
+  } = useCompleteRound(round.id as `0x${string}`);
+
   const progress = calculateProgress(round.totalRaised, round.targetRaise);
-  const stateInfo = getRoundStateLabel(round.state);
+  const stateInfo = getRoundStateLabel(round.state, progress);
 
-  // Calculate available to withdraw (total raised - total withdrawn)
-  const availableToWithdraw = BigInt(round.totalRaised) - BigInt(round.totalWithdrawn);
+  // Calculate vault balance (total raised - total withdrawn = what's still in vault)
+  const vaultBalance = BigInt(round.totalRaised) - BigInt(round.totalWithdrawn);
 
-  const handleWithdraw = () => {
-    if (!withdrawAmount) return;
-    const amountWei = parseUnits(withdrawAmount, USDC_DECIMALS);
-    founderWithdraw(amountWei);
-  };
+  // Calculate 2% max monthly withdrawal
+  const maxMonthlyWithdrawal = (vaultBalance * BigInt(MAX_WITHDRAWAL_RATE)) / BigInt(BASIS_POINTS);
 
-  const handleMaxWithdraw = () => {
-    const maxAmount = Number(formatUnits(availableToWithdraw, USDC_DECIMALS));
-    setWithdrawAmount(maxAmount.toString());
+  // Get lastWithdrawal (index 5) and completionTime (index 7) from contract data
+  const lastWithdrawalTime = roundData ? Number(roundData[5]) : 0;
+  const completionTime = roundData ? Number(roundData[7]) : 0;
+
+  // Use lastWithdrawal if a withdrawal was made, otherwise use completionTime
+  // This ensures the founder waits the cooldown period even for the first withdrawal
+  const cooldownStartTime = lastWithdrawalTime > 0 ? lastWithdrawalTime : completionTime;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  const timeSinceCooldownStart = currentTime - cooldownStartTime;
+  const timeUntilNextWithdrawal = SECONDS_PER_MONTH - timeSinceCooldownStart;
+  // Can withdraw if cooldown passed. If data not loaded yet (cooldownStartTime === 0 but roundData exists), don't allow
+  const canWithdrawNow = roundData ? timeUntilNextWithdrawal <= 0 : false;
+
+  // Round is completed and can withdraw (also check time restriction)
+  const canWithdraw = round.state === 1 && maxMonthlyWithdrawal > BigInt(0) && canWithdrawNow;
+
+  // Round is completed but needs to wait for cooldown
+  const isWithdrawalLocked = round.state === 1 && maxMonthlyWithdrawal > BigInt(0) && !canWithdrawNow;
+
+  // Round needs to be completed first (100% funded but state is still 0)
+  const needsCompletion = round.state === 0 && progress >= 100;
+
+  const handleWithdrawMax = () => {
+    if (maxMonthlyWithdrawal <= BigInt(0)) return;
+    founderWithdraw(maxMonthlyWithdrawal);
   };
 
   return (
@@ -92,12 +161,20 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
       <div className="p-5 border-b border-white/10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-              <Wallet className="h-5 w-5 text-[#A2D5C6]" />
+            <div className="h-12 w-12 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden">
+              {isLoadingMetadata ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]/50" />
+              ) : logoUrl ? (
+                <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-[#A2D5C6]">
+                  {companyName.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
               <h3 className="font-bold text-lg text-white">
-                {round.companyName || `Round ${round.id.slice(0, 8)}...`}
+                {companyName}
               </h3>
               <p className="text-sm text-white/60">
                 Created {new Date(Number(round.createdAt) * 1000).toLocaleDateString()}
@@ -135,21 +212,18 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
       <div className="grid grid-cols-3 divide-x divide-white/10 border-b border-white/10">
         <div className="p-4 text-center">
           <div className="flex items-center justify-center gap-1 text-white/60 mb-1">
-            <Users className="h-4 w-4" />
             <span className="text-xs">Investors</span>
           </div>
           <p className="text-lg font-bold text-white">{round.investorCount}</p>
         </div>
         <div className="p-4 text-center">
           <div className="flex items-center justify-center gap-1 text-white/60 mb-1">
-            <TrendingUp className="h-4 w-4" />
             <span className="text-xs">APY</span>
           </div>
           <p className="text-lg font-bold text-[#A2D5C6]">6%</p>
         </div>
         <div className="p-4 text-center">
           <div className="flex items-center justify-center gap-1 text-white/60 mb-1">
-            <DollarSign className="h-4 w-4" />
             <span className="text-xs">Withdrawn</span>
           </div>
           <p className="text-lg font-bold text-white">
@@ -176,89 +250,148 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
       {/* Expanded Actions */}
       {isExpanded && (
         <div className="p-5 bg-black/20 border-t border-white/10 space-y-4">
-          {/* Available to Withdraw */}
-          <div className="bg-white/5 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-white/60">Available to Withdraw</span>
-              <span className="text-lg font-bold text-[#A2D5C6]">
-                {formatUSDC(availableToWithdraw.toString())}
+          {/* Info: Round needs completion */}
+          {needsCompletion && !isCompleteSuccess && (
+            <div className="bg-[#A2D5C6]/10 rounded-xl p-4 space-y-4">
+              <div className="flex items-start gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-[#A2D5C6]">Round Ready to Complete</p>
+                  <p className="text-xs text-white/60 mt-1">
+                    Your round is 100% funded! Click the button below to complete the round on-chain.
+                    Once completed, you can withdraw up to 2% of funds per month.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={completeRound}
+                disabled={isCompletePending || isCompleteConfirming}
+                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6] text-black py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50"
+              >
+                {isCompletePending || isCompleteConfirming ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    {isCompletePending ? 'Confirm in Wallet...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="h-5 w-5" />
+                    Complete Round
+                  </>
+                )}
+              </button>
+              {completeError && (
+                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-lg">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{completeError.message?.slice(0, 80) || 'Transaction failed'}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Success state: waiting for indexer to update */}
+          {isCompleteSuccess && needsCompletion && (
+            <div className="bg-[#A2D5C6]/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-6 w-6 text-[#A2D5C6]" />
+                <div>
+                  <p className="text-sm font-semibold text-[#A2D5C6]">Round Completed!</p>
+                  <p className="text-xs text-white/60 mt-1">
+                    Transaction confirmed. Waiting for data to sync...
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-white/60 py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Withdrawal options will appear shortly</span>
+              </div>
+            </div>
+          )}
+
+          {/* Withdrawal Info */}
+          <div className="bg-white/5 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-white/60">Vault Balance</span>
+              <span className="text-lg font-bold text-white">
+                {formatUSDCValue(vaultBalance)}
               </span>
             </div>
-            {round.state === 0 && (
-              <p className="text-xs text-white/40">
-                Withdrawals are limited to 25% per month while fundraising is active.
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-white/60">Max Withdrawal (2%/month)</span>
+              <span className="text-lg font-bold text-[#A2D5C6]">
+                {formatUSDCValue(maxMonthlyWithdrawal)}
+              </span>
+            </div>
+
+            {round.state === 0 && !needsCompletion && (
+              <p className="text-xs text-white/40 pt-2 border-t border-white/10">
+                Withdrawals are only available after the round is completed.
+              </p>
+            )}
+            {round.state === 1 && (
+              <p className="text-xs text-white/40 pt-2 border-t border-white/10">
+                You can withdraw up to 2% of the vault balance per month.
               </p>
             )}
           </div>
 
-          {/* Withdraw Form */}
-          {round.state === 0 && availableToWithdraw > BigInt(0) && (
+          {/* Withdraw Button - Only show when round is COMPLETED and cooldown passed */}
+          {canWithdraw && (
             <div className="space-y-3">
-              {!showWithdrawForm ? (
-                <button
-                  onClick={() => setShowWithdrawForm(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6]/20 text-[#A2D5C6] py-3 rounded-xl font-semibold hover:bg-[#A2D5C6]/30 transition-colors"
-                >
-                  <ArrowDownToLine className="h-5 w-5" />
-                  Withdraw Funds
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      placeholder="Amount in USDC"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-20 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
-                    />
-                    <button
-                      onClick={handleMaxWithdraw}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2]"
-                    >
-                      MAX
-                    </button>
-                  </div>
+              <button
+                onClick={handleWithdrawMax}
+                disabled={isWithdrawPending || isWithdrawConfirming}
+                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50"
+              >
+                {isWithdrawPending || isWithdrawConfirming ? (
+                  <>
+                    {isWithdrawPending ? 'Confirm in Wallet...' : 'Processing...'}
+                  </>
+                ) : isWithdrawSuccess ? (
+                  <>
+                    Withdrawal Successful!
+                  </>
+                ) : (
+                  <>
+                    Withdraw {formatUSDCValue(maxMonthlyWithdrawal)} (2%)
+                  </>
+                )}
+              </button>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setShowWithdrawForm(false);
-                        setWithdrawAmount('');
-                      }}
-                      className="flex-1 py-3 rounded-xl border border-white/20 text-white/60 hover:bg-white/5 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleWithdraw}
-                      disabled={!withdrawAmount || isWithdrawPending || isWithdrawConfirming}
-                      className="flex-1 flex items-center justify-center gap-2 bg-[#A2D5C6] text-black py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50"
-                    >
-                      {isWithdrawPending || isWithdrawConfirming ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          {isWithdrawPending ? 'Confirm...' : 'Withdrawing...'}
-                        </>
-                      ) : isWithdrawSuccess ? (
-                        <>
-                          <CheckCircle className="h-4 w-4" />
-                          Success!
-                        </>
-                      ) : (
-                        'Withdraw'
-                      )}
-                    </button>
-                  </div>
-
-                  {withdrawError && (
-                    <div className="flex items-center gap-2 text-red-400 text-sm">
-                      <AlertCircle className="h-4 w-4" />
-                      {withdrawError.message?.slice(0, 60) || 'Transaction failed'}
-                    </div>
-                  )}
+              {withdrawError && (
+                <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-lg">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{withdrawError.message?.slice(0, 80) || 'Transaction failed'}</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Withdrawal locked - show countdown */}
+          {isWithdrawalLocked && (
+            <div className="space-y-3">
+              <button
+                disabled
+                className="w-full flex items-center justify-center gap-2 bg-white/10 text-white/50 py-4 rounded-xl font-semibold cursor-not-allowed"
+              >
+                Withdrawal Locked
+              </button>
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <p className="text-sm text-white/60">
+                  Next withdrawal available in{' '}
+                  <span className="font-semibold text-[#A2D5C6]">
+                    {formatTimeRemaining(timeUntilNextWithdrawal)}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Show message if round is still fundraising */}
+          {round.state === 0 && !needsCompletion && (
+            <div className="bg-white/5 rounded-xl p-4 text-center">
+              <p className="text-sm text-white/50">
+                Withdrawals will be available once the round is completed.
+              </p>
             </div>
           )}
 

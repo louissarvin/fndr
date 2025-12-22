@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:42069';
+const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 
 export interface RoundMetadata {
   name: string;
@@ -127,4 +129,66 @@ export function useIPFSUpload() {
     isUploading,
     error,
   };
+}
+
+// Convert IPFS URI to HTTP gateway URL
+export function ipfsToHttp(ipfsUri: string | null | undefined): string | null {
+  if (!ipfsUri) return null;
+
+  // Handle ipfs:// protocol
+  if (ipfsUri.startsWith('ipfs://')) {
+    const hash = ipfsUri.replace('ipfs://', '');
+    return `${IPFS_GATEWAY}/${hash}`;
+  }
+
+  // Handle direct hash
+  if (ipfsUri.startsWith('Qm') || ipfsUri.startsWith('bafy')) {
+    return `${IPFS_GATEWAY}/${ipfsUri}`;
+  }
+
+  // Already an HTTP URL
+  if (ipfsUri.startsWith('http')) {
+    return ipfsUri;
+  }
+
+  return null;
+}
+
+// Fetch metadata from IPFS
+async function fetchIPFSMetadata(metadataURI: string): Promise<RoundMetadata | null> {
+  const url = ipfsToHttp(metadataURI);
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch metadata: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching IPFS metadata:', error);
+    return null;
+  }
+}
+
+// Hook to fetch and cache round metadata from IPFS
+export function useRoundMetadata(metadataURI: string | null | undefined) {
+  return useQuery({
+    queryKey: ['ipfs', 'metadata', metadataURI],
+    queryFn: async () => {
+      if (!metadataURI) return null;
+      return fetchIPFSMetadata(metadataURI);
+    },
+    enabled: !!metadataURI,
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour (IPFS content is immutable)
+    gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours
+  });
+}
+
+// Get the logo URL from metadata
+export function useRoundLogo(metadataURI: string | null | undefined) {
+  const { data: metadata } = useRoundMetadata(metadataURI);
+
+  if (!metadata?.logo) return null;
+  return ipfsToHttp(metadata.logo);
 }

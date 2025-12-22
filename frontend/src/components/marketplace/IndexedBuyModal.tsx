@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { type SellOrder } from '@/hooks/usePonderData';
+import { type SellOrder, useRound } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useBuyTokens,
   useUSDCBalance,
@@ -16,7 +17,6 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Tag,
   Clock,
   Wallet,
   ArrowRight,
@@ -29,9 +29,10 @@ interface IndexedBuyModalProps {
 }
 
 function formatTokenAmount(value: string): string {
-  const num = Number(formatUnits(BigInt(value), 18));
+  // Token amounts are stored as whole numbers (not scaled to 18 decimals)
+  const num = Number(value);
   return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(num);
 }
 
@@ -70,6 +71,13 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
   // Form state
   const [buyAmount, setBuyAmount] = useState('');
   const [step, setStep] = useState<'form' | 'approve' | 'buy' | 'success'>('form');
+
+  // Fetch round and IPFS metadata for the token
+  const { data: round } = useRound(order?.tokenContract);
+  const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round?.metadataURI);
+
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const companyName = metadata?.name || round?.companyName || (order ? `Round ${order.tokenContract.slice(0, 8)}...` : 'Unknown');
 
   // Contract hooks
   const { data: usdcBalance } = useUSDCBalance(address);
@@ -120,10 +128,11 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
   if (!order) return null;
 
   // Calculate values
-  const amount = buyAmount ? parseUnits(buyAmount, 18) : BigInt(0);
+  // Note: Token amounts are whole numbers (not scaled to 18 decimals)
+  const amount = buyAmount ? BigInt(Math.floor(Number(buyAmount))) : BigInt(0);
   const maxAmount = BigInt(order.amount);
   const pricePerToken = BigInt(order.pricePerToken);
-  const totalCost = (amount * pricePerToken) / BigInt(10 ** 18);
+  const totalCost = amount * pricePerToken; // amount is whole number, price is USDC with 6 decimals
   const platformFee = (totalCost * BigInt(25)) / BigInt(10000); // 0.25%
   const totalWithFee = totalCost + platformFee;
 
@@ -154,12 +163,12 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
   };
 
   const handleMaxAmount = () => {
-    setBuyAmount(formatUnits(maxAmount, 18));
+    setBuyAmount(maxAmount.toString());
   };
 
   const handleQuickAmount = (percentage: number) => {
     const quickAmount = (maxAmount * BigInt(percentage)) / BigInt(100);
-    setBuyAmount(formatUnits(quickAmount, 18));
+    setBuyAmount(quickAmount.toString());
   };
 
   if (!isOpen) return null;
@@ -179,11 +188,19 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-              <Tag className="h-5 w-5 text-[#A2D5C6]" />
+            <div className="h-12 w-12 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden">
+              {isLoadingMetadata ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]/50" />
+              ) : logoUrl ? (
+                <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-[#A2D5C6]">
+                  {companyName.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Buy Tokens</h2>
+              <h2 className="text-xl font-bold text-white">{companyName}</h2>
               <p className="text-sm text-white/60">Order #{order.orderId}</p>
             </div>
           </div>
@@ -387,7 +404,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
               <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Purchase Successful!</h3>
               <p className="text-white/60 mb-2">
-                You have successfully purchased tokens.
+                You have successfully purchased {companyName} tokens.
               </p>
               <p className="text-sm text-[#A2D5C6] mb-6">
                 {buyAmount} tokens for {formatUSDC(totalWithFee)}

@@ -35,6 +35,7 @@ export interface Round {
   founder: string;
   equityToken: string | null;
   companyName: string | null;
+  metadataURI: string | null;
   targetRaise: string;
   equityPercentage: string | null;
   totalRaised: string;
@@ -126,6 +127,7 @@ export function useRounds() {
               founder
               equityToken
               companyName
+              metadataURI
               targetRaise
               equityPercentage
               totalRaised
@@ -160,6 +162,7 @@ export function useActiveRounds() {
               founder
               equityToken
               companyName
+              metadataURI
               targetRaise
               equityPercentage
               totalRaised
@@ -189,6 +192,7 @@ export function useRound(roundId: string | undefined) {
             founder
             equityToken
             companyName
+            metadataURI
             targetRaise
             equityPercentage
             totalRaised
@@ -422,6 +426,7 @@ export function useFounderRounds(founderAddress: string | undefined) {
               founder
               equityToken
               companyName
+              metadataURI
               targetRaise
               equityPercentage
               totalRaised

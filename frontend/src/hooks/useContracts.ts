@@ -1,4 +1,4 @@
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import {
   CONTRACTS,
@@ -218,6 +218,21 @@ export function useRoundInfo(roundAddress: `0x${string}` | undefined) {
   });
 }
 
+// Read the full round data struct including lastWithdrawal
+export function useRoundData(roundAddress: `0x${string}` | undefined) {
+  return useReadContract({
+    address: roundAddress,
+    abi: RoundManagerABI,
+    functionName: 'round',
+    query: {
+      enabled: !!roundAddress,
+    },
+  });
+}
+
+// Constants from the contract
+export const SECONDS_PER_MONTH = 1 * 24 * 60 * 60; // 30 days in seconds
+
 export function useRoundConfig(roundAddress: `0x${string}` | undefined) {
   return useReadContract({
     address: roundAddress,
@@ -250,6 +265,57 @@ export function useYieldInfo(roundAddress: `0x${string}` | undefined) {
       enabled: !!roundAddress,
     },
   });
+}
+
+// Hook to get pending yield across multiple rounds for an investor
+export function useMultiRoundInvestorYield(
+  roundAddresses: `0x${string}`[],
+  investor: `0x${string}` | undefined
+) {
+  const contracts = roundAddresses.map((roundAddress) => ({
+    address: roundAddress,
+    abi: RoundManagerABI,
+    functionName: 'getInvestorInfoView' as const,
+    args: investor ? [investor] : undefined,
+  }));
+
+  const result = useReadContracts({
+    contracts,
+    query: {
+      enabled: !!investor && roundAddresses.length > 0,
+    },
+  });
+
+  // Calculate total pending yield from all rounds
+  const totalPendingYield = result.data?.reduce((total, roundResult) => {
+    if (roundResult.status === 'success' && roundResult.result) {
+      // getInvestorInfoView returns: (contribution, equityTokens, yieldBalance, yieldClaimed)
+      const yieldBalance = (roundResult.result as readonly [bigint, bigint, bigint, bigint])[2];
+      return total + yieldBalance;
+    }
+    return total;
+  }, BigInt(0)) || BigInt(0);
+
+  // Get per-round yield breakdown
+  const yieldByRound = result.data?.map((roundResult, index) => {
+    if (roundResult.status === 'success' && roundResult.result) {
+      const data = roundResult.result as readonly [bigint, bigint, bigint, bigint];
+      return {
+        roundAddress: roundAddresses[index],
+        contribution: data[0],
+        equityTokens: data[1],
+        yieldBalance: data[2],
+        yieldClaimed: data[3],
+      };
+    }
+    return null;
+  }).filter(Boolean) || [];
+
+  return {
+    ...result,
+    totalPendingYield,
+    yieldByRound,
+  };
 }
 
 export function useGetEquityToken(roundAddress: `0x${string}` | undefined) {
@@ -334,6 +400,32 @@ export function useFounderWithdraw(roundAddress: `0x${string}` | undefined) {
   };
 }
 
+// Hook to complete a round (triggers updateRoundState modifier)
+export function useCompleteRound(roundAddress: `0x${string}` | undefined) {
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const completeRound = () => {
+    if (!roundAddress) return;
+    // Call getRoundInfo which has updateRoundState modifier
+    // This will trigger state transition if conditions are met
+    writeContract({
+      address: roundAddress,
+      abi: RoundManagerABI,
+      functionName: 'getRoundInfo',
+    });
+  };
+
+  return {
+    completeRound,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  };
+}
+
 // ============================================
 // Secondary Market Hooks
 // ============================================
@@ -371,6 +463,45 @@ export function useSellerOrders(seller: `0x${string}` | undefined) {
     query: {
       enabled: !!seller,
     },
+  });
+}
+
+export function useCanSellTokens(
+  seller: `0x${string}` | undefined,
+  tokenContract: `0x${string}` | undefined,
+  amount: bigint
+) {
+  return useReadContract({
+    address: CONTRACTS.StartupSecondaryMarket as `0x${string}`,
+    abi: StartupSecondaryMarketABI,
+    functionName: 'canSellTokens',
+    args: seller && tokenContract ? [seller, tokenContract, amount] : undefined,
+    query: {
+      enabled: !!seller && !!tokenContract && amount > BigInt(0),
+    },
+  });
+}
+
+export function useFirstPurchaseTime(
+  investor: `0x${string}` | undefined,
+  tokenContract: `0x${string}` | undefined
+) {
+  return useReadContract({
+    address: CONTRACTS.StartupSecondaryMarket as `0x${string}`,
+    abi: StartupSecondaryMarketABI,
+    functionName: 'firstPurchaseTime',
+    args: investor && tokenContract ? [investor, tokenContract] : undefined,
+    query: {
+      enabled: !!investor && !!tokenContract,
+    },
+  });
+}
+
+export function useMinHoldingPeriod() {
+  return useReadContract({
+    address: CONTRACTS.StartupSecondaryMarket as `0x${string}`,
+    abi: StartupSecondaryMarketABI,
+    functionName: 'MIN_HOLDING_PERIOD',
   });
 }
 

@@ -1,8 +1,16 @@
-import { useState } from 'react';
-import { Users, Clock, TrendingUp, Wallet, ExternalLink } from 'lucide-react';
-import { formatUnits } from 'viem';
-import type { Round } from '@/hooks/usePonderData';
-import InvestModal from '@/components/investor/InvestModal';
+import { useState } from "react";
+import {
+  Users,
+  Clock,
+  TrendingUp,
+  Wallet,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
+import { formatUnits } from "viem";
+import type { Round } from "@/hooks/usePonderData";
+import { useRoundMetadata, ipfsToHttp } from "@/hooks/useIPFS";
+import InvestModal from "@/components/investor/InvestModal";
 
 interface RoundCardProps {
   round: Round;
@@ -10,11 +18,20 @@ interface RoundCardProps {
 
 const USDC_DECIMALS = 6;
 
+// Fallback images when no IPFS image is available
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800",
+  "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800",
+  "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800",
+  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800",
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800",
+];
+
 function formatUSDC(value: string): string {
   const num = Number(formatUnits(BigInt(value), USDC_DECIMALS));
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(num);
@@ -34,55 +51,71 @@ function shortenAddress(address: string): string {
 function getRoundStateLabel(state: number): { label: string; color: string } {
   switch (state) {
     case 0:
-      return { label: 'Fundraising', color: 'bg-[#A2D5C6] text-black' };
+      return { label: "Fundraising", color: "bg-[#A2D5C6] text-black" };
     case 1:
-      return { label: 'Completed', color: 'bg-blue-500 text-white' };
+      return { label: "Completed", color: "bg-[#A2D5C6] text-black" };
     case 2:
-      return { label: 'Cancelled', color: 'bg-red-500 text-white' };
+      return { label: "Cancelled", color: "bg-[#A2D5C6] text-black" };
     default:
-      return { label: 'Unknown', color: 'bg-gray-500 text-white' };
+      return { label: "Unknown", color: "bg-[#A2D5C6] text-black" };
   }
 }
 
-function getRandomImage(id: string): string {
-  const images = [
-    'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
-    'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
-    'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800',
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800',
-    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800',
-  ];
-  const index = parseInt(id.slice(-4), 16) % images.length;
-  return images[index];
+function getFallbackImage(id: string): string {
+  const index = parseInt(id.slice(-4), 16) % FALLBACK_IMAGES.length;
+  return FALLBACK_IMAGES[index];
 }
 
 export default function RoundCard({ round }: RoundCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
+
+  // Fetch IPFS metadata
+  const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(
+    round.metadataURI
+  );
+
   const progress = calculateProgress(round.totalRaised, round.targetRaise);
   const stateInfo = getRoundStateLabel(round.state);
-  const image = getRandomImage(round.id);
   const isActive = round.state === 0;
+
+  // Get image: IPFS logo > fallback
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const image = logoUrl || getFallbackImage(round.id);
+
+  // Get company name: metadata > indexed > shortened address
+  const companyName =
+    metadata?.name || round.companyName || `Round ${shortenAddress(round.id)}`;
+  const description =
+    metadata?.description || "Fundraising round on FNDR platform";
 
   return (
     <div
-      className="group bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:bg-[#A2D5C6]/15"
+      className="group bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 "
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image */}
       <div className="relative aspect-video overflow-hidden">
-        <img
-          src={image}
-          alt={round.companyName || 'Startup'}
-          className={`w-full h-full object-cover transition-transform duration-500 ${
-            isHovered ? 'scale-105' : ''
-          }`}
-        />
+        {isLoadingMetadata ? (
+          <div className="w-full h-full bg-[#A2D5C6]/10 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]/40" />
+          </div>
+        ) : (
+          <img
+            src={image}
+            alt={companyName}
+            className={`w-full h-full object-cover transition-transform duration-500 ${
+              isHovered ? "scale-105" : ""
+            }`}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
         {/* State Badge */}
-        <span className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full ${stateInfo.color}`}>
+        <span
+          className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full ${stateInfo.color}`}
+        >
           {stateInfo.label}
         </span>
 
@@ -102,20 +135,32 @@ export default function RoundCard({ round }: RoundCardProps) {
 
       <div className="p-5 space-y-4">
         {/* Founder */}
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center">
-            <Wallet className="h-3 w-3 text-[#A2D5C6]" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 flex items-center justify-center">
+              <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+            </div>
+            <span className="text-sm text-white/60">
+              {shortenAddress(round.founder)}
+            </span>
           </div>
-          <span className="text-sm text-white/60">{shortenAddress(round.founder)}</span>
+          <a
+            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg text-white/40 hover:text-white transition-all"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
 
         {/* Title */}
         <div>
           <h3 className="font-bold text-lg text-white group-hover:text-[#CFFFE2] transition-colors">
-            {round.companyName || `Round ${shortenAddress(round.id)}`}
+            {companyName}
           </h3>
           <p className="text-sm text-white/60 line-clamp-2 mt-1">
-            Fundraising round on FNDR platform
+            {description}
           </p>
         </div>
 
@@ -164,15 +209,6 @@ export default function RoundCard({ round }: RoundCardProps) {
               Invest Now
             </button>
           )}
-          <a
-            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${isActive ? 'flex-shrink-0 p-3' : 'flex-1 py-3'} flex items-center justify-center gap-2 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors`}
-          >
-            <ExternalLink className="h-4 w-4" />
-            {!isActive && 'View on Explorer'}
-          </a>
         </div>
       </div>
 

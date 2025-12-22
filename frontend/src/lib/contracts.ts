@@ -182,6 +182,7 @@ export const RoundFactoryABI = [
       { name: "sharePrice", type: "uint256", internalType: "uint256" },
       { name: "deadline", type: "uint256", internalType: "uint256" },
       { name: "companySymbol", type: "string", internalType: "string" },
+      { name: "metadataURI", type: "string", internalType: "string" },
     ],
     outputs: [{ name: "", type: "address", internalType: "address" }],
     stateMutability: "nonpayable",
@@ -294,6 +295,12 @@ export const RoundFactoryABI = [
         type: "uint256",
         indexed: false,
         internalType: "uint256",
+      },
+      {
+        name: "metadataURI",
+        type: "string",
+        indexed: false,
+        internalType: "string",
       },
     ],
     anonymous: false,
@@ -1152,6 +1159,16 @@ export const StartupSecondaryMarketABI = [
       { name: "canSell", type: "bool", internalType: "bool" },
       { name: "reason", type: "string", internalType: "string" },
     ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "firstPurchaseTime",
+    inputs: [
+      { name: "investor", type: "address", internalType: "address" },
+      { name: "tokenContract", type: "address", internalType: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {

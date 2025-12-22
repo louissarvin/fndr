@@ -1,27 +1,23 @@
-import { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { gsap } from 'gsap';
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
 import Layout from '@/components/layout/Layout';
-import { useInvestorInvestments, useRound, usePlatformStats, type Investment } from '@/hooks/usePonderData';
+import { useInvestorInvestments, useRound, type Investment } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
+import { useMultiRoundInvestorYield, useClaimYield, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
 import {
-  TrendingUp,
   Wallet,
-  PiggyBank,
   ArrowUpRight,
-  DollarSign,
   Clock,
   ChevronRight,
-  Coins,
-  Wifi,
   WifiOff,
   Loader2,
   ExternalLink,
-  Rocket
+  Rocket,
+  RefreshCw
 } from 'lucide-react';
-
-const PortfolioOrb = lazy(() => import('@/components/3d/PortfolioOrb'));
 
 const USDC_DECIMALS = 6;
 
@@ -36,9 +32,11 @@ function formatUSDC(value: string): string {
 }
 
 function formatTokenAmount(value: string): string {
-  const num = Number(formatUnits(BigInt(value), 18));
+  // Token amounts are stored as whole numbers (not scaled to 18 decimals)
+  // The contract calculates: tokensToMint = usdcAmount / sharePrice (no decimal scaling)
+  const num = Number(value);
   return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(num);
 }
 
@@ -58,20 +56,35 @@ function formatCurrency(value: number): string {
 // Investment card for indexed data
 function InvestmentCard({ investment }: { investment: Investment }) {
   const { data: round } = useRound(investment.roundId);
+  const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round?.metadataURI);
+
+  // Get image: IPFS logo > fallback placeholder
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+
+  // Get company name: metadata > indexed > shortened address
+  const companyName = metadata?.name || round?.companyName || `Round ${shortenAddress(investment.roundId)}`;
 
   return (
     <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 hover:bg-[#A2D5C6]/15 transition-colors">
       <div className="flex items-start gap-4">
-        {/* Round Icon */}
-        <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0">
-          <TrendingUp className="h-8 w-8 text-[#A2D5C6]" />
+        {/* Round Image/Logo */}
+        <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {isLoadingMetadata ? (
+            <Loader2 className="h-6 w-6 animate-spin text-[#A2D5C6]/40" />
+          ) : logoUrl ? (
+            <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-2xl font-bold text-[#A2D5C6]">
+              {companyName.charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
 
         {/* Investment Details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-bold text-white text-lg">
-              {round?.companyName || `Round ${shortenAddress(investment.roundId)}`}
+              {companyName}
             </h3>
           </div>
           <p className="text-sm text-white/50 mb-3 truncate">
@@ -128,11 +141,25 @@ function InvestmentCard({ investment }: { investment: Investment }) {
 
 export default function Portfolio() {
   const { address, isConnected } = useAccount();
-  const [claimingAll, setClaimingAll] = useState(false);
+  const [claimingRound, setClaimingRound] = useState<string | null>(null);
 
   // Fetch indexed investments for connected wallet
   const { data: investments, isLoading, error } = useInvestorInvestments(address);
-  const { data: platformStats } = usePlatformStats();
+
+  // Get unique round addresses from investments
+  const uniqueRoundAddresses = useMemo(() => {
+    if (!investments) return [];
+    const addresses = [...new Set(investments.map(inv => inv.roundId))];
+    return addresses as `0x${string}`[];
+  }, [investments]);
+
+  // Fetch real-time yield data from all rounds
+  const {
+    totalPendingYield,
+    yieldByRound,
+    isLoading: isLoadingYield,
+    refetch: refetchYield
+  } = useMultiRoundInvestorYield(uniqueRoundAddresses, address);
 
   // Animation refs
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -145,6 +172,22 @@ export default function Portfolio() {
     (acc, inv) => acc + Number(formatUnits(BigInt(inv.usdcAmount), USDC_DECIMALS)),
     0
   ) || 0;
+
+  // Format pending yield for display
+  const formattedPendingYield = useMemo(() => {
+    const yieldAmount = Number(formatUnits(totalPendingYield, USDC_DECIMALS));
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(yieldAmount);
+  }, [totalPendingYield]);
+
+  // Find round with claimable yield
+  const roundWithYield = useMemo(() => {
+    return yieldByRound.find(r => r && r.yieldBalance > BigInt(0));
+  }, [yieldByRound]);
 
   // Entrance animations
   useEffect(() => {
@@ -188,10 +231,23 @@ export default function Portfolio() {
     return () => ctx.revert();
   }, []);
 
-  const handleClaimAll = () => {
-    setClaimingAll(true);
-    // TODO: Implement real yield claiming
-    setTimeout(() => setClaimingAll(false), 2000);
+  // Claim yield hook - we'll claim from rounds one at a time
+  const { claimYield, isPending: isClaimPending, isSuccess: isClaimSuccess } = useClaimYield(
+    claimingRound as `0x${string}` | undefined
+  );
+
+  // Handle claim success - refetch yield data
+  useEffect(() => {
+    if (isClaimSuccess) {
+      setClaimingRound(null);
+      refetchYield();
+    }
+  }, [isClaimSuccess, refetchYield]);
+
+  const handleClaimYield = () => {
+    if (!roundWithYield) return;
+    setClaimingRound(roundWithYield.roundAddress);
+    claimYield();
   };
 
   return (
@@ -222,32 +278,21 @@ export default function Portfolio() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading your investments...
               </div>
-            ) : error ? (
+            ) : error && (
               <div className="flex items-center gap-2 text-red-400 text-sm">
                 <WifiOff className="h-4 w-4" />
                 Failed to connect to indexer
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-[#A2D5C6] text-sm">
-                <Wifi className="h-4 w-4" />
-                Connected as {shortenAddress(address || '')}
-                {investments && investments.length > 0 && (
-                  <span className="bg-[#A2D5C6]/20 px-2 py-0.5 rounded-full text-xs">
-                    {investments.length} investments
-                  </span>
-                )}
-              </div>
             )}
           </div>
 
-          {/* Stats Cards */}
+          {/* Stats Cards & Quick Actions */}
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#A2D5C6]/20 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/30">
               <div className="flex items-center gap-2 mb-2">
-                <Wallet className="h-4 w-4 text-[#A2D5C6]" />
                 <p className="text-white/50 text-sm">Total Invested</p>
               </div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-[#A2D5C6]">
                 {formatCurrency(totalInvested)}
               </p>
               <p className="text-xs text-white/40 mt-1">
@@ -257,38 +302,62 @@ export default function Portfolio() {
 
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-[#A2D5C6]" />
-                <p className="text-white/50 text-sm">Platform Rounds</p>
-              </div>
-              <p className="text-2xl font-bold text-white">{platformStats?.totalRounds || 0}</p>
-              <p className="text-xs text-white/40 mt-1">Active rounds</p>
-            </div>
-
-            <div className="bg-[#A2D5C6]/20 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/30">
-              <div className="flex items-center gap-2 mb-2">
-                <PiggyBank className="h-4 w-4 text-[#A2D5C6]" />
-                <p className="text-white/50 text-sm">Total Platform Raised</p>
-              </div>
-              <p className="text-2xl font-bold text-[#A2D5C6]">
-                {platformStats?.totalRaised ? formatUSDC(platformStats.totalRaised) : '$0'}
-              </p>
-              <p className="text-xs text-white/40 mt-1">All time</p>
-            </div>
-
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Coins className="h-4 w-4 text-[#A2D5C6]" />
                 <p className="text-white/50 text-sm">APY Rate</p>
               </div>
               <p className="text-2xl font-bold text-white">6%</p>
               <p className="text-xs text-white/40 mt-1">Guaranteed yield</p>
             </div>
+
+            {/* Pending Yield Card */}
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-white/50 text-sm">Pending Yield</p>
+                <button
+                  onClick={() => refetchYield()}
+                  disabled={isLoadingYield}
+                  className="text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
+                  title="Refresh yield data"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoadingYield ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {isLoadingYield ? (
+                  <span className="text-white/40">Loading...</span>
+                ) : (
+                  formattedPendingYield
+                )}
+              </p>
+              <button
+                onClick={handleClaimYield}
+                disabled={isClaimPending || !isConnected || totalPendingYield === BigInt(0)}
+                className="text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                {isClaimPending ? 'Claiming...' : totalPendingYield > BigInt(0) ? 'Claim Now' : 'No yield to claim'}
+              </button>
+            </div>
+
+            {/* Tokens Card */}
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-white/50 text-sm">Your Tokens</p>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {investments?.reduce((acc, inv) => acc + Number(inv.tokensReceived), 0).toLocaleString() || 0}
+              </p>
+              <Link
+                to="/marketplace"
+                className="text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors mt-1 flex items-center gap-1"
+              >
+                Sell on Marketplace <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
 
-          {/* Main Content Grid */}
-          <div ref={contentRef} className="grid lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div ref={contentRef}>
             {/* Investment Cards */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-white">Your Investments</h2>
                 <Link
@@ -336,43 +405,6 @@ export default function Portfolio() {
                   )}
                 </>
               )}
-            </div>
-
-            {/* Portfolio Visualization */}
-            <div className="space-y-4">
-              <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-                <h2 className="text-xl font-bold text-white mb-4">Portfolio Breakdown</h2>
-                <Suspense
-                  fallback={
-                    <div className="h-[300px] flex items-center justify-center">
-                      <div className="h-16 w-16 rounded-full bg-[#A2D5C6]/30 animate-pulse" />
-                    </div>
-                  }
-                >
-                  <PortfolioOrb />
-                </Suspense>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-                <h3 className="font-bold text-white mb-4">Quick Actions</h3>
-                <div className="space-y-3">
-                  <button
-                    onClick={handleClaimAll}
-                    disabled={claimingAll || !isConnected || !investments?.length}
-                    className="w-full py-3 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    {claimingAll ? 'Claiming...' : 'Claim All Yield'}
-                  </button>
-                  <Link
-                    to="/marketplace"
-                    className="block w-full py-3 bg-transparent text-[#A2D5C6] font-semibold rounded-xl border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all text-center"
-                  >
-                    Sell on Marketplace
-                  </Link>
-                </div>
-              </div>
             </div>
           </div>
         </div>

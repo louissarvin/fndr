@@ -14,9 +14,10 @@ import {
 } from 'lucide-react';
 
 function formatTokenAmount(value: bigint): string {
-  const num = Number(formatUnits(value, 18));
+  // Token amounts are stored as whole numbers (not scaled to 18 decimals)
+  const num = Number(value);
   return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(num);
 }
 

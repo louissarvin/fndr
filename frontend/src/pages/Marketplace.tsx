@@ -34,9 +34,10 @@ function formatUSDC(value: string): string {
 }
 
 function formatTokenAmount(value: string): string {
-  const num = Number(formatUnits(BigInt(value), 18));
+  // Token amounts are stored as whole numbers (not scaled to 18 decimals)
+  const num = Number(value);
   return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(num);
 }
 
@@ -185,7 +186,6 @@ export default function Marketplace() {
                       : 'bg-white/10 text-white/60 hover:text-white'
                   }`}
                 >
-                  <Layers className="h-4 w-4" />
                   All Orders
                 </button>
                 {isConnected && (
@@ -197,7 +197,6 @@ export default function Marketplace() {
                         : 'bg-white/10 text-white/60 hover:text-white'
                     }`}
                   >
-                    <ShoppingCart className="h-4 w-4" />
                     My Orders
                   </button>
                 )}
@@ -207,7 +206,6 @@ export default function Marketplace() {
                   onClick={() => setIsSellModalOpen(true)}
                   className="px-5 py-2.5 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors flex items-center gap-2"
                 >
-                  <Tag className="h-4 w-4" />
                   List for Sale
                 </button>
               )}

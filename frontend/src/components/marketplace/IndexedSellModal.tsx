@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { useInvestorInvestments, useRound } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useCreateSellOrder,
   useEquityTokenBalance,
   useEquityTokenApprove,
   useUSDCAllowance,
+  useFirstPurchaseTime,
+  useMinHoldingPeriod,
+  useGetEquityToken,
   USDC_DECIMALS,
 } from '@/hooks/useContracts';
 import { CONTRACTS } from '@/lib/contracts';
@@ -18,9 +22,103 @@ import {
   Tag,
   Clock,
   ChevronDown,
-  Coins,
   DollarSign,
+  Lock,
 } from 'lucide-react';
+
+// Helper to format time remaining
+function formatTimeRemaining(seconds: number): string {
+  if (seconds <= 0) return '';
+
+  const days = Math.floor(seconds / (24 * 60 * 60));
+  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+
+  if (days > 30) {
+    const months = Math.floor(days / 30);
+    const remainingDays = days % 30;
+    return `${months}mo ${remainingDays}d remaining`;
+  } else if (days > 0) {
+    return `${days}d ${hours}h remaining`;
+  } else {
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    return `${hours}h ${minutes}m remaining`;
+  }
+}
+
+// Component to display token holding with IPFS metadata
+function TokenHoldingItem({
+  holding,
+  onSelect,
+  isSelected = false
+}: {
+  holding: TokenHolding;
+  onSelect?: () => void;
+  isSelected?: boolean;
+}) {
+  const { data: round } = useRound(holding.roundId);
+  const { data: metadata, isLoading } = useRoundMetadata(round?.metadataURI);
+
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const companyName = metadata?.name || round?.companyName || `Round ${holding.roundId.slice(0, 8)}...`;
+
+  if (onSelect) {
+    // Dropdown item
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#A2D5C6]/10 transition-colors"
+      >
+        <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+          ) : logoUrl ? (
+            <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-sm font-bold text-[#A2D5C6]">
+              {companyName.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="font-semibold text-white truncate">{companyName}</p>
+          <p className="text-xs text-white/50">
+            {holding.roundId.slice(0, 10)}...{holding.roundId.slice(-8)}
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-sm font-semibold text-[#A2D5C6]">
+            {Number(holding.balance).toLocaleString()}
+          </p>
+          <p className="text-xs text-white/40">tokens</p>
+        </div>
+      </button>
+    );
+  }
+
+  // Selected display
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+        ) : logoUrl ? (
+          <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-sm font-bold text-[#A2D5C6]">
+            {companyName.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold text-white truncate">{companyName}</p>
+        <p className="text-xs text-white/50">
+          Balance: {Number(holding.balance).toLocaleString()}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface IndexedSellModalProps {
   isOpen: boolean;
@@ -80,6 +178,48 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
     error: createError,
   } = useCreateSellOrder();
 
+  // Get equity token address for the selected round
+  const { data: equityTokenAddress } = useGetEquityToken(
+    selectedToken?.tokenAddress as `0x${string}`
+  );
+
+  // Holding period validation - use equity token address, not round address
+  const { data: firstPurchaseTime } = useFirstPurchaseTime(
+    address,
+    equityTokenAddress as `0x${string}`
+  );
+  const { data: minHoldingPeriod } = useMinHoldingPeriod();
+
+  // Get earliest investment time from Ponder data as fallback
+  const earliestInvestmentTime = selectedToken && investments
+    ? investments
+        .filter(inv => inv.roundId === selectedToken.roundId)
+        .reduce((earliest, inv) => {
+          const invTime = Number(inv.timestamp);
+          return earliest === 0 || invTime < earliest ? invTime : earliest;
+        }, 0)
+    : 0;
+
+  // Calculate holding period status
+  const currentTime = Math.floor(Date.now() / 1000);
+  // Use contract firstPurchaseTime if available, otherwise use Ponder investment timestamp
+  const contractPurchaseTime = firstPurchaseTime ? Number(firstPurchaseTime) : 0;
+  const purchaseTime = contractPurchaseTime > 0 ? contractPurchaseTime : earliestInvestmentTime;
+  const holdingPeriodSeconds = minHoldingPeriod ? Number(minHoldingPeriod) : 0;
+  const timeSincePurchase = purchaseTime > 0 ? currentTime - purchaseTime : 0;
+  const timeUntilCanSell = holdingPeriodSeconds - timeSincePurchase;
+
+  // Check if we have data loaded
+  const isDataLoading = selectedToken && !equityTokenAddress;
+  const hasHoldingData = purchaseTime > 0 && holdingPeriodSeconds > 0;
+  const canSellNow = hasHoldingData && timeUntilCanSell <= 0;
+
+  // Lock selling if: token is selected AND (time hasn't passed OR still loading)
+  const isHoldingPeriodLocked = selectedToken && (
+    isDataLoading || // Still loading equity token address
+    (hasHoldingData && timeUntilCanSell > 0) // Has data, time not passed
+  );
+
   // Build token holdings from investments
   useEffect(() => {
     if (!investments) return;
@@ -135,10 +275,12 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   }, [isCreateSuccess, step]);
 
   // Calculate values
-  const amount = sellAmount ? parseUnits(sellAmount, 18) : BigInt(0);
+  // Note: Token amounts are stored as whole numbers (not scaled to 18 decimals)
+  // The contract calculates: tokensToMint = usdcAmount / sharePrice (no decimal scaling)
+  const amount = sellAmount ? BigInt(Math.floor(Number(sellAmount))) : BigInt(0);
   const price = pricePerToken ? parseUnits(pricePerToken, USDC_DECIMALS) : BigInt(0);
   const maxAmount = tokenBalance || selectedToken?.balance || BigInt(0);
-  const totalValue = (amount * price) / BigInt(10 ** 18);
+  const totalValue = amount * price; // No need to divide by 10^18 since amount is already whole number
   const isValidAmount = amount > 0 && amount <= maxAmount;
   const isValidPrice = price > BigInt(0);
 
@@ -173,7 +315,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   };
 
   const handleMaxAmount = () => {
-    setSellAmount(formatUnits(maxAmount, 18));
+    setSellAmount(maxAmount.toString());
   };
 
   if (!isOpen) return null;
@@ -193,9 +335,6 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-              <Tag className="h-5 w-5 text-[#A2D5C6]" />
-            </div>
             <div>
               <h2 className="text-xl font-bold text-white">List for Sale</h2>
               <p className="text-sm text-white/60">Create a sell order</p>
@@ -204,9 +343,9 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg transition-colors disabled:opacity-50"
           >
-            <X className="h-5 w-5 text-white/60" />
+            <X className="h-5 w-5 text-white/60 hover:text-[#A2D5C6]" />
           </button>
         </div>
 
@@ -226,23 +365,11 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left flex items-center justify-between hover:border-white/20 transition-colors"
                   >
                     {selectedToken ? (
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-                          <Coins className="h-4 w-4 text-[#A2D5C6]" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">
-                            {selectedToken.companyName || `Round ${selectedToken.roundId.slice(0, 8)}...`}
-                          </p>
-                          <p className="text-xs text-white/50">
-                            Balance: {Number(formatUnits(tokenBalance || selectedToken.balance, 18)).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
+                      <TokenHoldingItem holding={selectedToken} isSelected />
                     ) : (
                       <span className="text-white/40">Choose a token...</span>
                     )}
-                    <ChevronDown className={`h-5 w-5 text-white/50 transition-transform ${showTokenDropdown ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-5 w-5 text-white/50 transition-transform flex-shrink-0 ${showTokenDropdown ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showTokenDropdown && (
@@ -253,30 +380,11 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                         </p>
                       ) : (
                         tokenHoldings.map((holding) => (
-                          <button
+                          <TokenHoldingItem
                             key={holding.roundId}
-                            type="button"
-                            onClick={() => handleSelectToken(holding)}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#A2D5C6]/10 transition-colors"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-                              <Coins className="h-4 w-4 text-[#A2D5C6]" />
-                            </div>
-                            <div className="flex-1 text-left">
-                              <p className="font-semibold text-white">
-                                {holding.companyName || `Round ${holding.roundId.slice(0, 8)}...`}
-                              </p>
-                              <p className="text-xs text-white/50">
-                                {holding.roundId.slice(0, 10)}...{holding.roundId.slice(-8)}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm font-semibold text-[#A2D5C6]">
-                                {Number(formatUnits(holding.balance, 18)).toLocaleString()}
-                              </p>
-                              <p className="text-xs text-white/40">tokens</p>
-                            </div>
-                          </button>
+                            holding={holding}
+                            onSelect={() => handleSelectToken(holding)}
+                          />
                         ))
                       )}
                     </div>
@@ -290,7 +398,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                   <label className="text-sm font-medium text-white/80">Amount to Sell</label>
                   {selectedToken && (
                     <span className="text-xs text-white/40">
-                      Balance: {Number(formatUnits(maxAmount, 18)).toLocaleString()}
+                      Balance: {Number(maxAmount).toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -301,7 +409,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     onChange={(e) => setSellAmount(e.target.value)}
                     placeholder="0"
                     disabled={!selectedToken}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     step="any"
                   />
                   {selectedToken && (
@@ -330,7 +438,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     placeholder="0.00"
                     step="0.01"
                     disabled={!selectedToken}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -338,7 +446,6 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
               {/* Duration Selector */}
               <div>
                 <label className="text-sm font-medium text-white/80 mb-2 flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
                   Order Duration
                 </label>
                 <div className="flex gap-2 flex-wrap mt-2">
@@ -388,19 +495,64 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                 </div>
               )}
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={!selectedToken || !isValidAmount || !isValidPrice}
-                className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Tag className="h-5 w-5" />
-                Create Sell Order
-              </button>
+              {/* Holding Period Locked Warning */}
+              {isHoldingPeriodLocked && (
+                <div className="bg-white/5 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Lock className="h-5 w-5 text-white/50" />
+                    <div>
+                      <p className="text-sm font-semibold text-white">Holding Period Active</p>
+                      <p className="text-xs text-white/50">
+                        Tokens must be held before selling
+                      </p>
+                    </div>
+                  </div>
+                  {hasHoldingData && timeUntilCanSell > 0 && (
+                    <div className="text-center py-2 bg-white/5 rounded-lg">
+                      <p className="text-sm text-white/60">
+                        You can sell in{' '}
+                        <span className="font-semibold text-[#A2D5C6]">
+                          {formatTimeRemaining(timeUntilCanSell)}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                  {isDataLoading && (
+                    <div className="text-center py-2 bg-white/5 rounded-lg">
+                      <p className="text-sm text-white/60 flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Checking holding period...
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Submit Button - Show locked state or regular button */}
+              {isHoldingPeriodLocked ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full bg-white/10 text-white/50 py-4 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Lock className="h-5 w-5" />
+                  Selling Locked
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!selectedToken || !isValidAmount || !isValidPrice}
+                  className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  Create Sell Order
+                </button>
+              )}
 
               {/* Info */}
               <p className="text-xs text-white/40 text-center">
-                Your tokens will be held in escrow until the order is filled or cancelled.
+                {isHoldingPeriodLocked
+                  ? 'You must wait for the holding period to end before selling.'
+                  : 'Your tokens will be held in escrow until the order is filled or cancelled.'}
               </p>
             </form>
           )}

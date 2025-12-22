@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
-import { parseUnits, formatUnits } from 'viem';
-import { useRound, type Round } from '@/hooks/usePonderData';
+import { parseUnits } from 'viem';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { gsap } from 'gsap';
+import { useRound } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useInvest,
   useUSDCBalance,
@@ -16,11 +19,10 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  DollarSign,
-  Coins,
+  Users,
+  Clock,
   TrendingUp,
-  ArrowRight,
-  Info,
+  Wallet,
 } from 'lucide-react';
 
 interface InvestModalProps {
@@ -29,16 +31,53 @@ interface InvestModalProps {
   roundId: string;
 }
 
+// Fallback images when no IPFS image is available
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
+  'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800',
+  'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800',
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800',
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800',
+];
+
+function getFallbackImage(id: string): string {
+  const index = parseInt(id.slice(-4), 16) % FALLBACK_IMAGES.length;
+  return FALLBACK_IMAGES[index];
+}
+
+function shortenAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 export default function InvestModal({ isOpen, onClose, roundId }: InvestModalProps) {
   const { address } = useAccount();
 
   // Form state
-  const [amount, setAmount] = useState('');
+  const [investAmount, setInvestAmount] = useState('');
   const [step, setStep] = useState<'form' | 'approve' | 'invest' | 'success'>('form');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  // Animation refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const badgesRef = useRef<HTMLDivElement>(null);
+  const apyBadgeRef = useRef<HTMLSpanElement>(null);
+  const founderRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const progressSectionRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const investSectionRef = useRef<HTMLDivElement>(null);
+  const quickButtonsRef = useRef<HTMLDivElement>(null);
 
   // Get round details
   const { data: round, isLoading: isLoadingRound } = useRound(roundId);
   const { data: roundConfig } = useRoundConfig(roundId as `0x${string}`);
+
+  // Fetch IPFS metadata
+  const { data: metadata } = useRoundMetadata(round?.metadataURI);
 
   // Contract hooks
   const { data: usdcBalance } = useUSDCBalance(address);
@@ -60,13 +99,69 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
     error: investError,
   } = useInvest(roundId as `0x${string}`);
 
-  // Reset form when modal closes
+  // Get image: IPFS logo > fallback
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const image = logoUrl || getFallbackImage(roundId);
+
+  // Get company name: metadata > indexed > shortened address
+  const companyName = metadata?.name || round?.companyName || `Round ${shortenAddress(roundId)}`;
+
+  const progress = round
+    ? Math.min(Math.round((Number(round.totalRaised) / Number(round.targetRaise)) * 100), 100)
+    : 0;
+
+  // Handle open state changes
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setShouldRender(true);
       setStep('form');
-      setAmount('');
+      setInvestAmount('');
     }
   }, [isOpen]);
+
+  // Entrance animations
+  useEffect(() => {
+    if (!isOpen || !shouldRender) return;
+
+    let ctx: gsap.Context | null = null;
+
+    const timeoutId = setTimeout(() => {
+      if (!containerRef.current) return;
+
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+        gsap.set(overlayRef.current, { opacity: 0 });
+        gsap.set(containerRef.current, { scale: 0.9, opacity: 0, y: 30 });
+        gsap.set(imageRef.current, { scale: 1.1 });
+        gsap.set([badgesRef.current, apyBadgeRef.current], { y: -20, opacity: 0 });
+        gsap.set(founderRef.current, { x: -20, opacity: 0 });
+        gsap.set(titleRef.current, { y: 30, opacity: 0 });
+        gsap.set(taglineRef.current, { y: 20, opacity: 0 });
+        gsap.set(progressSectionRef.current, { y: 30, opacity: 0 });
+        gsap.set(progressBarRef.current, { scaleX: 0, transformOrigin: 'left' });
+        gsap.set(investSectionRef.current, { y: 30, opacity: 0 });
+        gsap.set(quickButtonsRef.current?.children || [], { y: 20, opacity: 0 });
+
+        tl.to(overlayRef.current, { opacity: 1, duration: 0.3 });
+        tl.to(containerRef.current, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.2)' }, '-=0.2');
+        tl.to(imageRef.current, { scale: 1, duration: 0.8, ease: 'power2.out' }, '-=0.2');
+        tl.to([badgesRef.current, apyBadgeRef.current], { y: 0, opacity: 1, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' }, '-=0.6');
+        tl.to(founderRef.current, { x: 0, opacity: 1, duration: 0.4 }, '-=0.3');
+        tl.to(titleRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.3)' }, '-=0.2');
+        tl.to(taglineRef.current, { y: 0, opacity: 1, duration: 0.4 }, '-=0.3');
+        tl.to(progressSectionRef.current, { y: 0, opacity: 1, duration: 0.5 }, '-=0.2');
+        tl.to(progressBarRef.current, { scaleX: 1, duration: 0.8, ease: 'power2.out' }, '-=0.3');
+        tl.to(investSectionRef.current, { y: 0, opacity: 1, duration: 0.4 }, '-=0.4');
+        tl.to(quickButtonsRef.current?.children || [], { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'back.out(1.5)' }, '-=0.2');
+      });
+    }, 10);
+
+    return () => {
+      clearTimeout(timeoutId);
+      ctx?.revert();
+    };
+  }, [isOpen, shouldRender]);
 
   // Move to invest step after approval
   useEffect(() => {
@@ -83,27 +178,45 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
     }
   }, [isInvestSuccess, step]);
 
-  const amountWei = amount ? parseUnits(amount, USDC_DECIMALS) : BigInt(0);
+  const amountWei = investAmount ? parseUnits(investAmount, USDC_DECIMALS) : BigInt(0);
   const hasEnoughAllowance = allowance && allowance >= amountWei;
   const hasEnoughBalance = usdcBalance && usdcBalance >= amountWei;
 
-  // Calculate tokens to receive based on share price
-  const sharePrice = roundConfig?.[2] || BigInt(1e6); // Default to 1 USDC
+  const sharePrice = roundConfig?.[2] || BigInt(1e6);
+  // Match contract logic: tokensToMint = usdcAmount / sharePrice (no decimal scaling)
   const tokensToReceive = amountWei > 0 && sharePrice > 0
-    ? (amountWei * BigInt(1e18)) / sharePrice
+    ? amountWei / sharePrice
     : BigInt(0);
 
-  // Calculate remaining capacity
   const remainingCapacity = round
     ? BigInt(round.targetRaise) - BigInt(round.totalRaised)
     : BigInt(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleClose = () => {
+    if (isAnimating || isApprovePending || isApproveConfirming || isInvestPending || isInvestConfirming) return;
+    setIsAnimating(true);
 
-    if (!amount || amountWei <= 0) {
-      return;
-    }
+    const tl = gsap.timeline({
+      defaults: { ease: 'power2.in' },
+      onComplete: () => {
+        setIsAnimating(false);
+        setShouldRender(false);
+        onClose();
+      }
+    });
+
+    tl.to(quickButtonsRef.current?.children || [], { y: 10, opacity: 0, duration: 0.15, stagger: 0.02 });
+    tl.to(investSectionRef.current, { y: 15, opacity: 0, duration: 0.15 }, '-=0.1');
+    tl.to(progressSectionRef.current, { y: 15, opacity: 0, duration: 0.15 }, '-=0.1');
+    tl.to([taglineRef.current, titleRef.current], { y: 10, opacity: 0, duration: 0.15, stagger: 0.02 }, '-=0.1');
+    tl.to(founderRef.current, { x: -10, opacity: 0, duration: 0.15 }, '-=0.1');
+    tl.to([badgesRef.current, apyBadgeRef.current], { y: -10, opacity: 0, duration: 0.15 }, '-=0.1');
+    tl.to(containerRef.current, { scale: 0.95, opacity: 0, y: 20, duration: 0.25, ease: 'power2.in' }, '-=0.1');
+    tl.to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.15');
+  };
+
+  const handleSubmit = () => {
+    if (!investAmount || amountWei <= 0) return;
 
     if (hasEnoughAllowance) {
       setStep('invest');
@@ -122,247 +235,268 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
     invest(amountWei);
   };
 
-  const handleMaxAmount = () => {
-    if (!usdcBalance) return;
-    const maxAmount = remainingCapacity < usdcBalance ? remainingCapacity : usdcBalance;
-    setAmount(formatUnits(maxAmount, USDC_DECIMALS));
-  };
-
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const isProcessing = isApprovePending || isApproveConfirming || isInvestPending || isInvestConfirming;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={!isProcessing ? onClose : undefined}
-      />
-
-      {/* Modal */}
-      <div className="relative bg-[#1A1A1A] rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-              <Coins className="h-5 w-5 text-[#A2D5C6]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Invest in Round</h2>
-              <p className="text-sm text-white/60">
-                {round?.companyName || `Round ${roundId.slice(0, 8)}...`}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={isProcessing}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
-          >
-            <X className="h-5 w-5 text-white/60" />
-          </button>
-        </div>
+    <DialogPrimitive.Root open={true} onOpenChange={(newOpen) => !newOpen && handleClose()}>
+      <DialogPrimitive.Portal forceMount>
+        {/* Overlay */}
+        <DialogPrimitive.Overlay
+          ref={overlayRef}
+          onClick={handleClose}
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm cursor-pointer"
+        />
 
         {/* Content */}
-        <div className="p-6">
-          {isLoadingRound ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]" />
+        <DialogPrimitive.Content
+          onEscapeKeyDown={handleClose}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] p-4"
+        >
+          {/* Glassmorphism Container */}
+          <div ref={containerRef} className="relative bg-[#1A1A1A]/90 backdrop-blur-xl border border-[#A2D5C6]/20 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={handleClose}
+              disabled={isProcessing}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-all duration-200 disabled:opacity-50"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Hero Image */}
+            <div ref={imageRef} className="relative h-48 md:h-56 overflow-hidden">
+              <img
+                src={image}
+                alt={companyName}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+
+              {/* Badges */}
+              <div ref={badgesRef} className="absolute top-5 left-4 flex gap-2">
+                <span className="bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+                  {round?.state === 0 ? 'Fundraising' : round?.state === 1 ? 'Completed' : 'Cancelled'}
+                </span>
+                {round?.equityPercentage && (
+                  <span className="bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full">
+                    {Number(round.equityPercentage) / 100}% Equity
+                  </span>
+                )}
+              </div>
+              <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
+                <TrendingUp className="h-3 w-3" />
+                6% APY
+              </span>
             </div>
-          ) : step === 'form' ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Round Info */}
-              <div className="bg-white/5 rounded-xl p-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Target Raise</span>
-                  <span className="text-white font-medium">
-                    {round && formatUSDCDisplay(BigInt(round.targetRaise))}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Already Raised</span>
-                  <span className="text-white font-medium">
-                    {round && formatUSDCDisplay(BigInt(round.totalRaised))}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Remaining Capacity</span>
-                  <span className="text-[#A2D5C6] font-medium">
-                    {formatUSDCDisplay(remainingCapacity)}
-                  </span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#A2D5C6] rounded-full"
-                    style={{
-                      width: `${round ? Math.min((Number(round.totalRaised) / Number(round.targetRaise)) * 100, 100) : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
 
-              {/* Amount Input */}
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Investment Amount (USDC)
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-20 py-4 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
-                    required
-                    min="1"
-                    step="any"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleMaxAmount}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2] bg-[#A2D5C6]/10 px-2 py-1 rounded"
-                  >
-                    MAX
-                  </button>
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {isLoadingRound ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]" />
                 </div>
-                <p className="text-xs text-white/40 mt-2">
-                  Balance: {usdcBalance ? formatUSDCDisplay(usdcBalance) : '$0.00'}
-                </p>
-              </div>
-
-              {/* Tokens to Receive */}
-              {amount && tokensToReceive > 0 && (
-                <div className="bg-[#A2D5C6]/10 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Coins className="h-5 w-5 text-[#A2D5C6]" />
-                      <span className="text-sm text-white/80">You will receive</span>
+              ) : step === 'form' ? (
+                <>
+                  {/* Founder & Title */}
+                  <div className="space-y-3">
+                    <div ref={founderRef} className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center border-2 border-[#A2D5C6]/30">
+                        <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+                      </div>
+                      <span className="text-sm text-white/70">{round?.founder ? shortenAddress(round.founder) : 'Unknown'}</span>
                     </div>
-                    <span className="text-lg font-bold text-[#A2D5C6]">
-                      {Number(formatUnits(tokensToReceive, 18)).toLocaleString()} tokens
-                    </span>
+
+                    <DialogPrimitive.Title ref={titleRef} className="text-2xl md:text-3xl font-bold text-white">
+                      {companyName}
+                    </DialogPrimitive.Title>
+                    <DialogPrimitive.Description ref={taglineRef} className="text-[#A2D5C6] font-medium">
+                      Invest and earn 6% APY while supporting this startup
+                    </DialogPrimitive.Description>
                   </div>
-                </div>
-              )}
 
-              {/* APY Info */}
-              <div className="flex items-start gap-3 bg-white/5 rounded-xl p-4">
-                <TrendingUp className="h-5 w-5 text-[#A2D5C6] mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-white">Earn 6% APY</p>
-                  <p className="text-xs text-white/60">
-                    Your investment earns yield while funds are in the shared vault. You can claim
-                    yields anytime from your investor dashboard.
-                  </p>
-                </div>
-              </div>
+                  {/* Progress Section */}
+                  <div ref={progressSectionRef} className="bg-[#A2D5C6]/10 rounded-2xl p-4 space-y-3">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-2xl font-bold text-white">
+                          {round && formatUSDCDisplay(BigInt(round.totalRaised))}
+                        </p>
+                        <p className="text-sm text-white/50">
+                          raised of {round && formatUSDCDisplay(BigInt(round.targetRaise))}
+                        </p>
+                      </div>
+                      <p className="text-lg font-semibold text-[#A2D5C6]">{progress}%</p>
+                    </div>
 
-              {/* Validation Messages */}
-              {!hasEnoughBalance && amount && (
-                <div className="flex items-center gap-2 text-red-400 text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  Insufficient USDC balance
-                </div>
-              )}
-              {amountWei > remainingCapacity && amount && (
-                <div className="flex items-center gap-2 text-yellow-400 text-sm">
-                  <Info className="h-4 w-4" />
-                  Amount exceeds remaining capacity
-                </div>
-              )}
+                    {/* Progress Bar */}
+                    <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        ref={progressBarRef}
+                        className="h-full bg-gradient-to-r from-[#A2D5C6] to-[#CFFFE2] rounded-full"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={!amount || !hasEnoughBalance || amountWei > remainingCapacity || amountWei <= 0}
-                className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {hasEnoughAllowance ? 'Invest Now' : 'Approve & Invest'}
-                <ArrowRight className="h-5 w-5" />
-              </button>
-            </form>
-          ) : step === 'approve' ? (
-            <div className="text-center py-8">
-              {isApprovePending || isApproveConfirming ? (
-                <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {isApprovePending ? 'Confirm in Wallet' : 'Approving USDC...'}
-                  </h3>
-                  <p className="text-white/60">
-                    {isApprovePending
-                      ? 'Please confirm the approval transaction in your wallet'
-                      : 'Waiting for transaction confirmation...'}
-                  </p>
+                    {/* Stats */}
+                    <div className="flex justify-between pt-2">
+                      <div className="flex items-center gap-2 text-white/60">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm">{round?.investorCount || 0} investors</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/60">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm">
+                          Remaining: {formatUSDCDisplay(remainingCapacity)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Investment Section */}
+                  <div className="space-y-4">
+                    <div ref={investSectionRef} className="flex gap-3">
+                      <div className="flex-1 relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">$</span>
+                        <input
+                          type="number"
+                          value={investAmount}
+                          onChange={(e) => setInvestAmount(e.target.value)}
+                          placeholder="Enter amount"
+                          className="w-full bg-[#0A0A0A] border border-[#A2D5C6]/20 rounded-2xl pl-8 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#A2D5C6]/50 transition-colors"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!investAmount || !hasEnoughBalance || amountWei > remainingCapacity || amountWei <= 0}
+                        className="px-8 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {hasEnoughAllowance ? 'Invest Now' : 'Approve & Invest'}
+                      </button>
+                    </div>
+
+                    {/* Quick Amount Buttons */}
+                    <div ref={quickButtonsRef} className="flex gap-2">
+                      {[100, 500, 1000, 5000].map((amount) => (
+                        <button
+                          key={amount}
+                          onClick={() => setInvestAmount(amount.toString())}
+                          className="flex-1 py-3 bg-[#A2D5C6]/10 text-[#A2D5C6] text-sm font-medium rounded-2xl hover:bg-[#A2D5C6]/20 transition-colors"
+                        >
+                          ${amount.toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Balance & Token Info */}
+                    <div className="flex justify-between text-sm text-white/50">
+                      <span>Balance: {usdcBalance ? formatUSDCDisplay(usdcBalance) : '$0.00'}</span>
+                      {investAmount && tokensToReceive > 0 && (
+                        <span className="text-[#A2D5C6]">
+                          Receive: {Number(tokensToReceive).toLocaleString()} tokens
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Validation Messages */}
+                    {!hasEnoughBalance && investAmount && (
+                      <div className="flex items-center gap-2 text-red-400 text-sm">
+                        <AlertCircle className="h-4 w-4" />
+                        Insufficient USDC balance
+                      </div>
+                    )}
+                    {amountWei > remainingCapacity && investAmount && (
+                      <div className="flex items-center gap-2 text-yellow-400 text-sm">
+                        <AlertCircle className="h-4 w-4" />
+                        Amount exceeds remaining capacity
+                      </div>
+                    )}
+                  </div>
                 </>
-              ) : approveError ? (
-                <>
-                  <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Approval Failed</h3>
-                  <p className="text-red-400 text-sm mb-4">
-                    {approveError.message?.slice(0, 100) || 'Transaction failed'}
+              ) : step === 'approve' ? (
+                <div className="text-center py-8">
+                  {isApprovePending || isApproveConfirming ? (
+                    <>
+                      <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {isApprovePending ? 'Confirm in Wallet' : 'Approving USDC...'}
+                      </h3>
+                      <p className="text-white/60">
+                        {isApprovePending
+                          ? 'Please confirm the approval transaction in your wallet'
+                          : 'Waiting for transaction confirmation...'}
+                      </p>
+                    </>
+                  ) : approveError ? (
+                    <>
+                      <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">Approval Failed</h3>
+                      <p className="text-red-400 text-sm mb-4">
+                        {approveError.message?.slice(0, 100) || 'Transaction failed'}
+                      </p>
+                      <button
+                        onClick={handleApprove}
+                        className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              ) : step === 'invest' ? (
+                <div className="text-center py-8">
+                  {isInvestPending || isInvestConfirming ? (
+                    <>
+                      <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {isInvestPending ? 'Confirm in Wallet' : 'Processing Investment...'}
+                      </h3>
+                      <p className="text-white/60">
+                        {isInvestPending
+                          ? 'Please confirm the investment transaction in your wallet'
+                          : 'Your investment is being processed...'}
+                      </p>
+                    </>
+                  ) : investError ? (
+                    <>
+                      <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">Investment Failed</h3>
+                      <p className="text-red-400 text-sm mb-4">
+                        {investError.message?.slice(0, 100) || 'Transaction failed'}
+                      </p>
+                      <button
+                        onClick={handleInvest}
+                        className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                      >
+                        Try Again
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              ) : step === 'success' ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">Investment Successful!</h3>
+                  <p className="text-white/60 mb-2">
+                    You have successfully invested {formatUSDCDisplay(amountWei)} in this round.
+                  </p>
+                  <p className="text-sm text-[#A2D5C6] mb-6">
+                    You received {Number(tokensToReceive).toLocaleString()} equity tokens
                   </p>
                   <button
-                    onClick={handleApprove}
+                    onClick={handleClose}
                     className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
                   >
-                    Try Again
+                    Done
                   </button>
-                </>
+                </div>
               ) : null}
             </div>
-          ) : step === 'invest' ? (
-            <div className="text-center py-8">
-              {isInvestPending || isInvestConfirming ? (
-                <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {isInvestPending ? 'Confirm in Wallet' : 'Processing Investment...'}
-                  </h3>
-                  <p className="text-white/60">
-                    {isInvestPending
-                      ? 'Please confirm the investment transaction in your wallet'
-                      : 'Your investment is being processed...'}
-                  </p>
-                </>
-              ) : investError ? (
-                <>
-                  <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Investment Failed</h3>
-                  <p className="text-red-400 text-sm mb-4">
-                    {investError.message?.slice(0, 100) || 'Transaction failed'}
-                  </p>
-                  <button
-                    onClick={handleInvest}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
-                  >
-                    Try Again
-                  </button>
-                </>
-              ) : null}
-            </div>
-          ) : step === 'success' ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Investment Successful!</h3>
-              <p className="text-white/60 mb-2">
-                You have successfully invested {formatUSDCDisplay(amountWei)} in this round.
-              </p>
-              <p className="text-sm text-[#A2D5C6] mb-6">
-                You received {Number(formatUnits(tokensToReceive, 18)).toLocaleString()} equity tokens
-              </p>
-              <button
-                onClick={onClose}
-                className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
-              >
-                Done
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
