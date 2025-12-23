@@ -60,8 +60,9 @@ contract CoreFlowTest is Test {
         usdc = new MockUSDC();
         sharedVault = new MockVault(address(usdc), "Shared Yield Vault", "sUSDC");
         identity = new FndrIdentity();
-        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity));
+        // Deploy secondary market first so we can pass it to factory
         secondaryMarket = new StartupSecondaryMarket(address(identity), address(usdc), platformWallet);
+        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity), address(secondaryMarket));
 
         // Fund vault and users
         usdc.transfer(address(sharedVault), 1000000 * 1e6);

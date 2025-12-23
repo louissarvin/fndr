@@ -318,6 +318,155 @@ export function useMultiRoundInvestorYield(
   };
 }
 
+// Hook to get vault balance and round info for yield calculations
+export function useMultiRoundYieldInfo(
+  roundAddresses: `0x${string}`[],
+  investor: `0x${string}` | undefined
+) {
+  // Fetch yield info (vault balance, total yield, APY) for each round
+  const yieldContracts = roundAddresses.map((roundAddress) => ({
+    address: roundAddress,
+    abi: RoundManagerABI,
+    functionName: 'getYieldInfoView' as const,
+  }));
+
+  // Fetch round info (totalRaised, totalWithdrawn, tokensIssued) for each round
+  const roundContracts = roundAddresses.map((roundAddress) => ({
+    address: roundAddress,
+    abi: RoundManagerABI,
+    functionName: 'getRoundInfoView' as const,
+  }));
+
+  // Fetch investor info for each round
+  const investorContracts = roundAddresses.map((roundAddress) => ({
+    address: roundAddress,
+    abi: RoundManagerABI,
+    functionName: 'getInvestorInfoView' as const,
+    args: investor ? [investor] : undefined,
+  }));
+
+  const yieldResult = useReadContracts({
+    contracts: yieldContracts,
+    query: { enabled: roundAddresses.length > 0 },
+  });
+
+  const roundResult = useReadContracts({
+    contracts: roundContracts,
+    query: { enabled: roundAddresses.length > 0 },
+  });
+
+  const investorResult = useReadContracts({
+    contracts: investorContracts,
+    query: { enabled: !!investor && roundAddresses.length > 0 },
+  });
+
+  // Calculate totals and per-round breakdown
+  let totalVaultBalance = BigInt(0);
+  let totalRaised = BigInt(0);
+  let totalWithdrawn = BigInt(0);
+  let totalTokensIssued = BigInt(0);
+  let userTotalTokens = BigInt(0);
+  let totalClaimableYield = BigInt(0);
+  let totalYieldClaimed = BigInt(0);
+
+  const roundBreakdown = roundAddresses.map((roundAddress, index) => {
+    const yieldData = yieldResult.data?.[index];
+    const roundData = roundResult.data?.[index];
+    const investorData = investorResult.data?.[index];
+
+    let vaultBalance = BigInt(0);
+    let raised = BigInt(0);
+    let withdrawn = BigInt(0);
+    let tokensIssued = BigInt(0);
+    let userTokens = BigInt(0);
+    let claimableYield = BigInt(0);
+    let yieldClaimed = BigInt(0);
+
+    if (yieldData?.status === 'success' && yieldData.result) {
+      const data = yieldData.result as readonly [bigint, bigint, bigint];
+      vaultBalance = data[0]; // totalVaultBalance
+    }
+
+    if (roundData?.status === 'success' && roundData.result) {
+      const data = roundData.result as readonly [number, bigint, bigint, bigint, bigint, bigint];
+      raised = data[1]; // totalRaised
+      withdrawn = data[2]; // totalWithdrawn
+      tokensIssued = data[3]; // tokensIssued
+    }
+
+    if (investorData?.status === 'success' && investorData.result) {
+      const data = investorData.result as readonly [bigint, bigint, bigint, bigint];
+      userTokens = data[1]; // equityTokens
+      claimableYield = data[2]; // yieldBalance
+      yieldClaimed = data[3]; // yieldClaimed
+    }
+
+    // Accumulate totals
+    totalVaultBalance += vaultBalance;
+    totalRaised += raised;
+    totalWithdrawn += withdrawn;
+    totalTokensIssued += tokensIssued;
+    userTotalTokens += userTokens;
+    totalClaimableYield += claimableYield;
+    totalYieldClaimed += yieldClaimed;
+
+    // Calculate accruing yield for this round
+    // Vault growth = vaultBalance - (raised - withdrawn)
+    // This represents yield that has accrued but not yet distributed
+    const originalPrincipal = raised > withdrawn ? raised - withdrawn : BigInt(0);
+    const vaultGrowth = vaultBalance > originalPrincipal ? vaultBalance - originalPrincipal : BigInt(0);
+
+    // Investor's share of potential yield (50% goes to investors, proportional to tokens)
+    const investorShareOfGrowth = tokensIssued > BigInt(0) && userTokens > BigInt(0)
+      ? (vaultGrowth * BigInt(50) * userTokens) / (BigInt(100) * tokensIssued)
+      : BigInt(0);
+
+    return {
+      roundAddress,
+      vaultBalance,
+      totalRaised: raised,
+      totalWithdrawn: withdrawn,
+      tokensIssued,
+      userTokens,
+      claimableYield,
+      yieldClaimed,
+      accruingYield: investorShareOfGrowth,
+    };
+  });
+
+  // Calculate total accruing yield
+  const totalAccruingYield = roundBreakdown.reduce(
+    (acc, round) => acc + (round?.accruingYield || BigInt(0)),
+    BigInt(0)
+  );
+
+  // User's share of total vault
+  const userVaultShare = totalTokensIssued > BigInt(0) && userTotalTokens > BigInt(0)
+    ? (totalVaultBalance * userTotalTokens) / totalTokensIssued
+    : BigInt(0);
+
+  return {
+    isLoading: yieldResult.isLoading || roundResult.isLoading || investorResult.isLoading,
+    refetch: () => {
+      yieldResult.refetch();
+      roundResult.refetch();
+      investorResult.refetch();
+    },
+    // Totals
+    totalVaultBalance,
+    totalRaised,
+    totalWithdrawn,
+    userTotalTokens,
+    totalTokensIssued,
+    totalClaimableYield,
+    totalYieldClaimed,
+    totalAccruingYield,
+    userVaultShare,
+    // Per-round breakdown
+    roundBreakdown,
+  };
+}
+
 export function useGetEquityToken(roundAddress: `0x${string}` | undefined) {
   return useReadContract({
     address: roundAddress,

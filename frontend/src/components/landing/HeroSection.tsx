@@ -30,10 +30,10 @@ const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(
                 Tokenized startup equity with on-chain yield — built on Mantle.
               </p>
               <div ref={buttonsRef} className="flex space-x-6 justify-center mb-12">
-                <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(162,213,198,0.6)] transition-all duration-300 opacity-0">
+                <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
                   Explore startups
                 </Link>
-                <Link to="/founder" className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(162,213,198,0.4)] transition-all duration-300 opacity-0">
+                <Link to="/founder" className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
                   Tokenize your startup
                 </Link>
               </div>

@@ -73,7 +73,7 @@ contract RoundManager {
     uint256 public founderYieldClaimed;
     uint256 public lastYieldUpdate;
 
-    uint256 public constant SECONDS_PER_MONTH = 30 days;
+    uint256 public constant SECONDS_PER_MONTH = 1 days;
     uint256 public constant BASIS_POINTS = 10000;
     uint256 public constant PLATFORM_SUCCESS_FEE = 50;
     uint256 public constant MAX_WITHDRAWAL_RATE = 200;
@@ -171,7 +171,8 @@ contract RoundManager {
         string memory _companySymbol,
         address _founder,
         address _fndrIdentity,
-        string memory _metadataURI
+        string memory _metadataURI,
+        address _secondaryMarket
     ) {
         if(_usdc == address(0)) {
             revert InvalidUSDCAddress();
@@ -219,6 +220,11 @@ contract RoundManager {
             address(this),
             _fndrIdentity
         );
+
+        // Auto-link secondary market so holding periods are initialized on investment
+        if (_secondaryMarket != address(0)) {
+            round.equityToken.setSecondaryMarket(_secondaryMarket);
+        }
 
         emit RoundCreated(
             _founder,
@@ -501,7 +507,9 @@ contract RoundManager {
         if (vault.balanceOf(address(this)) == 0) return;
 
         uint256 currentVaultBalance = vault.convertToAssets(vault.balanceOf(address(this)));
-        uint256 lastBalance = round.totalRaised - round.totalWithdrawn + totalYieldDistributed;
+
+        uint256 netRaised = (round.totalRaised * (BASIS_POINTS - PLATFORM_SUCCESS_FEE)) / BASIS_POINTS;
+        uint256 lastBalance = netRaised - round.totalWithdrawn + totalYieldDistributed;
 
         if (currentVaultBalance <= lastBalance) return;
 

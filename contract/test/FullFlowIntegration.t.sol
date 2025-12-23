@@ -82,8 +82,9 @@ contract FullFlowIntegrationTest is Test {
         usdc = new MockUSDC();
         sharedVault = new MockVault(address(usdc), "Shared Yield Vault", "sUSDC");
         identity = new FndrIdentity();
-        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity));
+        // Deploy secondary market first so we can pass it to factory
         secondaryMarket = new StartupSecondaryMarket(address(identity), address(usdc), platformWallet);
+        factory = new RoundFactory(address(usdc), address(sharedVault), address(identity), address(secondaryMarket));
         
         // Pre-fund vault for yield generation (simulates existing liquidity)
         usdc.transfer(address(sharedVault), 10000000 * 1e6); // 10M USDC
@@ -162,11 +163,10 @@ contract FullFlowIntegrationTest is Test {
         // Get round and token contracts
         round = RoundManager(roundAddress);
         equityToken = StartupEquityToken(round.getEquityToken());
-        
-        // Set secondary market in equity token (automatically whitelists it)
-        vm.prank(founder);
-        equityToken.setSecondaryMarket(address(secondaryMarket));
-        
+
+        // Secondary market is now auto-linked during round creation!
+        // No need to manually call setSecondaryMarket anymore
+
         // Verify round creation
         assertEq(factory.getTotalRoundsCount(), 1, "Round count incorrect");
         assertEq(factory.getRoundByFounder(founder), roundAddress, "Founder mapping incorrect");

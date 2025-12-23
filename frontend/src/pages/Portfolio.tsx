@@ -6,7 +6,7 @@ import { formatUnits } from 'viem';
 import Layout from '@/components/layout/Layout';
 import { useInvestorInvestments, useRound, type Investment } from '@/hooks/usePonderData';
 import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
-import { useMultiRoundInvestorYield, useClaimYield, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
+import { useMultiRoundInvestorYield, useMultiRoundYieldInfo, useClaimYield, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
 import {
   Wallet,
   ArrowUpRight,
@@ -155,11 +155,18 @@ export default function Portfolio() {
 
   // Fetch real-time yield data from all rounds
   const {
-    totalPendingYield,
     yieldByRound,
     isLoading: isLoadingYield,
     refetch: refetchYield
   } = useMultiRoundInvestorYield(uniqueRoundAddresses, address);
+
+  // Fetch yield info from vault
+  const {
+    totalClaimableYield,
+    totalAccruingYield,
+    isLoading: isLoadingVaultInfo,
+    refetch: refetchVaultInfo
+  } = useMultiRoundYieldInfo(uniqueRoundAddresses, address);
 
   // Animation refs
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -173,16 +180,27 @@ export default function Portfolio() {
     0
   ) || 0;
 
-  // Format pending yield for display
-  const formattedPendingYield = useMemo(() => {
-    const yieldAmount = Number(formatUnits(totalPendingYield, USDC_DECIMALS));
+  // Format claimable yield (from contract)
+  const formattedClaimableYield = useMemo(() => {
+    const amount = Number(formatUnits(totalClaimableYield, USDC_DECIMALS));
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(yieldAmount);
-  }, [totalPendingYield]);
+    }).format(amount);
+  }, [totalClaimableYield]);
+
+  // Format accruing yield (estimated from vault growth)
+  const formattedAccruingYield = useMemo(() => {
+    const amount = Number(formatUnits(totalAccruingYield, USDC_DECIMALS));
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }, [totalAccruingYield]);
 
   // Find round with claimable yield
   const roundWithYield = useMemo(() => {
@@ -286,12 +304,11 @@ export default function Portfolio() {
             )}
           </div>
 
-          {/* Stats Cards & Quick Actions */}
+          {/* Stats Cards */}
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* Total Invested */}
             <div className="bg-[#A2D5C6]/20 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/30">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-white/50 text-sm">Total Invested</p>
-              </div>
+              <p className="text-white/50 text-sm mb-2">Total Invested</p>
               <p className="text-2xl font-bold text-[#A2D5C6]">
                 {formatCurrency(totalInvested)}
               </p>
@@ -300,48 +317,16 @@ export default function Portfolio() {
               </p>
             </div>
 
+            {/* APY Rate */}
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-white/50 text-sm">APY Rate</p>
-              </div>
+              <p className="text-white/50 text-sm mb-2">APY Rate</p>
               <p className="text-2xl font-bold text-white">6%</p>
               <p className="text-xs text-white/40 mt-1">Guaranteed yield</p>
             </div>
 
-            {/* Pending Yield Card */}
+            {/* Your Tokens */}
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-white/50 text-sm">Pending Yield</p>
-                <button
-                  onClick={() => refetchYield()}
-                  disabled={isLoadingYield}
-                  className="text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
-                  title="Refresh yield data"
-                >
-                  <RefreshCw className={`h-3 w-3 ${isLoadingYield ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-              <p className="text-2xl font-bold text-white">
-                {isLoadingYield ? (
-                  <span className="text-white/40">Loading...</span>
-                ) : (
-                  formattedPendingYield
-                )}
-              </p>
-              <button
-                onClick={handleClaimYield}
-                disabled={isClaimPending || !isConnected || totalPendingYield === BigInt(0)}
-                className="text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                {isClaimPending ? 'Claiming...' : totalPendingYield > BigInt(0) ? 'Claim Now' : 'No yield to claim'}
-              </button>
-            </div>
-
-            {/* Tokens Card */}
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-white/50 text-sm">Your Tokens</p>
-              </div>
+              <p className="text-white/50 text-sm mb-2">Your Tokens</p>
               <p className="text-2xl font-bold text-white">
                 {investments?.reduce((acc, inv) => acc + Number(inv.tokensReceived), 0).toLocaleString() || 0}
               </p>
@@ -349,8 +334,36 @@ export default function Portfolio() {
                 to="/marketplace"
                 className="text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors mt-1 flex items-center gap-1"
               >
-                Sell on Marketplace <ArrowUpRight className="h-3 w-3" />
+                Sell on Marketplace
               </Link>
+            </div>
+
+            {/* Pending Yield - with claim action */}
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-white/50 text-sm">Pending Yield</p>
+                <button
+                  onClick={() => { refetchYield(); refetchVaultInfo(); }}
+                  disabled={isLoadingYield || isLoadingVaultInfo}
+                  className="text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
+                  title="Refresh"
+                >
+                  <RefreshCw className={`h-3 w-3 ${(isLoadingYield || isLoadingVaultInfo) ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+              <p className="text-2xl font-bold text-[#A2D5C6]">
+                {isLoadingYield ? '...' : formattedClaimableYield}
+              </p>
+              <p className="text-xs text-white/40 mt-1 mb-2">
+                +{isLoadingVaultInfo ? '...' : formattedAccruingYield} accruing
+              </p>
+              <button
+                onClick={handleClaimYield}
+                disabled={isClaimPending || !isConnected || totalClaimableYield === BigInt(0)}
+                className="w-full py-2 px-3 bg-[#A2D5C6] text-black text-sm font-semibold rounded-sm hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isClaimPending ? 'Claiming...' : totalClaimableYield > BigInt(0) ? 'Claim' : 'No yield'}
+              </button>
             </div>
           </div>
 

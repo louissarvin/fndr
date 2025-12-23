@@ -563,6 +563,12 @@ export const RoundManagerABI = [
         indexed: false,
         internalType: "uint256",
       },
+      {
+        name: "metadataURI",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
     ],
     anonymous: false,
   },

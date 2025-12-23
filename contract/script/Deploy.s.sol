@@ -42,23 +42,24 @@ contract DeployFndr is Script {
         FndrIdentity identity = new FndrIdentity();
         console.log("   FndrIdentity deployed at:", address(identity));
 
-        // 4. Deploy RoundFactory
-        console.log("4. Deploying RoundFactory...");
-        RoundFactory factory = new RoundFactory(
-            address(usdc),
-            address(vault),
-            address(identity)
-        );
-        console.log("   RoundFactory deployed at:", address(factory));
-
-        // 5. Deploy StartupSecondaryMarket
-        console.log("5. Deploying StartupSecondaryMarket...");
+        // 4. Deploy StartupSecondaryMarket FIRST (needed by RoundFactory)
+        console.log("4. Deploying StartupSecondaryMarket...");
         StartupSecondaryMarket market = new StartupSecondaryMarket(
             address(identity),
             address(usdc),
             PLATFORM_WALLET
         );
         console.log("   StartupSecondaryMarket deployed at:", address(market));
+
+        // 5. Deploy RoundFactory (with secondary market for auto-linking)
+        console.log("5. Deploying RoundFactory...");
+        RoundFactory factory = new RoundFactory(
+            address(usdc),
+            address(vault),
+            address(identity),
+            address(market)  // Auto-link secondary market to new rounds
+        );
+        console.log("   RoundFactory deployed at:", address(factory));
 
         // Seed the vault with USDC for yield generation
         console.log("6. Seeding vault with initial USDC for yield...");

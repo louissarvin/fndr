@@ -161,14 +161,19 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
     address
   );
 
-  // Contract hooks
+  // Get equity token address for the selected round (must be before useEquityTokenApprove)
+  const { data: equityTokenAddress } = useGetEquityToken(
+    selectedToken?.tokenAddress as `0x${string}`
+  );
+
+  // Contract hooks - use equityTokenAddress (actual token), not selectedToken.tokenAddress (round address)
   const {
     approve: approveToken,
     isPending: isApprovePending,
     isConfirming: isApproveConfirming,
     isSuccess: isApproveSuccess,
     error: approveError,
-  } = useEquityTokenApprove(selectedToken?.tokenAddress as `0x${string}`);
+  } = useEquityTokenApprove(equityTokenAddress as `0x${string}`);
 
   const {
     createSellOrder,
@@ -177,11 +182,6 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
     isSuccess: isCreateSuccess,
     error: createError,
   } = useCreateSellOrder();
-
-  // Get equity token address for the selected round
-  const { data: equityTokenAddress } = useGetEquityToken(
-    selectedToken?.tokenAddress as `0x${string}`
-  );
 
   // Holding period validation - use equity token address, not round address
   const { data: firstPurchaseTime } = useFirstPurchaseTime(
@@ -300,9 +300,9 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   };
 
   const handleCreate = () => {
-    if (!selectedToken) return;
+    if (!selectedToken || !equityTokenAddress) return;
     createSellOrder(
-      selectedToken.tokenAddress as `0x${string}`,
+      equityTokenAddress as `0x${string}`,
       amount,
       price,
       BigInt(duration)

@@ -9,20 +9,31 @@ ponder.on("RoundFactory:RoundDeployed", async ({ event, context }) => {
   const metadataURI = event.args.metadataURI;
   const timestamp = event.block.timestamp;
 
-  // Create new round entry
-  await context.db.insert(schema.round).values({
-    id: roundId,
-    founder: founder,
-    targetRaise: targetRaise,
-    metadataURI: metadataURI,
-    totalRaised: 0n,
-    totalWithdrawn: 0n,
-    tokensIssued: 0n,
-    investorCount: 0,
-    state: 0, // Fundraising
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  });
+  // Upsert round entry (RoundCreated may have already created it)
+  const existingRound = await context.db.find(schema.round, { id: roundId });
+
+  if (existingRound) {
+    await context.db.update(schema.round, { id: roundId }).set({
+      founder: founder,
+      targetRaise: targetRaise,
+      metadataURI: metadataURI,
+      updatedAt: timestamp,
+    });
+  } else {
+    await context.db.insert(schema.round).values({
+      id: roundId,
+      founder: founder,
+      targetRaise: targetRaise,
+      metadataURI: metadataURI,
+      totalRaised: 0n,
+      totalWithdrawn: 0n,
+      tokensIssued: 0n,
+      investorCount: 0,
+      state: 0, // Fundraising
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  }
 
   // Update platform stats
   const stats = await context.db.find(schema.platformStats, { id: "global" });

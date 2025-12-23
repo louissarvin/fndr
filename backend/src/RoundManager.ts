@@ -2,6 +2,7 @@ import { ponder } from "ponder:registry";
 import * as schema from "ponder:schema";
 
 // Handle round creation (emitted by RoundManager after deployment)
+// Note: This event may fire BEFORE RoundDeployed due to log ordering
 ponder.on("RoundManager:RoundCreated", async ({ event, context }) => {
   const roundId = event.log.address.toLowerCase();
   const founder = event.args.founder.toLowerCase();
@@ -11,7 +12,7 @@ ponder.on("RoundManager:RoundCreated", async ({ event, context }) => {
   const equityPercentage = event.args.equityPercentage;
   const timestamp = event.block.timestamp;
 
-  // Update round with additional info from RoundCreated event
+  // Upsert round with info from RoundCreated event
   const existingRound = await context.db.find(schema.round, { id: roundId });
 
   if (existingRound) {
@@ -22,7 +23,7 @@ ponder.on("RoundManager:RoundCreated", async ({ event, context }) => {
       updatedAt: timestamp,
     });
   } else {
-    // Round should already exist from RoundDeployed, but create if not
+    // RoundCreated fires before RoundDeployed, so create with all available info
     await context.db.insert(schema.round).values({
       id: roundId,
       founder: founder,

@@ -23,6 +23,7 @@ interface FounderRoundCardProps {
 }
 
 const MAX_WITHDRAWAL_RATE = 200; // 2% in basis points
+const PLATFORM_SUCCESS_FEE = 50; // 0.5% platform fee in basis points
 const BASIS_POINTS = 10000;
 
 function formatUSDCValue(value: bigint): string {
@@ -121,10 +122,17 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
   const progress = calculateProgress(round.totalRaised, round.targetRaise);
   const stateInfo = getRoundStateLabel(round.state, progress);
 
-  // Calculate vault balance (total raised - total withdrawn = what's still in vault)
-  const vaultBalance = BigInt(round.totalRaised) - BigInt(round.totalWithdrawn);
+  // Use real-time contract data if available, fallback to indexed data
+  // roundData returns: [state, founder, equityToken, totalRaised, totalWithdrawn, lastWithdrawal, tokensIssued, completionTime]
+  const totalRaised = roundData ? BigInt(roundData[3]) : BigInt(round.totalRaised);
+  const totalWithdrawn = roundData ? BigInt(roundData[4]) : BigInt(round.totalWithdrawn);
 
-  // Calculate 2% max monthly withdrawal
+  // Calculate vault balance accounting for platform fee (0.5%)
+  // Net raised = totalRaised * (1 - 0.5%) = totalRaised * 9950 / 10000
+  const netRaised = (totalRaised * BigInt(BASIS_POINTS - PLATFORM_SUCCESS_FEE)) / BigInt(BASIS_POINTS);
+  const vaultBalance = netRaised - totalWithdrawn;
+
+  // Calculate 2% max monthly withdrawal based on net vault balance
   const maxMonthlyWithdrawal = (vaultBalance * BigInt(MAX_WITHDRAWAL_RATE)) / BigInt(BASIS_POINTS);
 
   // Get lastWithdrawal (index 5) and completionTime (index 7) from contract data
@@ -227,7 +235,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
             <span className="text-xs">Withdrawn</span>
           </div>
           <p className="text-lg font-bold text-white">
-            ${(Number(round.totalWithdrawn) / 1e6).toLocaleString()}
+            ${(Number(totalWithdrawn) / 1e6).toLocaleString()}
           </p>
         </div>
       </div>
@@ -310,7 +318,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
           {/* Withdrawal Info */}
           <div className="bg-white/5 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-white/60">Vault Balance</span>
+              <span className="text-sm text-white/60">Available Balance</span>
               <span className="text-lg font-bold text-white">
                 {formatUSDCValue(vaultBalance)}
               </span>
@@ -329,7 +337,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
             )}
             {round.state === 1 && (
               <p className="text-xs text-white/40 pt-2 border-t border-white/10">
-                You can withdraw up to 2% of the vault balance per month.
+                Available balance = Total raised minus 0.5% platform fee. You can withdraw up to 2% per month.
               </p>
             )}
           </div>

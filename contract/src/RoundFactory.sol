@@ -15,6 +15,7 @@ contract RoundFactory {
     IERC20 public immutable usdc;
     MockVault public immutable sharedYieldVault;
     FndrIdentity public immutable identity;
+    address public immutable secondaryMarket;
 
     uint256 public constant ROUND_CREATION_FEE = 10 * 1e6;
     address public immutable platformWallet = 0x564323aE0D8473103F3763814c5121Ca9e48004B;
@@ -30,13 +31,14 @@ contract RoundFactory {
         string metadataURI
     );
 
-    constructor(address _usdc, address _sharedYieldVault, address _fndrIdentity) {
-        if (_usdc == address(0) || _sharedYieldVault == address(0) || _fndrIdentity == address(0))
+    constructor(address _usdc, address _sharedYieldVault, address _fndrIdentity, address _secondaryMarket) {
+        if (_usdc == address(0) || _sharedYieldVault == address(0) || _fndrIdentity == address(0) || _secondaryMarket == address(0))
             revert InvalidParams();
 
         usdc = IERC20(_usdc);
         sharedYieldVault = MockVault(_sharedYieldVault);
         identity = FndrIdentity(_fndrIdentity);
+        secondaryMarket = _secondaryMarket;
     }
 
     function createRound(
@@ -69,7 +71,8 @@ contract RoundFactory {
             companySymbol,
             msg.sender,
             address(identity),
-            metadataURI
+            metadataURI,
+            secondaryMarket
         );
 
         address roundAddress = address(newRound);

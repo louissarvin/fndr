@@ -97,8 +97,8 @@ contract StartupEquityToken {
         _;
     }
     
-    modifier onlyFounderOrCampaign() { 
-        if (msg.sender != founder || msg.sender != campaign) {
+    modifier onlyFounderOrCampaign() {
+        if (msg.sender != founder && msg.sender != campaign) {
             revert OnlyFounderOrCampaignCanCall();
         }
         _;
@@ -282,7 +282,7 @@ contract StartupEquityToken {
         issuanceEnabled = false;
     }
     
-    function setSecondaryMarket(address _secondaryMarket) external onlyFounder {
+    function setSecondaryMarket(address _secondaryMarket) external onlyFounderOrCampaign {
         require(_secondaryMarket != address(0), "Invalid secondary market address");
         secondaryMarket = _secondaryMarket;
         
