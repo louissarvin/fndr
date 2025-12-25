@@ -125,27 +125,26 @@ export default function Navbar() {
                   <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${walletDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={0} className="bg-[#A2D5C6] border-0 rounded-t-none rounded-b-xl min-w-[var(--radix-dropdown-menu-trigger-width)] animate-in fade-in-0 zoom-in-95 duration-200 py-3 pb-4">
+              <DropdownMenuContent align="end" sideOffset={0} className="bg-[#A2D5C6] border-0 rounded-t-none rounded-b-xl min-w-[var(--radix-dropdown-menu-trigger-width)] animate-in fade-in-0 zoom-in-95 duration-200 py-1 pb-2">
                 <DropdownMenuItem asChild className="text-black hover:bg-transparent focus:bg-transparent focus:text-black cursor-pointer relative overflow-hidden group">
                   <Link to="/dashboard">
                     <span className="relative z-10">View Portfolio</span>
-                    <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
+                    <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(65%-16px)]"></span>
                   </Link>
                 </DropdownMenuItem>
                 {isFounder && (
                   <DropdownMenuItem asChild className="text-black hover:bg-transparent focus:bg-transparent focus:text-black cursor-pointer relative overflow-hidden group">
                     <Link to="/founder">
                       <span className="relative z-10 flex items-center gap-2">
-                        <Briefcase className="h-3 w-3" />
                         Founder Dashboard
                       </span>
-                      <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
+                      <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-black transition-all duration-300 ease-out group-hover:w-[calc(88%-16px)]"></span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 hover:bg-transparent focus:bg-transparent focus:text-red-600 cursor-pointer relative overflow-hidden group">
                   <span className="relative z-10">Disconnect</span>
-                  <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-red-600 transition-all duration-300 ease-out group-hover:w-[calc(100%-16px)]"></span>
+                  <span className="absolute bottom-1 left-2 h-[2px] w-0 bg-red-600 transition-all duration-300 ease-out group-hover:w-[calc(56%-16px)]"></span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

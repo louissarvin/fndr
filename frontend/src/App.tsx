@@ -6,6 +6,7 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { config } from "@/lib/web3-config";
+import { AIProvider } from "@/components/ai/AIContext";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import Portfolio from "./pages/Portfolio";
@@ -32,23 +33,25 @@ const App = () => (
         modalSize="compact"
       >
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Chest />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/dashboard" element={<Portfolio />} />
-              <Route path="/portfolio" element={<Portfolio />} />
-              <Route path="/founder" element={<FounderDashboard />} />
-              <Route path="/old-index" element={<Index />} />
-              <Route path="/how-it-works" element={<Chest />} />
-              <Route path="/create-campaign" element={<Browse />} />
-              <Route path="/campaign/:id" element={<Browse />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AIProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Chest />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/dashboard" element={<Portfolio />} />
+                <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/founder" element={<FounderDashboard />} />
+                <Route path="/old-index" element={<Index />} />
+                <Route path="/how-it-works" element={<Chest />} />
+                <Route path="/create-campaign" element={<Browse />} />
+                <Route path="/campaign/:id" element={<Browse />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AIProvider>
         </TooltipProvider>
       </RainbowKitProvider>
     </QueryClientProvider>

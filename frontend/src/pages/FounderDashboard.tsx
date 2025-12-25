@@ -137,7 +137,6 @@ export default function FounderDashboard() {
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Building2 className="h-4 w-4 text-[#A2D5C6]" />
                 <p className="text-white/50 text-sm">Total Rounds</p>
               </div>
               <p className="text-2xl font-bold text-white">{stats.totalRounds}</p>
@@ -145,7 +144,6 @@ export default function FounderDashboard() {
 
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-[#A2D5C6]" />
                 <p className="text-white/50 text-sm">Total Raised</p>
               </div>
               <p className="text-2xl font-bold text-white">
@@ -155,18 +153,16 @@ export default function FounderDashboard() {
 
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-[#A2D5C6]" />
                 <p className="text-white/50 text-sm">Total Investors</p>
               </div>
               <p className="text-2xl font-bold text-white">{stats.totalInvestors}</p>
             </div>
 
-            <div className="bg-[#A2D5C6]/20 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/30">
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 ">
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
                 <p className="text-white/50 text-sm">Active Rounds</p>
               </div>
-              <p className="text-2xl font-bold text-[#A2D5C6]">{stats.activeRounds}</p>
+              <p className="text-2xl font-bold text-white">{stats.activeRounds}</p>
             </div>
           </div>
 

@@ -3,16 +3,9 @@ export const RoundFactoryABI = [
     type: "constructor",
     inputs: [
       { name: "_usdc", type: "address", internalType: "address" },
-      {
-        name: "_sharedYieldVault",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_fndrIdentity",
-        type: "address",
-        internalType: "address",
-      },
+      { name: "_sharedYieldVault", type: "address", internalType: "address" },
+      { name: "_fndrIdentity", type: "address", internalType: "address" },
+      { name: "_secondaryMarket", type: "address", internalType: "address" },
     ],
     stateMutability: "nonpayable",
   },
@@ -28,11 +21,7 @@ export const RoundFactoryABI = [
     name: "createRound",
     inputs: [
       { name: "targetRaise", type: "uint256", internalType: "uint256" },
-      {
-        name: "equityPercentage",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "equityPercentage", type: "uint256", internalType: "uint256" },
       { name: "sharePrice", type: "uint256", internalType: "uint256" },
       { name: "deadline", type: "uint256", internalType: "uint256" },
       { name: "companySymbol", type: "string", internalType: "string" },
@@ -73,13 +62,7 @@ export const RoundFactoryABI = [
     type: "function",
     name: "identity",
     inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "contract FndrIdentity",
-      },
-    ],
+    outputs: [{ name: "", type: "address", internalType: "contract FndrIdentity" }],
     stateMutability: "view",
   },
   {
@@ -92,9 +75,7 @@ export const RoundFactoryABI = [
   {
     type: "function",
     name: "markRoundInactive",
-    inputs: [
-      { name: "roundAddress", type: "address", internalType: "address" },
-    ],
+    inputs: [{ name: "roundAddress", type: "address", internalType: "address" }],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -114,11 +95,16 @@ export const RoundFactoryABI = [
   },
   {
     type: "function",
+    name: "secondaryMarket",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "sharedYieldVault",
     inputs: [],
-    outputs: [
-      { name: "", type: "address", internalType: "contract MockVault" },
-    ],
+    outputs: [{ name: "", type: "address", internalType: "contract MockVault" }],
     stateMutability: "view",
   },
   {
@@ -132,30 +118,10 @@ export const RoundFactoryABI = [
     type: "event",
     name: "RoundDeployed",
     inputs: [
-      {
-        name: "roundAddress",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "founder",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "targetRaise",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-      {
-        name: "metadataURI",
-        type: "string",
-        indexed: false,
-        internalType: "string",
-      },
+      { name: "roundAddress", type: "address", indexed: true, internalType: "address" },
+      { name: "founder", type: "address", indexed: true, internalType: "address" },
+      { name: "targetRaise", type: "uint256", indexed: false, internalType: "uint256" },
+      { name: "metadataURI", type: "string", indexed: false, internalType: "string" },
     ],
     anonymous: false,
   },

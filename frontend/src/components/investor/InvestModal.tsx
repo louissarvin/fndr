@@ -277,7 +277,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
 
               {/* Badges */}
               <div ref={badgesRef} className="absolute top-5 left-4 flex gap-2">
-                <span className="bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+                <span className="bg-[#CFFFE2] backdrop-blur-sm text-black text-xs font-medium px-3 py-1 rounded-full">
                   {round?.state === 0 ? 'Fundraising' : round?.state === 1 ? 'Completed' : 'Cancelled'}
                 </span>
                 {round?.equityPercentage && (
@@ -286,8 +286,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                   </span>
                 )}
               </div>
-              <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
-                <TrendingUp className="h-3 w-3" />
+              <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
                 6% APY
               </span>
             </div>
@@ -477,7 +476,6 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                 </div>
               ) : step === 'success' ? (
                 <div className="text-center py-8">
-                  <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">Investment Successful!</h3>
                   <p className="text-white/60 mb-2">
                     You have successfully invested {formatUSDCDisplay(amountWei)} in this round.

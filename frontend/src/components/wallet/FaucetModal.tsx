@@ -60,16 +60,13 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
   };
 
   const isLoading = isPending || isConfirming;
-  const formattedBalance = balance ? formatUSDCDisplay(balance) : '$0.00';
+  const formattedBalance = balance ? formatUSDCDisplay(balance) : '$0';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#1F1F1F] rounded-2xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
-            <div className="p-2 bg-[#A2D5C6]/20 rounded-xl">
-              <Droplets className="h-6 w-6 text-[#A2D5C6]" />
-            </div>
             Test USDC Faucet
           </DialogTitle>
           <DialogDescription className="text-white/60">
@@ -77,15 +74,15 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className=" space-y-6">
           {/* Balance Card */}
-          <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/20">
+          <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 ">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/50 text-sm mb-1">Your USDC Balance</p>
                 <p className="text-3xl font-bold text-white">{formattedBalance}</p>
               </div>
-              <div className="p-3 bg-[#A2D5C6]/20 rounded-xl">
+              <div className="p-3 rounded-xl">
                 <Wallet className="h-8 w-8 text-[#A2D5C6]" />
               </div>
             </div>
@@ -94,8 +91,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
           {/* Status Messages */}
           {showSuccess && (
             <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm font-medium">Successfully claimed 10,000 USDC!</p>
+              <p className="text-sm font-medium">Successfully claimed 1,000 USDC!</p>
             </div>
           )}
 
@@ -117,7 +113,6 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
             </div>
           ) : hasClaimed ? (
             <div className="flex items-center justify-center gap-3 bg-[#1A1A1A] rounded-xl p-4">
-              <CheckCircle2 className="h-5 w-5 text-[#A2D5C6]" />
               <p className="text-white/70 text-sm font-medium">You've already claimed your airdrop</p>
             </div>
           ) : (
@@ -134,7 +129,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
               ) : (
                 <>
                   <Droplets className="h-5 w-5" />
-                  Claim 10,000 Test USDC
+                  Claim 1.000 Test USDC
                 </>
               )}
             </button>

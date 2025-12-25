@@ -307,9 +307,9 @@ export default function Portfolio() {
           {/* Stats Cards */}
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {/* Total Invested */}
-            <div className="bg-[#A2D5C6]/20 backdrop-blur-md rounded-2xl p-5 border border-[#A2D5C6]/30">
+            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-2">Total Invested</p>
-              <p className="text-2xl font-bold text-[#A2D5C6]">
+              <p className="text-2xl font-bold text-white">
                 {formatCurrency(totalInvested)}
               </p>
               <p className="text-xs text-white/40 mt-1">
@@ -332,7 +332,7 @@ export default function Portfolio() {
               </p>
               <Link
                 to="/marketplace"
-                className="text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors mt-1 flex items-center gap-1"
+                className="text-xs text-white/40 hover:text-[#CFFFE2] transition-colors mt-1 flex items-center gap-1"
               >
                 Sell on Marketplace
               </Link>

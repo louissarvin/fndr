@@ -266,9 +266,6 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-[#A2D5C6]" />
-            </div>
             <div>
               <h2 className="text-xl font-bold text-white">Create Round</h2>
               <p className="text-sm text-white/60">
@@ -666,7 +663,6 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
 
           {txStep === 'success' && (
             <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Round Created!</h3>
               <p className="text-white/60 mb-6">
                 Your fundraising round has been successfully created. Investors can now participate.

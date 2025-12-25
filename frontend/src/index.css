@@ -382,19 +382,19 @@
   color: #FFFFFF !important;
 }
 
-/* Footer Links */
+/* Footer Links - only inside RainbowKit modals */
 [data-rk] [class*="ModalFooter"],
-[data-rk] a {
+[data-rk] [role="dialog"] a {
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
-[data-rk] a:hover {
+[data-rk] [role="dialog"] a:hover {
   color: #A2D5C6 !important;
 }
 
 /* "Learn More" accent link */
 [data-rk] [class*="LearnMore"],
-[data-rk] a[href*="learn"] {
+[data-rk] [role="dialog"] a[href*="learn"] {
   color: #A2D5C6 !important;
 }
 

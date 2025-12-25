@@ -219,7 +219,10 @@ contract FullFlowIntegrationTest is Test {
         assertEq(equityToken.balanceOf(investor1), expectedTokens1, "Investor1 token balance incorrect");
         assertEq(equityToken.balanceOf(investor2), expectedTokens2, "Investor2 token balance incorrect");
         assertEq(equityToken.balanceOf(investor3), expectedTokens3, "Investor3 token balance incorrect");
-        
+
+        // Trigger state update (needed since getRoundInfo is now a view function)
+        round.checkRoundState();
+
         // Verify round state
         (RoundManager.RoundState state, uint256 totalRaised, , uint256 tokensIssued, uint256 investorCount,) = round.getRoundInfo();
         assertEq(uint(state), uint(RoundManager.RoundState.COMPLETED), "Round should be completed");

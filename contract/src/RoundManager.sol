@@ -153,6 +153,7 @@ contract RoundManager {
     }
 
     modifier updateRoundState() {
+        _;
         if (round.state == RoundState.FUNDRAISING) {
             bool reachedTarget = round.totalRaised >= config.targetRaise;
             bool reachedDeadline = block.timestamp >= config.deadline;
@@ -161,7 +162,6 @@ contract RoundManager {
                 _completeRound();
             }
         }
-        _;
     }
 
     constructor(
@@ -221,7 +221,6 @@ contract RoundManager {
             _fndrIdentity
         );
 
-        // Auto-link secondary market so holding periods are initialized on investment
         if (_secondaryMarket != address(0)) {
             round.equityToken.setSecondaryMarket(_secondaryMarket);
         }
@@ -332,6 +331,9 @@ contract RoundManager {
         _updateYield();
     }
 
+    function checkRoundState() external updateRoundState {
+    }
+
     function getFounder() external view returns (address) {
         return round.founder;
     }
@@ -340,7 +342,7 @@ contract RoundManager {
         return address(round.equityToken);
     }
 
-    function getRoundInfo() external updateRoundState returns (
+    function getRoundInfo() external view returns (
         RoundState state,
         uint256 totalRaised,
         uint256 totalWithdrawn,
@@ -359,26 +361,7 @@ contract RoundManager {
         }
     }
 
-    function getRoundInfoView() external view returns (
-        RoundState state,
-        uint256 totalRaised,
-        uint256 totalWithdrawn,
-        uint256 tokensIssued,
-        uint256 investorCount,
-        uint256 vaultBalance
-    ) {
-        state = round.state;
-        totalRaised = round.totalRaised;
-        totalWithdrawn = round.totalWithdrawn;
-        tokensIssued = round.tokensIssued;
-        investorCount = round.investors.length;
-
-        if (vault.balanceOf(address(this)) > 0) {
-            vaultBalance = vault.convertToAssets(vault.balanceOf(address(this)));
-        }
-    }
-
-    function getInvestorInfo(address investor) external updateRoundState returns (
+    function getInvestorInfo(address investor) external view returns (
         uint256 contribution,
         uint256 equityTokens,
         uint256 yieldBalance,
@@ -390,19 +373,7 @@ contract RoundManager {
         yieldClaimed = investorYieldClaimed[investor];
     }
 
-    function getInvestorInfoView(address investor) external view returns (
-        uint256 contribution,
-        uint256 equityTokens,
-        uint256 yieldBalance,
-        uint256 yieldClaimed
-    ) {
-        contribution = round.investorContributions[investor];
-        equityTokens = round.equityToken.balanceOf(investor);
-        yieldBalance = investorYieldBalance[investor];
-        yieldClaimed = investorYieldClaimed[investor];
-    }
-
-    function getYieldInfo() external updateRoundState returns (
+    function getYieldInfo() external view returns (
         uint256 totalVaultBalance,
         uint256 totalYieldAccrued,
         uint256 currentAPY
@@ -415,44 +386,7 @@ contract RoundManager {
         totalYieldAccrued = totalYieldDistributed;
     }
 
-    function getYieldInfoView() external view returns (
-        uint256 totalVaultBalance,
-        uint256 totalYieldAccrued,
-        uint256 currentAPY
-    ) {
-        if (vault.balanceOf(address(this)) > 0) {
-            totalVaultBalance = vault.convertToAssets(vault.balanceOf(address(this)));
-            currentAPY = vault.getCurrentAPY();
-        }
-
-        totalYieldAccrued = totalYieldDistributed;
-    }
-
-    function canFounderWithdraw(uint256 usdcAmount) external updateRoundState returns (bool, string memory) {
-        if (round.state != RoundState.COMPLETED) {
-            return (false, "Round not completed");
-        }
-
-        uint256 vaultBalance = vault.convertToAssets(vault.balanceOf(address(this)));
-
-        uint256 maxMonthlyWithdrawal = (vaultBalance * MAX_WITHDRAWAL_RATE) / BASIS_POINTS;
-        if (usdcAmount > maxMonthlyWithdrawal) {
-            return (false, "Exceeds 2% monthly withdrawal limit");
-        }
-
-        uint256 timeSinceLastWithdrawal = block.timestamp - round.lastWithdrawal;
-        if (timeSinceLastWithdrawal < SECONDS_PER_MONTH && usdcAmount > maxMonthlyWithdrawal) {
-            return (false, "Multiple withdrawals within month exceed limit");
-        }
-
-        if (vaultBalance < usdcAmount) {
-            return (false, "Insufficient vault balance");
-        }
-
-        return (true, "Withdrawal allowed");
-    }
-
-    function canFounderWithdrawView(uint256 usdcAmount) external view returns (bool, string memory) {
+    function canFounderWithdraw(uint256 usdcAmount) external view returns (bool, string memory) {
         if (round.state != RoundState.COMPLETED) {
             return (false, "Round not completed");
         }

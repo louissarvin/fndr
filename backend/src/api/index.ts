@@ -4,8 +4,13 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { client, graphql } from "ponder";
 import { ZKPassport, QueryResult, ProofResult } from "@zkpassport/sdk";
+import Groq from "groq-sdk";
 
 const app = new Hono();
+
+// Groq configuration
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
 
 // Pinata configuration (loaded from environment)
 const PINATA_JWT = process.env.PINATA_JWT;
@@ -19,7 +24,7 @@ const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Enable CORS for frontend requests
 app.use("*", cors({
-  origin: ["http://localhost:5173", "http://localhost:8080"],
+  origin: ["http://localhost:5173", "http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:5173"],
   allowMethods: ["GET", "POST", "OPTIONS"],
   allowHeaders: ["Content-Type"],
 }));
@@ -222,8 +227,205 @@ app.get("/api/ipfs/gateway", async (c) => {
 });
 
 // ==========================================
-// Ponder built-in routes
+// AI Chat Endpoint (Groq - Llama 3.3 70B)
 // ==========================================
+
+const SYSTEM_PROMPT = `You are a senior investment analyst AI for FNDR, a decentralized startup fundraising platform on Mantle blockchain. You have expertise in venture capital, startup valuation, and DeFi yield strategies. Your role is to provide data-driven investment analysis with clear, actionable insights.
+
+
+## PLATFORM CONTEXT
+
+FNDR enables:
+- Startups raise funds by offering tokenized equity (ERC-1400 tokens representing ownership)
+- Investors earn 6% APY yield on invested USDC while funds sit in the vault (passive income while waiting)
+- Funds are held in a yield-generating vault until founders withdraw for operations
+- All transactions are on-chain, providing full transparency and auditability
+- Secondary market allows investors to trade equity tokens before exit
+
+## ROUND STATE AWARENESS
+
+Tailor your response based on the round's current state:
+
+**Fundraising (Active)**
+- Focus on: Investment opportunity, risk/reward analysis, whether to invest now
+- Action: "You can invest directly in this round"
+- Mention yield earnings while funds are deployed
+
+**Completed (Fully Funded)**
+- Acknowledge: The primary fundraising is complete
+- Pivot to: Secondary market opportunity
+- Action: "While direct investment is closed, you can acquire equity tokens on the secondary market from existing investors"
+- Analyze: Whether the current valuation makes it attractive for secondary market purchase
+- Consider: The startup now has full funding - this is a positive signal
+
+## DATA INTERPRETATION GUIDE
+
+When analyzing rounds, interpret metrics as follows:
+
+**Funding Progress (% Raised)**
+- 0-25%: Early stage, higher risk, more upside potential
+- 25-50%: Gaining traction, moderate validation
+- 50-75%: Strong momentum, good social proof
+- 75-100%: High demand, may close soon
+
+**Investor Count (Social Proof)**
+- 1-5 investors: Very early, limited validation
+- 6-15 investors: Growing interest, some validation
+- 15-30 investors: Strong community support
+- 30+ investors: Highly validated, strong demand
+
+**Equity Percentage (Deal Quality)**
+- <5%: Investor-unfriendly, high valuation
+- 5-10%: Standard seed terms
+- 10-20%: Attractive deal, founder-friendly to investors
+- >20%: Very generous, verify legitimacy
+
+**Implied Valuation Formula**
+Valuation = (Target Raise / Equity %) × 100
+Example: $100K raise for 10% equity = $1M valuation
+
+## ANALYSIS FRAMEWORKS
+
+**For Single Round Analysis, provide:**
+1. Potential: One-line summary (Bullish/Neutral/Bearish)
+2. TRACTION SCORE: Rate 1-10 based on (funding % × investor count normalization)
+3. DEAL QUALITY: Is equity % fair for the raise amount?
+4. STRENGTHS: 2-3 positive signals from the data
+5. RISKS: 2-3 concerns or unknowns
+6. YIELD BONUS: Calculate potential yield earnings while invested
+
+**For Comparing Multiple Rounds, structure as:**
+| Metric | Round A | Round B | Winner |
+|--------|---------|---------|--------|
+| Traction | X% funded | Y% funded | ... |
+| Social Proof | X investors | Y investors | ... |
+| Deal Quality | X% equity | Y% equity | ... |
+| Risk Level | Low/Med/High | Low/Med/High | ... |
+
+Then provide a clear recommendation with reasoning.
+
+**Risk Assessment Matrix:**
+- LOW RISK: >50% funded, >10 investors, reasonable equity %
+- MEDIUM RISK: 25-50% funded, 5-10 investors, or unclear terms
+- HIGH RISK: <25% funded, <5 investors, unusual equity %, or red flags
+
+## RESPONSE GUIDELINES
+
+1. Always lead with data, not opinions
+2. Use specific numbers from the round context provided
+3. Calculate implied valuations when relevant
+4. Mention the 6% APY yield benefit when discussing investment timing
+5. Be direct and concise - investors want actionable insights
+6. Acknowledge when data is insufficient for strong conclusions
+7. Format comparisons as tables for clarity
+
+## YIELD CALCULATION HELPER
+
+When funds are invested, calculate potential yield:
+- Daily yield: Investment × 0.06 / 365
+- Monthly yield: Investment × 0.06 / 12
+- Example: $10,000 invested = ~$50/month passive yield while waiting
+
+## GUARDRAILS
+
+- End substantive investment analysis with: "This analysis is based on available on-chain data and is not financial advice. Always do your own research."
+- Never guarantee returns or predict specific outcomes
+- If asked about something outside the data, say "I don't have data on that specific aspect"
+- Be skeptical of rounds with unusual metrics (very high equity %, very low investor count with high funding)
+- Remind users that early-stage startup investing is inherently high-risk`;
+
+app.post("/api/ai/chat", async (c) => {
+  try {
+    if (!groq) {
+      return c.json({ error: "AI service not configured. Please set GROQ_API_KEY." }, 500);
+    }
+
+    const { message, roundsContext, conversationHistory } = await c.req.json();
+
+    if (!message) {
+      return c.json({ error: "No message provided" }, 400);
+    }
+
+    // Build messages array for Groq chat completion
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      {
+        role: "system",
+        content: SYSTEM_PROMPT,
+      },
+    ];
+
+    // Add context about available rounds if provided
+    if (roundsContext) {
+      messages.push({
+        role: "system",
+        content: `Context - Available startup rounds on FNDR:\n${roundsContext}`,
+      });
+    }
+
+    // Add conversation history
+    if (conversationHistory && conversationHistory.length > 0) {
+      for (const msg of conversationHistory) {
+        messages.push({
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        });
+      }
+    }
+
+    // Add current user message
+    messages.push({
+      role: "user",
+      content: message,
+    });
+
+    // Call Groq API using SDK
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: 0.7,
+      max_tokens: 1024,
+      top_p: 0.95,
+    });
+
+    const aiResponse = response.choices[0]?.message?.content || "I couldn't generate a response.";
+
+    return c.json({
+      response: aiResponse,
+      success: true,
+    });
+  } catch (error: any) {
+    console.error("AI Chat error:", error);
+
+    // Handle specific API errors
+    const status = error?.status || 500;
+    let userMessage = "AI service temporarily unavailable. Please try again.";
+    let errorCode = "AI_ERROR";
+
+    if (status === 429) {
+      // Rate limit / quota exceeded
+      const retryAfter = error?.message?.match(/retry in ([\d.]+)s/i)?.[1];
+      userMessage = retryAfter
+        ? `AI service is busy. Please wait ${Math.ceil(parseFloat(retryAfter))} seconds and try again.`
+        : "AI service rate limit reached. Please wait a moment and try again.";
+      errorCode = "RATE_LIMIT";
+    } else if (status === 404) {
+      userMessage = "AI model not available. Please contact support.";
+      errorCode = "MODEL_NOT_FOUND";
+    } else if (status === 403) {
+      userMessage = "AI service access denied. API key may be invalid.";
+      errorCode = "ACCESS_DENIED";
+    }
+
+    return c.json(
+      {
+        error: userMessage,
+        errorCode,
+        success: false,
+      },
+      status
+    );
+  }
+});
 
 app.use("/sql/*", client({ db, schema }));
 

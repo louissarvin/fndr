@@ -211,7 +211,7 @@ export function useRoundInfo(roundAddress: `0x${string}` | undefined) {
   return useReadContract({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getRoundInfoView',
+    functionName: 'getRoundInfo',
     query: {
       enabled: !!roundAddress,
     },
@@ -248,7 +248,7 @@ export function useInvestorInfo(roundAddress: `0x${string}` | undefined, investo
   return useReadContract({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getInvestorInfoView',
+    functionName: 'getInvestorInfo',
     args: investor ? [investor] : undefined,
     query: {
       enabled: !!roundAddress && !!investor,
@@ -260,7 +260,7 @@ export function useYieldInfo(roundAddress: `0x${string}` | undefined) {
   return useReadContract({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getYieldInfoView',
+    functionName: 'getYieldInfo',
     query: {
       enabled: !!roundAddress,
     },
@@ -275,7 +275,7 @@ export function useMultiRoundInvestorYield(
   const contracts = roundAddresses.map((roundAddress) => ({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getInvestorInfoView' as const,
+    functionName: 'getInvestorInfo' as const,
     args: investor ? [investor] : undefined,
   }));
 
@@ -289,7 +289,7 @@ export function useMultiRoundInvestorYield(
   // Calculate total pending yield from all rounds
   const totalPendingYield = result.data?.reduce((total, roundResult) => {
     if (roundResult.status === 'success' && roundResult.result) {
-      // getInvestorInfoView returns: (contribution, equityTokens, yieldBalance, yieldClaimed)
+      // getInvestorInfo returns: (contribution, equityTokens, yieldBalance, yieldClaimed)
       const yieldBalance = (roundResult.result as readonly [bigint, bigint, bigint, bigint])[2];
       return total + yieldBalance;
     }
@@ -327,21 +327,21 @@ export function useMultiRoundYieldInfo(
   const yieldContracts = roundAddresses.map((roundAddress) => ({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getYieldInfoView' as const,
+    functionName: 'getYieldInfo' as const,
   }));
 
   // Fetch round info (totalRaised, totalWithdrawn, tokensIssued) for each round
   const roundContracts = roundAddresses.map((roundAddress) => ({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getRoundInfoView' as const,
+    functionName: 'getRoundInfo' as const,
   }));
 
   // Fetch investor info for each round
   const investorContracts = roundAddresses.map((roundAddress) => ({
     address: roundAddress,
     abi: RoundManagerABI,
-    functionName: 'getInvestorInfoView' as const,
+    functionName: 'getInvestorInfo' as const,
     args: investor ? [investor] : undefined,
   }));
 
@@ -556,12 +556,12 @@ export function useCompleteRound(roundAddress: `0x${string}` | undefined) {
 
   const completeRound = () => {
     if (!roundAddress) return;
-    // Call getRoundInfo which has updateRoundState modifier
+    // Call checkRoundState which has updateRoundState modifier
     // This will trigger state transition if conditions are met
     writeContract({
       address: roundAddress,
       abi: RoundManagerABI,
-      functionName: 'getRoundInfo',
+      functionName: 'checkRoundState',
     });
   };
 
@@ -883,7 +883,7 @@ export function formatUSDCDisplay(amount: bigint): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(parseFloat(formatted));
 }

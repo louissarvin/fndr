@@ -12,8 +12,7 @@ const LandingNavbar = forwardRef<HTMLElement>((_, ref) => {
           <a href="/browse" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Browse</a>
           <a href="/marketplace" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Marketplace</a>
           <a href="/dashboard" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Dashboard</a>
-          <a href="#how-it-works" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">How it Works</a>
-          <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-4 py-2 rounded-full font-semibold text-sm hover:bg-[#CFFFE2] transition-colors">
+          <Link to="/browse" className="bg-[#A2D5C6] px-4 py-2 rounded-full font-semibold text-sm hover:bg-[#CFFFE2] transition-colors" style={{ color: '#000000' }}>
             Launch App
           </Link>
         </div>

@@ -124,7 +124,8 @@ contract CoreFlowTest is Test {
         assertEq(token.balanceOf(investor1), 30000);
         assertEq(token.balanceOf(investor2), 20000);
 
-        // 3. Round completion check
+        // 3. Round completion check (trigger state update first)
+        round.checkRoundState();
         (RoundManager.RoundState state, uint256 totalRaised,,,,) = round.getRoundInfo();
         assertEq(uint(state), uint(RoundManager.RoundState.COMPLETED));
         assertEq(totalRaised, 50000 * 1e6);

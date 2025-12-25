@@ -6,11 +6,14 @@ import {
   Wallet,
   ExternalLink,
   Loader2,
+  Bot,
 } from "lucide-react";
 import { formatUnits } from "viem";
 import type { Round } from "@/hooks/usePonderData";
 import { useRoundMetadata, ipfsToHttp } from "@/hooks/useIPFS";
 import InvestModal from "@/components/investor/InvestModal";
+import { useAI } from "@/components/ai/AIContext";
+import { calculateCredibilityScore } from "@/lib/credibilityScore";
 
 interface RoundCardProps {
   round: Round;
@@ -69,6 +72,7 @@ function getFallbackImage(id: string): string {
 export default function RoundCard({ round }: RoundCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isInvestModalOpen, setIsInvestModalOpen] = useState(false);
+  const { openWithRound } = useAI();
 
   // Fetch IPFS metadata
   const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(
@@ -78,6 +82,7 @@ export default function RoundCard({ round }: RoundCardProps) {
   const progress = calculateProgress(round.totalRaised, round.targetRaise);
   const stateInfo = getRoundStateLabel(round.state);
   const isActive = round.state === 0;
+  const credibility = calculateCredibilityScore(round);
 
   // Get image: IPFS logo > fallback
   const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
@@ -121,16 +126,22 @@ export default function RoundCard({ round }: RoundCardProps) {
 
         {/* APY Badge */}
         <span className="absolute top-3 right-3 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" />
           6% APY
         </span>
 
         {/* Equity Badge */}
         {round.equityPercentage && (
-          <span className="absolute bottom-3 left-3 bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+          <span className="absolute bottom-3 left-3 bg-[#A2D5C6] backdrop-blur-sm text-black text-xs font-bold px-3 py-1 rounded-full">
             {Number(round.equityPercentage) / 100}% Equity
           </span>
         )}
+
+        {/* Credibility Score Badge */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+          <span className={`${credibility.color} text-xs font-bold px-2 py-1 rounded-full`}>
+            {credibility.score.toFixed(1)}
+          </span>
+        </div>
       </div>
 
       <div className="p-5 space-y-4">
@@ -156,7 +167,7 @@ export default function RoundCard({ round }: RoundCardProps) {
 
         {/* Title */}
         <div>
-          <h3 className="font-bold text-lg text-white group-hover:text-[#CFFFE2] transition-colors">
+          <h3 className="font-bold text-lg text-white transition-colors">
             {companyName}
           </h3>
           <p className="text-sm text-white/60 line-clamp-2 mt-1">
@@ -209,6 +220,13 @@ export default function RoundCard({ round }: RoundCardProps) {
               Invest Now
             </button>
           )}
+          <button
+            onClick={() => openWithRound(round)}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-white rounded-2xl font-semibold hover:bg-white/20 transition-colors"
+            title="AI Analysis"
+          >
+            <Bot className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

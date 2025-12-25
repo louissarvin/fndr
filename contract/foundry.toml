@@ -4,7 +4,7 @@ out = "out"
 libs = ["lib"]
 viaIR = true
 optimizer = true
-optimizer_runs = 200
+optimizer_runs = 1
 
 # Mantle Sepolia Testnet
 [rpc_endpoints]

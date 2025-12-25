@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import Layout from '@/components/layout/Layout';
 import RoundCard from '@/components/campaigns/RoundCard';
+import AIChat from '@/components/ai/AIChat';
 import { useRounds } from '@/hooks/usePonderData';
 import { ChevronLeft, ChevronRight, Loader2, Wifi, WifiOff, Rocket } from 'lucide-react';
 
@@ -177,6 +178,9 @@ export default function Browse() {
           )}
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat rounds={rounds || []} />
     </Layout>
   );
 }
