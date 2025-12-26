@@ -275,14 +275,19 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   }, [isCreateSuccess, step]);
 
   // Calculate values
-  // Note: Token amounts are stored as whole numbers (not scaled to 18 decimals)
-  // The contract calculates: tokensToMint = usdcAmount / sharePrice (no decimal scaling)
-  const amount = sellAmount ? BigInt(Math.floor(Number(sellAmount))) : BigInt(0);
+  // Note: Equity tokens use 6 decimals (same as USDC)
+  const EQUITY_TOKEN_DECIMALS = 6;
+  const displayAmount = sellAmount ? BigInt(Math.floor(Number(sellAmount))) : BigInt(0);
+  const scaledAmount = sellAmount ? parseUnits(sellAmount, EQUITY_TOKEN_DECIMALS) : BigInt(0);
   const price = pricePerToken ? parseUnits(pricePerToken, USDC_DECIMALS) : BigInt(0);
-  const maxAmount = tokenBalance || selectedToken?.balance || BigInt(0);
-  const totalValue = amount * price; // No need to divide by 10^18 since amount is already whole number
-  const isValidAmount = amount > 0 && amount <= maxAmount;
+
+  // For display/validation, use the Ponder balance (whole numbers)
+  const maxDisplayAmount = selectedToken?.balance || BigInt(0);
+  const isValidAmount = displayAmount > 0 && displayAmount <= maxDisplayAmount;
   const isValidPrice = price > BigInt(0);
+
+  // Total value calculation: displayAmount * price (both in their respective units)
+  const totalValue = displayAmount * price;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,14 +301,16 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
 
   const handleApprove = () => {
     if (!selectedToken) return;
-    approveToken(CONTRACTS.StartupSecondaryMarket as `0x${string}`, amount);
+    // Use scaledAmount (18 decimals) for ERC20 approval
+    approveToken(CONTRACTS.StartupSecondaryMarket as `0x${string}`, scaledAmount);
   };
 
   const handleCreate = () => {
     if (!selectedToken || !equityTokenAddress) return;
+    // Use scaledAmount (18 decimals) for contract interaction
     createSellOrder(
       equityTokenAddress as `0x${string}`,
-      amount,
+      scaledAmount,
       price,
       BigInt(duration)
     );
@@ -315,7 +322,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   };
 
   const handleMaxAmount = () => {
-    setSellAmount(maxAmount.toString());
+    setSellAmount(maxDisplayAmount.toString());
   };
 
   if (!isOpen) return null;
@@ -398,7 +405,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                   <label className="text-sm font-medium text-white/80">Amount to Sell</label>
                   {selectedToken && (
                     <span className="text-xs text-white/40">
-                      Balance: {Number(maxAmount).toLocaleString()}
+                      Balance: {Number(maxDisplayAmount).toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -467,7 +474,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
               </div>
 
               {/* Order Summary */}
-              {selectedToken && amount > 0 && price > 0 && (
+              {selectedToken && displayAmount > 0 && price > 0 && (
                 <div className="bg-[#A2D5C6]/10 rounded-xl p-4 space-y-2">
                   <h4 className="font-semibold text-white mb-2">Order Summary</h4>
                   <div className="flex justify-between text-sm">
@@ -488,7 +495,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
               )}
 
               {/* Validation Messages */}
-              {amount > maxAmount && selectedToken && (
+              {displayAmount > maxDisplayAmount && selectedToken && (
                 <div className="flex items-center gap-2 text-red-400 text-sm">
                   <AlertCircle className="h-4 w-4" />
                   Amount exceeds your balance

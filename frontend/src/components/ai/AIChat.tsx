@@ -3,7 +3,7 @@ import { X, Send, Loader2, Bot, User } from 'lucide-react';
 import type { Round } from '@/hooks/usePonderData';
 import { formatUnits } from 'viem';
 import ReactMarkdown from 'react-markdown';
-import { useAI } from './AIContext';
+import { useAI, type PortfolioData } from './AIContext';
 import { calculateCredibilityScore, getScoreExplanation } from '@/lib/credibilityScore';
 
 interface Message {
@@ -53,7 +53,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function AIChat({ rounds = [] }: AIChatProps) {
-  const { isOpen, focusedRound, closeChat, openChat, clearFocus } = useAI();
+  const { isOpen, focusedRound, portfolioData, closeChat, openChat, clearFocus } = useAI();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -65,6 +65,7 @@ export default function AIChat({ rounds = [] }: AIChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastAnalyzedRoundId, setLastAnalyzedRoundId] = useState<string | null>(null);
+  const [lastAnalyzedPortfolio, setLastAnalyzedPortfolio] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -142,6 +143,80 @@ Quick Assessment: ${explanation}
 Please provide a comprehensive analysis of this round, considering its current state.`;
   }, []);
 
+  // Format portfolio for AI analysis
+  const formatPortfolioContext = useCallback((data: PortfolioData): string => {
+    const { walletAddress, investments, rounds, totalInvested, totalYield } = data;
+
+    // Calculate portfolio metrics
+    const positions = investments.map(inv => {
+      const round = rounds.find(r => r.id.toLowerCase() === inv.roundId.toLowerCase());
+      const investedAmount = Number(formatUnits(BigInt(inv.usdcAmount), USDC_DECIMALS));
+      const percentOfPortfolio = totalInvested > 0 ? (investedAmount / totalInvested * 100) : 0;
+      const credibility = round ? calculateCredibilityScore(round) : null;
+
+      return {
+        investment: inv,
+        round,
+        investedAmount,
+        percentOfPortfolio,
+        credibility,
+      };
+    });
+
+    // Calculate diversification metrics
+    const numPositions = positions.length;
+    const largestPosition = Math.max(...positions.map(p => p.percentOfPortfolio));
+    const avgCredibility = positions.filter(p => p.credibility).reduce((acc, p) => acc + (p.credibility?.score || 0), 0) / numPositions;
+
+    // Count risk distribution
+    const highRiskCount = positions.filter(p => p.credibility && p.credibility.score < 4).length;
+    const mediumRiskCount = positions.filter(p => p.credibility && p.credibility.score >= 4 && p.credibility.score < 6).length;
+    const lowRiskCount = positions.filter(p => p.credibility && p.credibility.score >= 6).length;
+
+    // Format positions
+    const positionsText = positions.map((p, i) => {
+      const roundState = p.round?.state === 0 ? 'Fundraising' : p.round?.state === 1 ? 'Completed' : 'Unknown';
+      const roundProgress = p.round ? (Number(p.round.totalRaised) / Number(p.round.targetRaise) * 100).toFixed(1) : 'N/A';
+
+      return `
+Position ${i + 1}: ${p.round?.companyName || 'Unknown Round'}
+- Invested: $${p.investedAmount.toLocaleString()} (${p.percentOfPortfolio.toFixed(1)}% of portfolio)
+- Tokens Held: ${Number(p.investment.tokensReceived).toLocaleString()}
+- Round State: ${roundState}
+- Round Progress: ${roundProgress}% funded
+- Credibility Score: ${p.credibility ? `${p.credibility.score.toFixed(1)}/10 (${p.credibility.label})` : 'N/A'}`;
+    }).join('\n');
+
+    // Calculate monthly yield
+    const monthlyYield = totalInvested * 0.06 / 12;
+
+    return `
+PORTFOLIO ANALYSIS REQUEST:
+
+Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}
+
+**PORTFOLIO SUMMARY**
+- Total Invested: $${totalInvested.toLocaleString()}
+- Number of Positions: ${numPositions}
+- Pending Yield: $${totalYield.toFixed(2)}
+- Estimated Monthly Yield: $${monthlyYield.toFixed(2)} (6% APY)
+
+**DIVERSIFICATION METRICS**
+- Largest Position: ${largestPosition.toFixed(1)}% of portfolio
+- Average Credibility Score: ${avgCredibility.toFixed(1)}/10
+- Risk Distribution: ${lowRiskCount} low-risk, ${mediumRiskCount} medium-risk, ${highRiskCount} high-risk
+
+**INDIVIDUAL POSITIONS**
+${positionsText}
+
+Please provide a comprehensive portfolio analysis including:
+1. Diversification assessment
+2. Risk exposure analysis
+3. Concentration risk evaluation
+4. Yield optimization suggestions
+5. Actionable recommendations to improve portfolio health`;
+  }, []);
+
   // Auto-trigger analysis when a round is focused
   useEffect(() => {
     if (focusedRound && isOpen && focusedRound.id !== lastAnalyzedRoundId && !isLoading) {
@@ -150,6 +225,14 @@ Please provide a comprehensive analysis of this round, considering its current s
       sendMessageWithContext(`Analyze the ${companyName} round in detail`, formatSingleRoundContext(focusedRound));
     }
   }, [focusedRound, isOpen, lastAnalyzedRoundId, isLoading, formatSingleRoundContext]);
+
+  // Auto-trigger analysis when portfolio is focused
+  useEffect(() => {
+    if (portfolioData && isOpen && portfolioData.walletAddress !== lastAnalyzedPortfolio && !isLoading) {
+      setLastAnalyzedPortfolio(portfolioData.walletAddress);
+      sendMessageWithContext('Analyze my investment portfolio', formatPortfolioContext(portfolioData));
+    }
+  }, [portfolioData, isOpen, lastAnalyzedPortfolio, isLoading, formatPortfolioContext]);
 
   // Send message with optional focused round context
   const sendMessageWithContext = async (content: string, focusedContext?: string) => {
@@ -226,6 +309,8 @@ Please provide a comprehensive analysis of this round, considering its current s
     // If there's a focused round, include its context
     if (focusedRound) {
       sendMessageWithContext(content, formatSingleRoundContext(focusedRound));
+    } else if (portfolioData) {
+      sendMessageWithContext(content, formatPortfolioContext(portfolioData));
     } else {
       sendMessageWithContext(content);
     }
@@ -246,9 +331,11 @@ Please provide a comprehensive analysis of this round, considering its current s
     sendMessage(question);
   };
 
-  // Get focused round name for display
-  const focusedRoundName = focusedRound
-    ? focusedRound.companyName || `Round ${focusedRound.id.slice(0, 8)}...`
+  // Get context label for display
+  const contextLabel = portfolioData
+    ? 'Analyzing your portfolio'
+    : focusedRound
+    ? `Analyzing: ${focusedRound.companyName || `Round ${focusedRound.id.slice(0, 8)}...`}`
     : null;
 
   return (
@@ -271,8 +358,8 @@ Please provide a comprehensive analysis of this round, considering its current s
             <div className="flex items-center gap-3">
               <div>
                 <h3 className="font-semibold text-white">AI Investment Advisor</h3>
-                {focusedRoundName && (
-                  <p className="text-xs text-[#A2D5C6]">Analyzing: {focusedRoundName}</p>
+                {contextLabel && (
+                  <p className="text-xs text-[#A2D5C6]">{contextLabel}</p>
                 )}
               </div>
             </div>

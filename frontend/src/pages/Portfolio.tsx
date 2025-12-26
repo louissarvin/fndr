@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
 import Layout from '@/components/layout/Layout';
-import { useInvestorInvestments, useRound, type Investment } from '@/hooks/usePonderData';
+import { useInvestorInvestments, useRound, useRounds, type Investment } from '@/hooks/usePonderData';
 import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import { useMultiRoundInvestorYield, useMultiRoundYieldInfo, useClaimYield, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
+import { useAI } from '@/components/ai/AIContext';
+import AIChat from '@/components/ai/AIChat';
 import {
   Wallet,
   ArrowUpRight,
@@ -16,7 +18,8 @@ import {
   Loader2,
   ExternalLink,
   Rocket,
-  RefreshCw
+  RefreshCw,
+  Bot
 } from 'lucide-react';
 
 const USDC_DECIMALS = 6;
@@ -142,9 +145,13 @@ function InvestmentCard({ investment }: { investment: Investment }) {
 export default function Portfolio() {
   const { address, isConnected } = useAccount();
   const [claimingRound, setClaimingRound] = useState<string | null>(null);
+  const { openWithPortfolio } = useAI();
 
   // Fetch indexed investments for connected wallet
   const { data: investments, isLoading, error } = useInvestorInvestments(address);
+
+  // Fetch all rounds for portfolio analysis context
+  const { data: allRounds } = useRounds();
 
   // Get unique round addresses from investments
   const uniqueRoundAddresses = useMemo(() => {
@@ -152,6 +159,14 @@ export default function Portfolio() {
     const addresses = [...new Set(investments.map(inv => inv.roundId))];
     return addresses as `0x${string}`[];
   }, [investments]);
+
+  // Get rounds that match user's investments
+  const investedRounds = useMemo(() => {
+    if (!allRounds || !investments) return [];
+    return allRounds.filter(round =>
+      investments.some(inv => inv.roundId.toLowerCase() === round.id.toLowerCase())
+    );
+  }, [allRounds, investments]);
 
   // Fetch real-time yield data from all rounds
   const {
@@ -268,6 +283,21 @@ export default function Portfolio() {
     claimYield();
   };
 
+  // Handle AI portfolio analysis
+  const handleAnalyzePortfolio = () => {
+    if (!investments || !address || investments.length === 0) return;
+
+    const totalYieldNum = Number(formatUnits(totalClaimableYield, USDC_DECIMALS));
+
+    openWithPortfolio({
+      walletAddress: address,
+      investments,
+      rounds: investedRounds,
+      totalInvested,
+      totalYield: totalYieldNum,
+    });
+  };
+
   return (
     <Layout>
       <div className="py-12 px-8">
@@ -373,12 +403,23 @@ export default function Portfolio() {
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-white">Your Investments</h2>
-                <Link
-                  to="/browse"
-                  className="text-sm text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors flex items-center gap-1"
-                >
-                  Browse More <ChevronRight className="h-4 w-4" />
-                </Link>
+                <div className="flex items-center gap-3">
+                  {investments && investments.length > 0 && (
+                    <button
+                      onClick={handleAnalyzePortfolio}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-colors text-sm"
+                    >
+                      <Bot className="h-4 w-4" />
+                      Analyze Portfolio
+                    </button>
+                  )}
+                  <Link
+                    to="/browse"
+                    className="text-sm text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors flex items-center gap-1"
+                  >
+                    Browse More <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
 
               {/* Loading State */}
@@ -422,6 +463,9 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* AI Chat Modal */}
+      <AIChat />
     </Layout>
   );
 }
