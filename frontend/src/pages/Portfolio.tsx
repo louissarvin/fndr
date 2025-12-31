@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
 import Layout from '@/components/layout/Layout';
-import { useInvestorInvestments, useRound, useRounds, type Investment } from '@/hooks/usePonderData';
+import { useInvestorInvestments, useRound, useRounds, useRoundByEquityToken, useBuyerTrades, type Investment, type Trade } from '@/hooks/usePonderData';
 import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
-import { useMultiRoundInvestorYield, useMultiRoundYieldInfo, useClaimYield, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
+import { useMultiRoundInvestorYield, useMultiRoundYieldInfo, useClaimYield, useMultipleTokenBalances, USDC_DECIMALS as CONTRACT_USDC_DECIMALS } from '@/hooks/useContracts';
 import { useAI } from '@/components/ai/AIContext';
 import AIChat from '@/components/ai/AIChat';
 import {
@@ -19,7 +19,8 @@ import {
   ExternalLink,
   Rocket,
   RefreshCw,
-  Bot
+  Bot,
+  ShoppingCart
 } from 'lucide-react';
 
 const USDC_DECIMALS = 6;
@@ -56,8 +57,19 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-// Investment card for indexed data
-function InvestmentCard({ investment }: { investment: Investment }) {
+// Aggregated investment data for a single round
+interface AggregatedInvestment {
+  roundId: string;
+  totalUsdcAmount: bigint;
+  totalTokensReceived: bigint;
+  investmentCount: number;
+  firstTimestamp: string;
+  latestTimestamp: string;
+  transactionHashes: string[];
+}
+
+// Investment card for aggregated indexed data (combines multiple investments per round)
+function InvestmentCard({ investment, currentBalance }: { investment: AggregatedInvestment; currentBalance?: bigint }) {
   const { data: round } = useRound(investment.roundId);
   const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round?.metadataURI);
 
@@ -67,8 +79,13 @@ function InvestmentCard({ investment }: { investment: Investment }) {
   // Get company name: metadata > indexed > shortened address
   const companyName = metadata?.name || round?.companyName || `Round ${shortenAddress(investment.roundId)}`;
 
+  // Calculate if tokens were sold (now accurate since we aggregate all investments per round)
+  const tokensReceived = investment.totalTokensReceived;
+  const tokensSold = currentBalance !== undefined ? tokensReceived - currentBalance : BigInt(0);
+  const hasSoldTokens = tokensSold > BigInt(0);
+
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 hover:bg-[#A2D5C6]/15 transition-colors">
+    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
       <div className="flex items-start gap-4">
         {/* Round Image/Logo */}
         <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -95,25 +112,31 @@ function InvestmentCard({ investment }: { investment: Investment }) {
           </p>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-white/40 mb-0.5">Invested</p>
-              <p className="font-semibold text-white">{formatUSDC(investment.usdcAmount)}</p>
+              <p className="font-semibold text-white">{formatCurrency(Number(investment.totalUsdcAmount) / 1e6)}</p>
             </div>
             <div>
-              <p className="text-xs text-white/40 mb-0.5">Tokens Received</p>
-              <p className="font-semibold text-white">{formatTokenAmount(investment.tokensReceived)}</p>
+              <p className="text-xs text-white/40 mb-0.5">Received</p>
+              <p className="font-semibold text-white">{Number(investment.totalTokensReceived).toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-0.5">Current Balance</p>
+              <p className={`font-semibold ${hasSoldTokens && 'text-white'}`}>
+                {currentBalance !== undefined ? Number(currentBalance).toLocaleString() : '...'}
+              </p>
             </div>
             <div>
               <p className="text-xs text-white/40 mb-0.5">APY</p>
-              <p className="font-semibold text-[#A2D5C6]">6%</p>
+              <p className="font-semibold text-white">6%</p>
             </div>
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - link to latest transaction */}
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${investment.transactionHash}`}
+          href={`https://sepolia.mantlescan.xyz/tx/${investment.transactionHashes[0]}`}
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"
@@ -127,16 +150,132 @@ function InvestmentCard({ investment }: { investment: Investment }) {
         <div className="flex items-center gap-2 text-sm text-white/40">
           <Clock className="h-4 w-4" />
           <span>
-            Invested on {new Date(Number(investment.timestamp) * 1000).toLocaleDateString('en-US', {
+            {investment.investmentCount > 1 ? (
+              `${investment.investmentCount} investments since ${new Date(Number(investment.firstTimestamp) * 1000).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}`
+            ) : (
+              `Invested on ${new Date(Number(investment.firstTimestamp) * 1000).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}`
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasSoldTokens && (
+            <span className="text-xs bg-[#A2D5C6] text-black px-2 py-1 rounded-full">
+              {Number(tokensSold).toLocaleString()} sold
+            </span>
+          )}
+          <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full">
+            {round?.state === 0 ? 'Active' : round?.state === 1 ? 'Completed' : 'Pending'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Purchase card for secondary market trades
+function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?: bigint }) {
+  const { data: round } = useRoundByEquityToken(trade.tokenContract);
+  const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round?.metadataURI);
+
+  // Get image: IPFS logo > fallback placeholder
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+
+  // Get company name: metadata > indexed > shortened address
+  const companyName = metadata?.name || round?.companyName || `Token ${shortenAddress(trade.tokenContract)}`;
+
+  // Calculate tokens purchased vs current balance
+  const tokensPurchased = BigInt(trade.amount);
+  const tokensSold = currentBalance !== undefined ? tokensPurchased - currentBalance : BigInt(0);
+  const hasSoldTokens = tokensSold > BigInt(0);
+
+  return (
+    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
+      <div className="flex items-start gap-4">
+        {/* Token Image/Logo */}
+        <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {isLoadingMetadata ? (
+            <Loader2 className="h-6 w-6 animate-spin text-[#A2D5C6]/40" />
+          ) : logoUrl ? (
+            <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-2xl font-bold text-[#A2D5C6]">
+              {companyName.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {/* Trade Details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-bold text-white text-lg">
+              {companyName}
+            </h3>
+          </div>
+          <p className="text-sm text-white/50 mb-3 truncate">
+            Token: {shortenAddress(trade.tokenContract)}
+          </p>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-white/40 mb-0.5">Paid</p>
+              <p className="font-semibold text-white">{formatUSDC(trade.totalPrice)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-0.5">Purchased</p>
+              <p className="font-semibold text-white">{formatTokenAmount(trade.amount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-0.5">Current Balance</p>
+              <p className={`font-semibold ${hasSoldTokens ? 'text-[#A2D5C6]' : 'text-white'}`}>
+                {currentBalance !== undefined ? Number(currentBalance).toLocaleString() : '...'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-white/40 mb-0.5">Price/Token</p>
+              <p className="font-semibold text-white">{formatUSDC(trade.pricePerToken)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <a
+          href={`https://sepolia.mantlescan.xyz/tx/${trade.transactionHash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"
+        >
+          <ExternalLink className="h-5 w-5" />
+        </a>
+      </div>
+
+      {/* Timestamp */}
+      <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-white/40">
+          <Clock className="h-4 w-4" />
+          <span>
+            Purchased on {new Date(Number(trade.timestamp) * 1000).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric'
             })}
           </span>
         </div>
-        <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full">
-          {round?.state === 0 ? 'Active' : round?.state === 1 ? 'Completed' : 'Pending'}
-        </span>
+        <div className="flex items-center gap-2">
+          {hasSoldTokens && (
+            <span className="text-xs bg-[#A2D5C6] text-[#A2D5C6] px-2 py-1 rounded-full">
+              {Number(tokensSold).toLocaleString()} sold
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -150,6 +289,9 @@ export default function Portfolio() {
   // Fetch indexed investments for connected wallet
   const { data: investments, isLoading, error } = useInvestorInvestments(address);
 
+  // Fetch buyer's secondary market trades
+  const { data: buyerTrades, isLoading: isLoadingTrades } = useBuyerTrades(address);
+
   // Fetch all rounds for portfolio analysis context
   const { data: allRounds } = useRounds();
 
@@ -160,6 +302,47 @@ export default function Portfolio() {
     return addresses as `0x${string}`[];
   }, [investments]);
 
+  // Aggregate investments by round (combine multiple investments into the same round)
+  const aggregatedInvestments = useMemo((): AggregatedInvestment[] => {
+    if (!investments || investments.length === 0) return [];
+
+    const byRound = new Map<string, AggregatedInvestment>();
+
+    investments.forEach(inv => {
+      const roundKey = inv.roundId.toLowerCase();
+      const existing = byRound.get(roundKey);
+
+      if (existing) {
+        existing.totalUsdcAmount += BigInt(inv.usdcAmount);
+        existing.totalTokensReceived += BigInt(inv.tokensReceived);
+        existing.investmentCount += 1;
+        existing.transactionHashes.push(inv.transactionHash);
+        // Update timestamps
+        if (Number(inv.timestamp) < Number(existing.firstTimestamp)) {
+          existing.firstTimestamp = inv.timestamp;
+        }
+        if (Number(inv.timestamp) > Number(existing.latestTimestamp)) {
+          existing.latestTimestamp = inv.timestamp;
+        }
+      } else {
+        byRound.set(roundKey, {
+          roundId: inv.roundId,
+          totalUsdcAmount: BigInt(inv.usdcAmount),
+          totalTokensReceived: BigInt(inv.tokensReceived),
+          investmentCount: 1,
+          firstTimestamp: inv.timestamp,
+          latestTimestamp: inv.timestamp,
+          transactionHashes: [inv.transactionHash],
+        });
+      }
+    });
+
+    // Sort by latest timestamp (most recent first)
+    return Array.from(byRound.values()).sort(
+      (a, b) => Number(b.latestTimestamp) - Number(a.latestTimestamp)
+    );
+  }, [investments]);
+
   // Get rounds that match user's investments
   const investedRounds = useMemo(() => {
     if (!allRounds || !investments) return [];
@@ -167,6 +350,42 @@ export default function Portfolio() {
       investments.some(inv => inv.roundId.toLowerCase() === round.id.toLowerCase())
     );
   }, [allRounds, investments]);
+
+  // Get equity token addresses from invested rounds AND trades
+  const equityTokenAddresses = useMemo(() => {
+    const fromRounds = investedRounds
+      .map(round => round.equityToken?.toLowerCase())
+      .filter((addr): addr is string => !!addr);
+
+    const fromTrades = (buyerTrades || [])
+      .map(trade => trade.tokenContract.toLowerCase());
+
+    // Combine and deduplicate
+    const allAddresses = [...new Set([...fromRounds, ...fromTrades])];
+    return allAddresses as `0x${string}`[];
+  }, [investedRounds, buyerTrades]);
+
+  // Fetch actual token balances from contracts
+  const {
+    balancesByToken,
+    totalBalance: actualTotalTokens,
+    isLoading: isLoadingBalances,
+    refetch: refetchBalances
+  } = useMultipleTokenBalances(equityTokenAddresses, address);
+
+  // Create a map from roundId to current balance
+  const balanceByRound = useMemo(() => {
+    const map: Record<string, bigint> = {};
+    investedRounds.forEach(round => {
+      if (round.equityToken) {
+        const balance = balancesByToken[round.equityToken.toLowerCase()];
+        if (balance !== undefined) {
+          map[round.id.toLowerCase()] = balance;
+        }
+      }
+    });
+    return map;
+  }, [investedRounds, balancesByToken]);
 
   // Fetch real-time yield data from all rounds
   const {
@@ -189,11 +408,18 @@ export default function Portfolio() {
   const statsRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Calculate totals
-  const totalInvested = investments?.reduce(
+  // Calculate totals - includes both primary investments and secondary market purchases
+  const totalFromInvestments = investments?.reduce(
     (acc, inv) => acc + Number(formatUnits(BigInt(inv.usdcAmount), USDC_DECIMALS)),
     0
   ) || 0;
+
+  const totalFromTrades = buyerTrades?.reduce(
+    (acc, trade) => acc + Number(formatUnits(BigInt(trade.totalPrice), USDC_DECIMALS)),
+    0
+  ) || 0;
+
+  const totalInvested = totalFromInvestments + totalFromTrades;
 
   // Format claimable yield (from contract)
   const formattedClaimableYield = useMemo(() => {
@@ -285,15 +511,29 @@ export default function Portfolio() {
 
   // Handle AI portfolio analysis
   const handleAnalyzePortfolio = () => {
-    if (!investments || !address || investments.length === 0) return;
+    if (!address) return;
+    // Allow analysis if user has investments OR trades
+    if ((!investments || investments.length === 0) && (!buyerTrades || buyerTrades.length === 0)) return;
 
     const totalYieldNum = Number(formatUnits(totalClaimableYield, USDC_DECIMALS));
 
+    // Prepare aggregated investment data for AI
+    const aggregatedForAI = aggregatedInvestments.map(inv => ({
+      roundId: inv.roundId,
+      totalUsdcAmount: inv.totalUsdcAmount,
+      totalTokensReceived: inv.totalTokensReceived,
+      investmentCount: inv.investmentCount,
+    }));
+
     openWithPortfolio({
       walletAddress: address,
-      investments,
+      investments: investments || [],
+      aggregatedInvestments: aggregatedForAI,
+      trades: buyerTrades || [],
       rounds: investedRounds,
+      balancesByToken,
       totalInvested,
+      totalFromTrades,
       totalYield: totalYieldNum,
     });
   };
@@ -343,7 +583,8 @@ export default function Portfolio() {
                 {formatCurrency(totalInvested)}
               </p>
               <p className="text-xs text-white/40 mt-1">
-                Across {investments?.length || 0} rounds
+                {aggregatedInvestments.length} round{aggregatedInvestments.length !== 1 ? 's' : ''}
+                {(buyerTrades?.length || 0) > 0 && ` + ${buyerTrades?.length} purchase${(buyerTrades?.length || 0) !== 1 ? 's' : ''}`}
               </p>
             </div>
 
@@ -354,11 +595,21 @@ export default function Portfolio() {
               <p className="text-xs text-white/40 mt-1">Guaranteed yield</p>
             </div>
 
-            {/* Your Tokens */}
+            {/* Your Tokens - Actual Balance */}
             <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
-              <p className="text-white/50 text-sm mb-2">Your Tokens</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-white/50 text-sm">Your Tokens</p>
+                <button
+                  onClick={() => refetchBalances()}
+                  disabled={isLoadingBalances}
+                  className="text-white/30 hover:text-white/60 transition-colors disabled:opacity-50"
+                  title="Refresh balances"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoadingBalances ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
               <p className="text-2xl font-bold text-white">
-                {investments?.reduce((acc, inv) => acc + Number(inv.tokensReceived), 0).toLocaleString() || 0}
+                {isLoadingBalances ? '...' : Number(actualTotalTokens).toLocaleString()}
               </p>
               <Link
                 to="/marketplace"
@@ -404,7 +655,7 @@ export default function Portfolio() {
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-white">Your Investments</h2>
                 <div className="flex items-center gap-3">
-                  {investments && investments.length > 0 && (
+                  {((investments && investments.length > 0) || (buyerTrades && buyerTrades.length > 0)) && (
                     <button
                       onClick={handleAnalyzePortfolio}
                       className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-colors text-sm"
@@ -438,28 +689,68 @@ export default function Portfolio() {
                       <Wallet className="h-12 w-12 text-white/20 mx-auto mb-4" />
                       <p className="text-white/50 mb-4">Connect your wallet to view investments.</p>
                     </div>
-                  ) : !investments || investments.length === 0 ? (
-                    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
-                      <div className="w-16 h-16 bg-[#A2D5C6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Rocket className="h-8 w-8 text-[#A2D5C6]/40" />
+                  ) : aggregatedInvestments.length === 0 ? (
+                    // Show empty state only if no investments AND no trades
+                    (!buyerTrades || buyerTrades.length === 0) ? (
+                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                        <div className="w-16 h-16 bg-[#A2D5C6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Rocket className="h-8 w-8 text-[#A2D5C6]/40" />
+                        </div>
+                        <p className="text-white/50 mb-4">You haven't made any investments yet.</p>
+                        <Link
+                          to="/browse"
+                          className="inline-flex items-center gap-2 px-5 py-3 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors"
+                        >
+                          Browse Startups
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Link>
                       </div>
-                      <p className="text-white/50 mb-4">You haven't made any investments yet.</p>
-                      <Link
-                        to="/browse"
-                        className="inline-flex items-center gap-2 px-5 py-3 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors"
-                      >
-                        Browse Startups
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Link>
-                    </div>
+                    ) : (
+                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-8 text-center">
+                        <p className="text-white/50">No primary investments. See your marketplace purchases below.</p>
+                      </div>
+                    )
                   ) : (
-                    investments.map((investment) => (
-                      <InvestmentCard key={investment.id} investment={investment} />
+                    aggregatedInvestments.map((investment) => (
+                      <InvestmentCard
+                        key={investment.roundId}
+                        investment={investment}
+                        currentBalance={balanceByRound[investment.roundId.toLowerCase()]}
+                      />
                     ))
                   )}
                 </>
               )}
             </div>
+
+            {/* Marketplace Purchases Section */}
+            {isConnected && buyerTrades && buyerTrades.length > 0 && (
+              <div className="space-y-4 mt-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    Marketplace Purchases
+                  </h2>
+                  <span className="text-sm text-white/40">
+                    {buyerTrades.length} trade{buyerTrades.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {isLoadingTrades ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6] mb-2" />
+                    <p className="text-white/60 text-sm">Loading purchases...</p>
+                  </div>
+                ) : (
+                  buyerTrades.map((trade) => (
+                    <PurchaseCard
+                      key={trade.id}
+                      trade={trade}
+                      currentBalance={balancesByToken[trade.tokenContract.toLowerCase()]}
+                    />
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

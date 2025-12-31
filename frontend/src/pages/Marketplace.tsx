@@ -3,23 +3,24 @@ import { gsap } from 'gsap';
 import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 import Layout from '@/components/layout/Layout';
-import { useActiveSellOrders, useRecentTrades, usePlatformStats, type SellOrder } from '@/hooks/usePonderData';
+import { useActiveSellOrders, useRecentTrades, usePlatformStats, useRoundByEquityToken, useRounds, type SellOrder } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   TrendingUp,
   Clock,
   ArrowUpRight,
   Tag,
-  Layers,
-  Wifi,
-  WifiOff,
   Loader2,
   Wallet,
   ExternalLink,
-  ShoppingCart
+  Bot,
+  WifiOff,
 } from 'lucide-react';
 import IndexedBuyModal from '@/components/marketplace/IndexedBuyModal';
 import IndexedSellModal from '@/components/marketplace/IndexedSellModal';
 import MyOrders from '@/components/marketplace/MyOrders';
+import AIChat from '@/components/ai/AIChat';
+import { useAI, type OrderAnalysisData } from '@/components/ai/AIContext';
 
 const USDC_DECIMALS = 6;
 
@@ -59,6 +60,127 @@ function getTimeRemaining(expiryTimestamp: string): string {
   return `${hours}h`;
 }
 
+// Component to display token logo from IPFS
+function TokenLogo({ tokenContract }: { tokenContract: string }) {
+  const { data: round, isLoading: isRoundLoading } = useRoundByEquityToken(tokenContract);
+  const { data: metadata, isLoading: isMetadataLoading } = useRoundMetadata(round?.metadataURI);
+
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const companyName = metadata?.name || round?.companyName || '';
+  const isLoading = isRoundLoading || isMetadataLoading;
+
+  return (
+    <div className="w-10 h-10 rounded-2xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+      ) : logoUrl ? (
+        <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-sm font-bold text-[#A2D5C6]">
+          {companyName ? companyName.charAt(0).toUpperCase() : <Tag className="h-5 w-5" />}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Component to display token info with name from IPFS
+function TokenInfo({ tokenContract, orderId }: { tokenContract: string; orderId: string }) {
+  const { data: round } = useRoundByEquityToken(tokenContract);
+  const { data: metadata } = useRoundMetadata(round?.metadataURI);
+
+  const companyName = metadata?.name || round?.companyName || `Order #${orderId}`;
+
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="font-bold text-white truncate">{companyName}</p>
+      <p className="text-sm text-white/50 truncate">{shortenAddress(tokenContract)}</p>
+    </div>
+  );
+}
+
+// Order card component with AI analysis
+function OrderCard({
+  order,
+  onBuy,
+  onAnalyze,
+}: {
+  order: SellOrder;
+  onBuy: (order: SellOrder) => void;
+  onAnalyze: (order: SellOrder, companyName: string) => void;
+}) {
+  const { data: round } = useRoundByEquityToken(order.tokenContract);
+  const { data: metadata } = useRoundMetadata(round?.metadataURI);
+
+  const companyName = metadata?.name || round?.companyName || `Order #${order.orderId}`;
+
+  return (
+    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
+      {/* Token Contract with IPFS Logo */}
+      <div className="flex items-center gap-3 mb-4">
+        <TokenLogo tokenContract={order.tokenContract} />
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-white truncate">{companyName}</p>
+          <p className="text-sm text-white/50 truncate">{shortenAddress(order.tokenContract)}</p>
+        </div>
+        <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {getTimeRemaining(order.expiryTime)}
+        </span>
+      </div>
+
+      {/* Seller Info */}
+      <div className="flex items-center gap-2 mb-4">
+        <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+        <span className="text-sm text-white/70">{shortenAddress(order.seller)}</span>
+      </div>
+
+      {/* Order Details */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <p className="text-xs text-white/40 mb-1">Amount</p>
+          <p className="font-semibold text-white">{formatTokenAmount(order.amount)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-white/40 mb-1">Price/Token</p>
+          <p className="font-semibold text-white">{formatUSDC(order.pricePerToken)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-white/40 mb-1">Total Value</p>
+          <p className="font-semibold text-[#A2D5C6]">
+            {formatUSDC((BigInt(order.amount) * BigInt(order.pricePerToken)).toString())}
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onBuy(order)}
+          className="flex-1 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center justify-center gap-2"
+        >
+          Buy Tokens
+        </button>
+        <button
+          onClick={() => onAnalyze(order, companyName)}
+          className="flex-shrink-0 p-3 border border-[#A2D5C6]/30 text-[#A2D5C6] rounded-2xl hover:bg-[#A2D5C6]/10 transition-colors flex items-center justify-center"
+          title="Analyze with AI"
+        >
+          <Bot className="h-4 w-4" />
+        </button>
+        <a
+          href={`https://sepolia.mantlescan.xyz/tx/${order.transactionHash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0 p-3 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function Marketplace() {
   const { isConnected } = useAccount();
   const [selectedOrder, setSelectedOrder] = useState<SellOrder | null>(null);
@@ -70,6 +192,10 @@ export default function Marketplace() {
   const { data: orders, isLoading, error } = useActiveSellOrders();
   const { data: recentTrades } = useRecentTrades(10);
   const { data: platformStats } = usePlatformStats();
+  const { data: allRounds } = useRounds();
+
+  // AI context
+  const { openWithOrder } = useAI();
 
   // Animation refs
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -122,6 +248,17 @@ export default function Marketplace() {
   const handleBuyClick = (order: SellOrder) => {
     setSelectedOrder(order);
     setIsBuyModalOpen(true);
+  };
+
+  // Handle AI order analysis
+  const handleAnalyzeOrder = (order: SellOrder, companyName: string) => {
+    const round = allRounds?.find(r => r.equityToken?.toLowerCase() === order.tokenContract.toLowerCase()) || null;
+    const orderAnalysisData: OrderAnalysisData = {
+      order,
+      round,
+      companyName,
+    };
+    openWithOrder(orderAnalysisData);
   };
 
   return (
@@ -232,77 +369,18 @@ export default function Marketplace() {
                   <>
                     {!orders || orders.length === 0 ? (
                       <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
-                        <Tag className="h-12 w-12 text-white/20 mx-auto mb-4" />
                         <p className="text-white/50 mb-2">No active sell orders yet.</p>
                         <p className="text-white/30 text-sm">Create a sell order to list your equity tokens.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {orders.map((order: SellOrder) => (
-                          <div
+                          <OrderCard
                             key={order.id}
-                            className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 hover:bg-[#A2D5C6]/15 transition-colors"
-                          >
-                            {/* Token Contract */}
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-10 h-10 rounded-2xl bg-[#A2D5C6]/20 flex items-center justify-center">
-                                <Tag className="h-5 w-5 text-[#A2D5C6]" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-bold text-white truncate">Order #{order.orderId}</p>
-                                <p className="text-sm text-white/50 truncate">{shortenAddress(order.tokenContract)}</p>
-                              </div>
-                              <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {getTimeRemaining(order.expiryTime)}
-                              </span>
-                            </div>
-
-                            {/* Seller Info */}
-                            <div className="flex items-center gap-2 mb-4">
-                              <div className="w-6 h-6 rounded-full bg-[#A2D5C6]/20 flex items-center justify-center">
-                                <Wallet className="h-3 w-3 text-[#A2D5C6]" />
-                              </div>
-                              <span className="text-sm text-white/70">{shortenAddress(order.seller)}</span>
-                            </div>
-
-                            {/* Order Details */}
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                              <div>
-                                <p className="text-xs text-white/40 mb-1">Amount</p>
-                                <p className="font-semibold text-white">{formatTokenAmount(order.amount)}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-white/40 mb-1">Price/Token</p>
-                                <p className="font-semibold text-white">{formatUSDC(order.pricePerToken)}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-white/40 mb-1">Total Value</p>
-                                <p className="font-semibold text-[#A2D5C6]">
-                                  {formatUSDC((BigInt(order.amount) * BigInt(order.pricePerToken) / BigInt(10 ** 18)).toString())}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleBuyClick(order)}
-                                className="flex-1 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center justify-center gap-2"
-                              >
-                                Buy Tokens
-                                <ArrowUpRight className="h-4 w-4" />
-                              </button>
-                              <a
-                                href={`https://sepolia.mantlescan.xyz/tx/${order.transactionHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-shrink-0 p-3 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </div>
-                          </div>
+                            order={order}
+                            onBuy={handleBuyClick}
+                            onAnalyze={handleAnalyzeOrder}
+                          />
                         ))}
                       </div>
                     )}
@@ -313,7 +391,6 @@ export default function Marketplace() {
                 {activeTab === 'orders' && recentTrades && recentTrades.length > 0 && (
                   <div className="mt-8">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-[#A2D5C6]" />
                       Recent Trades
                     </h3>
                     <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden">
@@ -358,6 +435,9 @@ export default function Marketplace() {
         isOpen={isSellModalOpen}
         onClose={() => setIsSellModalOpen(false)}
       />
+
+      {/* AI Chat */}
+      <AIChat rounds={allRounds || []} />
     </Layout>
   );
 }

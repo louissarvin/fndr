@@ -840,6 +840,48 @@ export function useEquityTokenBalance(tokenAddress: `0x${string}` | undefined, h
   });
 }
 
+// Hook to fetch multiple token balances at once
+export function useMultipleTokenBalances(
+  tokenAddresses: (`0x${string}` | null | undefined)[],
+  holder: `0x${string}` | undefined
+) {
+  const validTokenAddresses = tokenAddresses.filter((addr): addr is `0x${string}` => !!addr);
+
+  const contracts = validTokenAddresses.map((tokenAddress) => ({
+    address: tokenAddress,
+    abi: StartupEquityTokenABI,
+    functionName: 'balanceOf' as const,
+    args: holder ? [holder] : undefined,
+  }));
+
+  const result = useReadContracts({
+    contracts,
+    query: {
+      enabled: !!holder && validTokenAddresses.length > 0,
+    },
+  });
+
+  // Map results back to token addresses
+  const balancesByToken: Record<string, bigint> = {};
+  let totalBalance = BigInt(0);
+
+  validTokenAddresses.forEach((tokenAddress, index) => {
+    const data = result.data?.[index];
+    if (data?.status === 'success' && data.result !== undefined) {
+      const balance = data.result as bigint;
+      balancesByToken[tokenAddress.toLowerCase()] = balance;
+      totalBalance += balance;
+    }
+  });
+
+  return {
+    balancesByToken,
+    totalBalance,
+    isLoading: result.isLoading,
+    refetch: result.refetch,
+  };
+}
+
 export function useEquityTokenApprove(tokenAddress: `0x${string}` | undefined) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });

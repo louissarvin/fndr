@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { useInvestorInvestments, useRound } from '@/hooks/usePonderData';
+import { useInvestorInvestments, useRound, useActiveSellOrders, useRounds, useBuyerTrades } from '@/hooks/usePonderData';
 import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useCreateSellOrder,
@@ -11,6 +11,7 @@ import {
   useFirstPurchaseTime,
   useMinHoldingPeriod,
   useGetEquityToken,
+  useMultipleTokenBalances,
   USDC_DECIMALS,
 } from '@/hooks/useContracts';
 import { CONTRACTS } from '@/lib/contracts';
@@ -24,7 +25,9 @@ import {
   ChevronDown,
   DollarSign,
   Lock,
+  Bot,
 } from 'lucide-react';
+import { useAI, type PriceSuggestionData } from '@/components/ai/AIContext';
 
 // Helper to format time remaining
 function formatTimeRemaining(seconds: number): string {
@@ -150,10 +153,111 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   const [duration, setDuration] = useState(168); // 7 days default
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
   const [step, setStep] = useState<'form' | 'approve' | 'create' | 'success'>('form');
-  const [tokenHoldings, setTokenHoldings] = useState<TokenHolding[]>([]);
 
   // Get investor's investments from Ponder
   const { data: investments } = useInvestorInvestments(address?.toLowerCase());
+
+  // Get buyer's secondary market trades
+  const { data: buyerTrades } = useBuyerTrades(address);
+
+  // Get all rounds to map roundId -> equityToken
+  const { data: allRounds } = useRounds();
+
+  // Get all active sell orders for price comparison
+  const { data: allSellOrders } = useActiveSellOrders();
+
+  // AI context for price suggestions
+  const { openWithPriceSuggestion } = useAI();
+
+  // Get unique round IDs from investments
+  const uniqueRoundIds = useMemo(() => {
+    if (!investments) return [];
+    return [...new Set(investments.map(inv => inv.roundId))];
+  }, [investments]);
+
+  // Get rounds that match user's investments
+  const investedRounds = useMemo(() => {
+    if (!allRounds || !investments) return [];
+    return allRounds.filter(round =>
+      investments.some(inv => inv.roundId.toLowerCase() === round.id.toLowerCase())
+    );
+  }, [allRounds, investments]);
+
+  // Get equity token addresses from invested rounds AND trades
+  const equityTokenAddresses = useMemo(() => {
+    const fromRounds = investedRounds
+      .map(round => round.equityToken?.toLowerCase())
+      .filter((addr): addr is string => !!addr);
+
+    const fromTrades = (buyerTrades || [])
+      .map(trade => trade.tokenContract.toLowerCase());
+
+    // Combine and deduplicate
+    const allAddresses = [...new Set([...fromRounds, ...fromTrades])];
+    return allAddresses as `0x${string}`[];
+  }, [investedRounds, buyerTrades]);
+
+  // Fetch actual token balances from contracts
+  const {
+    balancesByToken,
+    isLoading: isLoadingBalances,
+  } = useMultipleTokenBalances(equityTokenAddresses, address);
+
+  // Build token holdings with actual on-chain balances
+  const tokenHoldings = useMemo((): TokenHolding[] => {
+    if (!investments || !allRounds) return [];
+
+    const holdings: TokenHolding[] = [];
+
+    // Add holdings from primary investments
+    uniqueRoundIds.forEach(roundId => {
+      const round = allRounds.find(r => r.id.toLowerCase() === roundId.toLowerCase());
+      const equityToken = round?.equityToken?.toLowerCase();
+
+      // Get actual balance from on-chain
+      const actualBalance = equityToken && balancesByToken[equityToken]
+        ? balancesByToken[equityToken]
+        : BigInt(0);
+
+      // Only add if balance > 0
+      if (actualBalance > BigInt(0)) {
+        holdings.push({
+          roundId,
+          tokenAddress: roundId, // Round address is used for contract calls
+          companyName: round?.companyName || null,
+          balance: actualBalance,
+        });
+      }
+    });
+
+    // Add holdings from secondary market purchases (if not already included)
+    if (buyerTrades) {
+      buyerTrades.forEach(trade => {
+        const tokenContract = trade.tokenContract.toLowerCase();
+        // Check if we already have this token from primary investments
+        const alreadyIncluded = holdings.some(h => {
+          const round = allRounds.find(r => r.id.toLowerCase() === h.roundId.toLowerCase());
+          return round?.equityToken?.toLowerCase() === tokenContract;
+        });
+
+        if (!alreadyIncluded) {
+          const round = allRounds.find(r => r.equityToken?.toLowerCase() === tokenContract);
+          const actualBalance = balancesByToken[tokenContract] || BigInt(0);
+
+          if (actualBalance > BigInt(0)) {
+            holdings.push({
+              roundId: round?.id || tokenContract,
+              tokenAddress: round?.id || tokenContract,
+              companyName: round?.companyName || null,
+              balance: actualBalance,
+            });
+          }
+        }
+      });
+    }
+
+    return holdings;
+  }, [investments, allRounds, uniqueRoundIds, balancesByToken, buyerTrades]);
 
   // Get token balance for selected token
   const { data: tokenBalance } = useEquityTokenBalance(
@@ -220,33 +324,6 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
     (hasHoldingData && timeUntilCanSell > 0) // Has data, time not passed
   );
 
-  // Build token holdings from investments
-  useEffect(() => {
-    if (!investments) return;
-
-    // Group by round and get unique token addresses
-    const roundIds = [...new Set(investments.map(inv => inv.roundId))];
-
-    // For now, we'll create holdings based on investments
-    // In production, you'd query token balances directly
-    const holdings: TokenHolding[] = roundIds.map(roundId => {
-      const roundInvestments = investments.filter(inv => inv.roundId === roundId);
-      const totalTokens = roundInvestments.reduce(
-        (acc, inv) => acc + BigInt(inv.tokensReceived),
-        BigInt(0)
-      );
-
-      return {
-        roundId,
-        tokenAddress: roundId, // In the contract, round address is the token issuer
-        companyName: null, // Will be fetched separately
-        balance: totalTokens,
-      };
-    });
-
-    setTokenHoldings(holdings);
-  }, [investments]);
-
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -275,10 +352,11 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
   }, [isCreateSuccess, step]);
 
   // Calculate values
-  // Note: Equity tokens use 6 decimals (same as USDC)
-  const EQUITY_TOKEN_DECIMALS = 6;
+  // Note: Equity tokens are minted as whole numbers (tokensToMint = usdcAmount / sharePrice)
+  // even though the contract declares decimals = 6, the actual balances are whole numbers
   const displayAmount = sellAmount ? BigInt(Math.floor(Number(sellAmount))) : BigInt(0);
-  const scaledAmount = sellAmount ? parseUnits(sellAmount, EQUITY_TOKEN_DECIMALS) : BigInt(0);
+  // Use displayAmount directly since tokens are stored as whole numbers in the contract
+  const scaledAmount = displayAmount;
   const price = pricePerToken ? parseUnits(pricePerToken, USDC_DECIMALS) : BigInt(0);
 
   // For display/validation, use the Ponder balance (whole numbers)
@@ -323,6 +401,22 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
 
   const handleMaxAmount = () => {
     setSellAmount(maxDisplayAmount.toString());
+  };
+
+  // Handle AI price suggestion
+  const handleGetPriceSuggestion = () => {
+    if (!selectedToken || !equityTokenAddress) return;
+
+    // Get round info for the token
+    const priceSuggestionData: PriceSuggestionData = {
+      tokenContract: equityTokenAddress as string,
+      round: null, // Will be fetched in AIChat via the round lookup
+      companyName: selectedToken.companyName || `Round ${selectedToken.roundId.slice(0, 8)}...`,
+      tokenBalance: Number(maxDisplayAmount),
+      existingOrders: allSellOrders || [],
+    };
+
+    openWithPriceSuggestion(priceSuggestionData);
   };
 
   if (!isOpen) return null;
@@ -433,9 +527,21 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
 
               {/* Price Input */}
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Price per Token (USDC)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-white/80">
+                    Price per Token (USDC)
+                  </label>
+                  {selectedToken && equityTokenAddress && (
+                    <button
+                      type="button"
+                      onClick={handleGetPriceSuggestion}
+                      className="flex items-center gap-1.5 text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors"
+                    >
+                      <Bot className="h-3.5 w-3.5" />
+                      Get AI Suggestion
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
                   <input
@@ -630,13 +736,12 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
 
           {step === 'success' && (
             <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Order Created!</h3>
               <p className="text-white/60 mb-2">
                 Your sell order has been successfully created.
               </p>
               <p className="text-sm text-[#A2D5C6] mb-6">
-                {sellAmount} tokens @ ${pricePerToken} each
+                {sellAmount} tokens ${pricePerToken} each
               </p>
               <button
                 onClick={onClose}

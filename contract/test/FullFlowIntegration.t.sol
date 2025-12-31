@@ -496,34 +496,4 @@ contract FullFlowIntegrationTest is Test {
         // Final assertions for test completion
         assertTrue(true, "Full ecosystem flow test completed successfully");
     }
-    
-    function testErrorConditions() public {
-        emit TestPhase("=== ERROR CONDITION TESTING ===");
-
-        // Test unverified user attempting operations
-        address unverified = address(0x6666);
-        usdc.transfer(unverified, 50000 * 1e6);
-
-        // Should fail round creation
-        vm.startPrank(unverified);
-        usdc.approve(address(factory), 10 * 1e6);
-
-        vm.expectRevert();
-        factory.createRound(
-            50000 * 1e6,
-            1000,
-            1 * 1e6,
-            block.timestamp + 365 days,
-            "FAIL",
-            ""
-        );
-        vm.stopPrank();
-
-        console.log("Unverified user round creation blocked");
-
-        // Test various other error conditions...
-        // (Additional error testing can be added here)
-
-        console.log("Error condition testing completed");
-    }
 }

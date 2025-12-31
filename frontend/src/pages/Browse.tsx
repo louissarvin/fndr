@@ -3,16 +3,22 @@ import { gsap } from 'gsap';
 import Layout from '@/components/layout/Layout';
 import RoundCard from '@/components/campaigns/RoundCard';
 import AIChat from '@/components/ai/AIChat';
-import { useRounds } from '@/hooks/usePonderData';
-import { ChevronLeft, ChevronRight, Loader2, Wifi, WifiOff, Rocket } from 'lucide-react';
+import { useRounds, type Round } from '@/hooks/usePonderData';
+import { useAI } from '@/components/ai/AIContext';
+import { ChevronLeft, ChevronRight, Loader2, WifiOff, Rocket, Scale, X, Check } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 6;
 
 export default function Browse() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedRounds, setSelectedRounds] = useState<Round[]>([]);
 
   // Fetch real data from Ponder
   const { data: rounds, isLoading, error } = useRounds();
+
+  // AI context for comparison
+  const { openWithComparison } = useAI();
 
   // Animation refs
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -67,6 +73,40 @@ export default function Browse() {
     }
   };
 
+  // Toggle round selection for comparison
+  const toggleRoundSelection = (round: Round) => {
+    setSelectedRounds(prev => {
+      const isSelected = prev.some(r => r.id === round.id);
+      if (isSelected) {
+        return prev.filter(r => r.id !== round.id);
+      } else {
+        // Limit to 4 rounds for comparison
+        if (prev.length >= 4) return prev;
+        return [...prev, round];
+      }
+    });
+  };
+
+  // Check if a round is selected
+  const isRoundSelected = (roundId: string) => {
+    return selectedRounds.some(r => r.id === roundId);
+  };
+
+  // Handle compare action
+  const handleCompare = () => {
+    if (selectedRounds.length >= 2) {
+      openWithComparison(selectedRounds);
+      setCompareMode(false);
+      setSelectedRounds([]);
+    }
+  };
+
+  // Exit compare mode
+  const exitCompareMode = () => {
+    setCompareMode(false);
+    setSelectedRounds([]);
+  };
+
   return (
     <Layout>
       <div className="py-12 px-8">
@@ -81,7 +121,69 @@ export default function Browse() {
             <p ref={subtitleRef} className="text-lg text-[#F6F6F6]/60 max-w-xl mx-auto">
               Discover investment opportunities and earn 6% APY on your invested capital.
             </p>
+
+            {/* Compare Mode Toggle */}
+            {!isLoading && rounds && rounds.length >= 2 && (
+              <div className="mt-6">
+                {!compareMode ? (
+                  <button
+                    onClick={() => setCompareMode(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors text-sm"
+                  >
+                    <Scale className="h-4 w-4" />
+                    Compare Rounds
+                  </button>
+                ) : (
+                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#A2D5C6]/20 text-white rounded-xl">
+                    <Scale className="h-4 w-4 text-[#A2D5C6]" />
+                    <span className="text-sm">Select 2-4 rounds to compare</span>
+                    <button
+                      onClick={exitCompareMode}
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Compare Bar - Fixed at bottom when rounds are selected */}
+          {compareMode && selectedRounds.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1a1a1a] border border-white/10 rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                {selectedRounds.map((round) => (
+                  <div
+                    key={round.id}
+                    className="flex items-center gap-2 bg-[#A2D5C6]/20 px-3 py-1.5 rounded-lg"
+                  >
+                    <span className="text-sm text-white font-medium">
+                      {round.companyName || round.id.slice(0, 8)}
+                    </span>
+                    <button
+                      onClick={() => toggleRoundSelection(round)}
+                      className="p-0.5 hover:bg-white/10 rounded transition-colors"
+                    >
+                      <X className="h-3 w-3 text-white/60" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="h-8 w-px bg-white/10" />
+              <span className="text-sm text-white/60">
+                {selectedRounds.length}/4 selected
+              </span>
+              <button
+                onClick={handleCompare}
+                disabled={selectedRounds.length < 2}
+                className="px-4 py-2 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Scale className="h-4 w-4" />
+                Compare with AI
+              </button>
+            </div>
+          )}
 
           {/* Connection Status */}
           <div className="flex justify-center mb-8">
@@ -110,7 +212,36 @@ export default function Browse() {
           {!isLoading && rounds && rounds.length > 0 && (
             <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedRounds.map((round: any) => (
-                <RoundCard key={round.id} round={round} />
+                <div key={round.id} className="relative">
+                  {compareMode && (
+                    <button
+                      onClick={() => toggleRoundSelection(round)}
+                      className={`absolute -top-2 -right-2 z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                        isRoundSelected(round.id)
+                          ? 'bg-[#A2D5C6] border-[#A2D5C6] text-black'
+                          : 'bg-[#1a1a1a] border-white/30 text-white/60 hover:border-[#A2D5C6] hover:text-[#A2D5C6]'
+                      }`}
+                    >
+                      {isRoundSelected(round.id) ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <span className="text-xs font-medium">{selectedRounds.length + 1}</span>
+                      )}
+                    </button>
+                  )}
+                  <div
+                    className={`transition-all duration-200 ${
+                      compareMode
+                        ? isRoundSelected(round.id)
+                          ? 'ring-2 ring-[#A2D5C6] rounded-2xl'
+                          : 'cursor-pointer hover:ring-2 hover:ring-white/20 rounded-2xl'
+                        : ''
+                    }`}
+                    onClick={compareMode ? () => toggleRoundSelection(round) : undefined}
+                  >
+                    <RoundCard round={round} />
+                  </div>
+                </div>
               ))}
             </div>
           )}

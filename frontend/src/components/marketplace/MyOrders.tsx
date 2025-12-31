@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
-import { useSellerOrders, useCancelSellOrder, USDC_DECIMALS } from '@/hooks/useContracts';
+import { useCancelSellOrder, USDC_DECIMALS } from '@/hooks/useContracts';
+import { useSellerSellOrders, useRoundByEquityToken, type SellOrder } from '@/hooks/usePonderData';
+import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   Tag,
   Clock,
   Loader2,
-  X,
   AlertCircle,
   CheckCircle,
-  ExternalLink,
-  Trash2,
 } from 'lucide-react';
 
 function formatTokenAmount(value: bigint): string {
@@ -35,12 +34,57 @@ function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function getTimeRemaining(expiryTimestamp: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = Number(expiryTimestamp);
+  const diff = expiry - now;
+
+  if (diff <= 0) return 'Expired';
+
+  const days = Math.floor(diff / (60 * 60 * 24));
+  const hours = Math.floor((diff % (60 * 60 * 24)) / (60 * 60));
+
+  if (days > 0) return `${days}d ${hours}h`;
+  return `${hours}h`;
+}
+
+// Component to display token logo from IPFS
+function TokenLogo({ tokenContract }: { tokenContract: string }) {
+  const { data: round, isLoading: isRoundLoading } = useRoundByEquityToken(tokenContract);
+  const { data: metadata, isLoading: isMetadataLoading } = useRoundMetadata(round?.metadataURI);
+
+  const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
+  const companyName = metadata?.name || round?.companyName || '';
+  const isLoading = isRoundLoading || isMetadataLoading;
+
+  return (
+    <div className="w-10 h-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+      ) : logoUrl ? (
+        <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-sm font-bold text-[#A2D5C6]">
+          {companyName ? companyName.charAt(0).toUpperCase() : <Tag className="h-5 w-5" />}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Get company name from IPFS metadata
+function useCompanyName(tokenContract: string) {
+  const { data: round } = useRoundByEquityToken(tokenContract);
+  const { data: metadata } = useRoundMetadata(round?.metadataURI);
+  return metadata?.name || round?.companyName || null;
+}
+
 export default function MyOrders() {
   const { address, isConnected } = useAccount();
-  const [cancellingOrderId, setCancellingOrderId] = useState<bigint | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
-  // Get seller's orders from contract
-  const { data: orderIds, isLoading, refetch } = useSellerOrders(address);
+  // Get seller's orders from Ponder indexer
+  const { data: orders, isLoading, refetch } = useSellerSellOrders(address?.toLowerCase());
 
   // Cancel order hook
   const {
@@ -51,9 +95,9 @@ export default function MyOrders() {
     error: cancelError,
   } = useCancelSellOrder();
 
-  const handleCancelOrder = async (orderId: bigint) => {
+  const handleCancelOrder = async (orderId: string) => {
     setCancellingOrderId(orderId);
-    cancelSellOrder(orderId);
+    cancelSellOrder(BigInt(orderId));
   };
 
   // Reset after success
@@ -77,7 +121,10 @@ export default function MyOrders() {
     );
   }
 
-  if (!orderIds || orderIds.length === 0) {
+  // Filter to only show active orders
+  const activeOrders = orders?.filter(order => order.active) || [];
+
+  if (activeOrders.length === 0) {
     return (
       <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-8 text-center">
         <Tag className="h-12 w-12 text-white/20 mx-auto mb-3" />
@@ -89,14 +136,14 @@ export default function MyOrders() {
 
   return (
     <div className="space-y-4">
-      {orderIds.map((orderId) => (
+      {activeOrders.map((order) => (
         <OrderCard
-          key={orderId.toString()}
-          orderId={orderId}
-          onCancel={() => handleCancelOrder(orderId)}
-          isCancelling={cancellingOrderId === orderId && (isCancelPending || isCancelConfirming)}
-          isCancelled={cancellingOrderId === orderId && isCancelSuccess}
-          cancelError={cancellingOrderId === orderId ? cancelError : null}
+          key={order.id}
+          order={order}
+          onCancel={() => handleCancelOrder(order.orderId)}
+          isCancelling={cancellingOrderId === order.orderId && (isCancelPending || isCancelConfirming)}
+          isCancelled={cancellingOrderId === order.orderId && isCancelSuccess}
+          cancelError={cancellingOrderId === order.orderId ? cancelError : null}
         />
       ))}
     </div>
@@ -104,27 +151,25 @@ export default function MyOrders() {
 }
 
 interface OrderCardProps {
-  orderId: bigint;
+  order: SellOrder;
   onCancel: () => void;
   isCancelling: boolean;
   isCancelled: boolean;
   cancelError: Error | null;
 }
 
-function OrderCard({ orderId, onCancel, isCancelling, isCancelled, cancelError }: OrderCardProps) {
-  // In a real implementation, you'd fetch order details from contract
-  // For now, we'll show a simplified view
+function OrderCard({ order, onCancel, isCancelling, isCancelled, cancelError }: OrderCardProps) {
+  const companyName = useCompanyName(order.tokenContract);
+  const displayName = companyName || `Order #${order.orderId}`;
 
   return (
     <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-xl p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-            <Tag className="h-5 w-5 text-[#A2D5C6]" />
-          </div>
-          <div>
-            <p className="font-semibold text-white">Order #{orderId.toString()}</p>
-            <p className="text-xs text-white/50">Active sell order</p>
+          <TokenLogo tokenContract={order.tokenContract} />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white truncate">{displayName}</p>
+            <p className="text-xs text-white/50">{shortenAddress(order.tokenContract)}</p>
           </div>
         </div>
 
@@ -146,13 +191,28 @@ function OrderCard({ orderId, onCancel, isCancelling, isCancelled, cancelError }
                   Cancelling...
                 </>
               ) : (
-                <>
-                  <Trash2 className="h-4 w-4" />
-                  Cancel
-                </>
+                'Cancel'
               )}
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Order Details */}
+      <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/10">
+        <div className="text-center">
+          <p className="text-xs text-white/40 mb-1">Amount</p>
+          <p className="font-semibold text-white">{Number(order.amount).toLocaleString()}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-white/40 mb-1">Price/Token</p>
+          <p className="font-semibold text-white">{formatUSDC(BigInt(order.pricePerToken))}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-white/40 mb-1">Total Value</p>
+          <p className="font-semibold text-[#A2D5C6]">
+            {formatUSDC(BigInt(order.amount) * BigInt(order.pricePerToken))}
+          </p>
         </div>
       </div>
 

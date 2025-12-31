@@ -128,7 +128,6 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
                 </>
               ) : (
                 <>
-                  <Droplets className="h-5 w-5" />
                   Claim 1.000 Test USDC
                 </>
               )}

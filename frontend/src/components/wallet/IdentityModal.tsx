@@ -147,9 +147,6 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
       <DialogContent className="bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#1F1F1F] rounded-2xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
-            <div>
-              <UserCheck className="h-6 w-6 text-[#A2D5C6]" />
-            </div>
             Identity Verification
           </DialogTitle>
         </DialogHeader>
@@ -299,7 +296,6 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                 <div className="space-y-4">
                   {/* ZK Verified Badge */}
                   <div className="flex items-center gap-2 bg-[#A2D5C6]/10 rounded-lg px-3 py-2">
-                    <Shield className="h-4 w-4 text-[#A2D5C6]" />
                     <span className="text-sm text-[#A2D5C6]">ZKPassport Verified</span>
                   </div>
 
@@ -317,7 +313,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                     >
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl ${
-                          selectedRole === UserRole.Investor ? 'bg-[#A2D5C6]/30' : 'bg-[#2A2A2A]'
+                          selectedRole === UserRole.Investor
                         }`}>
                           <TrendingUp className={`h-6 w-6 ${
                             selectedRole === UserRole.Investor ? 'text-[#A2D5C6]' : 'text-white/60'
@@ -346,7 +342,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                     >
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl ${
-                          selectedRole === UserRole.Founder ? 'bg-[#A2D5C6]/30' : 'bg-[#2A2A2A]'
+                          selectedRole === UserRole.Founder
                         }`}>
                           <Briefcase className={`h-6 w-6 ${
                             selectedRole === UserRole.Founder ? 'text-[#A2D5C6]' : 'text-white/60'
@@ -378,7 +374,6 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       </>
                     ) : (
                       <>
-                        <UserCheck className="h-5 w-5" />
                         Register as {selectedRole !== null ? roleLabels[selectedRole] : '...'}
                       </>
                     )}

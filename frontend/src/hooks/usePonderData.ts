@@ -446,3 +446,100 @@ export function useFounderRounds(founderAddress: string | undefined) {
     staleTime: 30000,
   });
 }
+
+// Fetch sell orders by seller address
+export function useSellerSellOrders(sellerAddress: string | undefined) {
+  return useQuery({
+    queryKey: ["ponder", "sellOrders", "seller", sellerAddress],
+    queryFn: async () => {
+      if (!sellerAddress) return [];
+      const data = await queryPonder<{ sellOrders: { items: SellOrder[] } }>(`
+        query GetSellerSellOrders($seller: String!) {
+          sellOrders(where: { seller: $seller }, orderBy: "createdAt", orderDirection: "desc") {
+            items {
+              id
+              orderId
+              seller
+              tokenContract
+              amount
+              originalAmount
+              pricePerToken
+              expiryTime
+              active
+              createdAt
+              transactionHash
+            }
+          }
+        }
+      `, { seller: sellerAddress.toLowerCase() });
+      return data.sellOrders.items;
+    },
+    enabled: !!sellerAddress,
+    staleTime: 30000,
+  });
+}
+
+// Fetch round by equity token address
+export function useRoundByEquityToken(equityTokenAddress: string | undefined) {
+  return useQuery({
+    queryKey: ["ponder", "round", "equityToken", equityTokenAddress],
+    queryFn: async () => {
+      if (!equityTokenAddress) return null;
+      const data = await queryPonder<{ rounds: { items: Round[] } }>(`
+        query GetRoundByEquityToken($equityToken: String!) {
+          rounds(where: { equityToken: $equityToken }, limit: 1) {
+            items {
+              id
+              founder
+              equityToken
+              companyName
+              metadataURI
+              targetRaise
+              equityPercentage
+              totalRaised
+              tokensIssued
+              investorCount
+              state
+              createdAt
+            }
+          }
+        }
+      `, { equityToken: equityTokenAddress.toLowerCase() });
+      return data.rounds.items[0] || null;
+    },
+    enabled: !!equityTokenAddress,
+    staleTime: 30000,
+  });
+}
+
+// Fetch trades where user is the buyer (secondary market purchases)
+export function useBuyerTrades(buyerAddress: string | undefined) {
+  return useQuery({
+    queryKey: ["ponder", "trades", "buyer", buyerAddress],
+    queryFn: async () => {
+      if (!buyerAddress) return [];
+      const data = await queryPonder<{ trades: { items: Trade[] } }>(`
+        query GetBuyerTrades($buyer: String!) {
+          trades(where: { buyer: $buyer }, orderBy: "timestamp", orderDirection: "desc") {
+            items {
+              id
+              orderId
+              buyer
+              seller
+              tokenContract
+              amount
+              pricePerToken
+              totalPrice
+              platformFee
+              timestamp
+              transactionHash
+            }
+          }
+        }
+      `, { buyer: buyerAddress.toLowerCase() });
+      return data.trades.items;
+    },
+    enabled: !!buyerAddress,
+    staleTime: 30000,
+  });
+}

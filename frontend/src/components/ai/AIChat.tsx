@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Loader2, Bot, User } from 'lucide-react';
-import type { Round } from '@/hooks/usePonderData';
+import type { Round, Investment, Trade, SellOrder } from '@/hooks/usePonderData';
 import { formatUnits } from 'viem';
 import ReactMarkdown from 'react-markdown';
-import { useAI, type PortfolioData } from './AIContext';
+import { useAI, type PortfolioData, type AggregatedInvestmentData, type OrderAnalysisData, type PriceSuggestionData } from './AIContext';
 import { calculateCredibilityScore, getScoreExplanation } from '@/lib/credibilityScore';
+import { useAccount } from 'wagmi';
 
 interface Message {
   id: string;
@@ -29,6 +30,30 @@ function formatUSDC(value: string): string {
   }).format(num);
 }
 
+// Format price without trailing zeros (e.g., $3 instead of $3.0000)
+function formatPrice(value: number): string {
+  // If it's a whole number, show no decimals
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+  // Otherwise show up to 4 decimal places, removing trailing zeros
+  return parseFloat(value.toFixed(4)).toString();
+}
+
+function getTimeRemaining(expiryTimestamp: string): string {
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = Number(expiryTimestamp);
+  const diff = expiry - now;
+
+  if (diff <= 0) return 'Expired';
+
+  const days = Math.floor(diff / (60 * 60 * 24));
+  const hours = Math.floor((diff % (60 * 60 * 24)) / (60 * 60));
+
+  if (days > 0) return `${days}d ${hours}h`;
+  return `${hours}h`;
+}
+
 function formatRoundsContext(rounds: Round[]): string {
   if (!rounds || rounds.length === 0) return 'No rounds available.';
 
@@ -47,13 +72,79 @@ function formatRoundsContext(rounds: Round[]): string {
 
 const SUGGESTED_QUESTIONS = [
   "Which startup should I invest in?",
-  "What are the risks of investing?",
-  "Explain how the yield works",
-  "Compare the available rounds",
+  "Assess my risk profile",
+  "What are the market insights?",
+  "When should I buy or sell?",
 ];
 
+// Helper to fetch portfolio data from Ponder
+async function fetchPortfolioData(address: string): Promise<{ investments: Investment[], trades: Trade[] }> {
+  const PONDER_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:42069';
+
+  const investmentsQuery = `
+    query GetInvestorInvestments($investor: String!) {
+      investments(where: { investor: $investor }, orderBy: "timestamp", orderDirection: "desc") {
+        items {
+          id
+          roundId
+          investor
+          usdcAmount
+          tokensReceived
+          totalRaisedAtTime
+          timestamp
+          transactionHash
+        }
+      }
+    }
+  `;
+
+  const tradesQuery = `
+    query GetBuyerTrades($buyer: String!) {
+      trades(where: { buyer: $buyer }, orderBy: "timestamp", orderDirection: "desc") {
+        items {
+          id
+          orderId
+          buyer
+          seller
+          tokenContract
+          amount
+          pricePerToken
+          totalPrice
+          platformFee
+          timestamp
+          transactionHash
+        }
+      }
+    }
+  `;
+
+  const [investmentsRes, tradesRes] = await Promise.all([
+    fetch(`${PONDER_URL}/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: investmentsQuery, variables: { investor: address.toLowerCase() } }),
+    }),
+    fetch(`${PONDER_URL}/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: tradesQuery, variables: { buyer: address.toLowerCase() } }),
+    }),
+  ]);
+
+  const investmentsData = await investmentsRes.json();
+  const tradesData = await tradesRes.json();
+
+  return {
+    investments: investmentsData.data?.investments?.items || [],
+    trades: tradesData.data?.trades?.items || [],
+  };
+}
+
 export default function AIChat({ rounds = [] }: AIChatProps) {
-  const { isOpen, focusedRound, portfolioData, closeChat, openChat, clearFocus } = useAI();
+  const { isOpen, focusedRound, portfolioData, comparisonRounds, orderData, priceSuggestionData, closeChat, openChat, clearFocus } = useAI();
+  const { address, isConnected } = useAccount();
+  const [fetchedPortfolioData, setFetchedPortfolioData] = useState<PortfolioData | null>(null);
+  const [isFetchingPortfolio, setIsFetchingPortfolio] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -66,6 +157,9 @@ export default function AIChat({ rounds = [] }: AIChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [lastAnalyzedRoundId, setLastAnalyzedRoundId] = useState<string | null>(null);
   const [lastAnalyzedPortfolio, setLastAnalyzedPortfolio] = useState<string | null>(null);
+  const [lastComparisonKey, setLastComparisonKey] = useState<string | null>(null);
+  const [lastAnalyzedOrderId, setLastAnalyzedOrderId] = useState<string | null>(null);
+  const [lastPriceSuggestionToken, setLastPriceSuggestionToken] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -145,50 +239,120 @@ Please provide a comprehensive analysis of this round, considering its current s
 
   // Format portfolio for AI analysis
   const formatPortfolioContext = useCallback((data: PortfolioData): string => {
-    const { walletAddress, investments, rounds, totalInvested, totalYield } = data;
+    const {
+      walletAddress,
+      aggregatedInvestments,
+      trades,
+      rounds,
+      balancesByToken,
+      totalInvested,
+      totalFromTrades,
+      totalYield
+    } = data;
 
-    // Calculate portfolio metrics
-    const positions = investments.map(inv => {
+    // Calculate portfolio metrics from aggregated investments
+    const positions = aggregatedInvestments.map(inv => {
       const round = rounds.find(r => r.id.toLowerCase() === inv.roundId.toLowerCase());
-      const investedAmount = Number(formatUnits(BigInt(inv.usdcAmount), USDC_DECIMALS));
+      const investedAmount = Number(inv.totalUsdcAmount) / 1e6;
+      const tokensReceived = Number(inv.totalTokensReceived);
       const percentOfPortfolio = totalInvested > 0 ? (investedAmount / totalInvested * 100) : 0;
       const credibility = round ? calculateCredibilityScore(round) : null;
 
+      // Get actual balance from on-chain data
+      const equityToken = round?.equityToken?.toLowerCase();
+      const currentBalance = equityToken && balancesByToken[equityToken]
+        ? Number(balancesByToken[equityToken])
+        : tokensReceived;
+      const tokensSold = tokensReceived - currentBalance;
+
       return {
-        investment: inv,
+        roundId: inv.roundId,
         round,
         investedAmount,
+        tokensReceived,
+        currentBalance,
+        tokensSold,
         percentOfPortfolio,
         credibility,
+        investmentCount: inv.investmentCount,
+      };
+    });
+
+    // Calculate secondary market purchases
+    const purchasePositions = trades.map(trade => {
+      const round = rounds.find(r => r.equityToken?.toLowerCase() === trade.tokenContract.toLowerCase());
+      const paidAmount = Number(formatUnits(BigInt(trade.totalPrice), USDC_DECIMALS));
+      const tokensPurchased = Number(trade.amount);
+      const pricePerToken = Number(formatUnits(BigInt(trade.pricePerToken), USDC_DECIMALS));
+
+      // Get actual balance
+      const currentBalance = balancesByToken[trade.tokenContract.toLowerCase()]
+        ? Number(balancesByToken[trade.tokenContract.toLowerCase()])
+        : tokensPurchased;
+
+      return {
+        trade,
+        round,
+        paidAmount,
+        tokensPurchased,
+        currentBalance,
+        pricePerToken,
       };
     });
 
     // Calculate diversification metrics
-    const numPositions = positions.length;
-    const largestPosition = Math.max(...positions.map(p => p.percentOfPortfolio));
-    const avgCredibility = positions.filter(p => p.credibility).reduce((acc, p) => acc + (p.credibility?.score || 0), 0) / numPositions;
+    const numInvestments = positions.length;
+    const numPurchases = purchasePositions.length;
+    const totalPositions = numInvestments + numPurchases;
+
+    const largestPosition = positions.length > 0
+      ? Math.max(...positions.map(p => p.percentOfPortfolio), 0)
+      : 0;
+    const avgCredibility = positions.filter(p => p.credibility).length > 0
+      ? positions.filter(p => p.credibility).reduce((acc, p) => acc + (p.credibility?.score || 0), 0) / positions.filter(p => p.credibility).length
+      : 0;
 
     // Count risk distribution
     const highRiskCount = positions.filter(p => p.credibility && p.credibility.score < 4).length;
     const mediumRiskCount = positions.filter(p => p.credibility && p.credibility.score >= 4 && p.credibility.score < 6).length;
     const lowRiskCount = positions.filter(p => p.credibility && p.credibility.score >= 6).length;
 
-    // Format positions
+    // Calculate total tokens sold
+    const totalTokensSold = positions.reduce((acc, p) => acc + p.tokensSold, 0);
+    const hasTradeActivity = totalTokensSold > 0 || trades.length > 0;
+
+    // Format primary investment positions
     const positionsText = positions.map((p, i) => {
       const roundState = p.round?.state === 0 ? 'Fundraising' : p.round?.state === 1 ? 'Completed' : 'Unknown';
       const roundProgress = p.round ? (Number(p.round.totalRaised) / Number(p.round.targetRaise) * 100).toFixed(1) : 'N/A';
+      const soldInfo = p.tokensSold > 0 ? ` (${p.tokensSold.toLocaleString()} sold on secondary market)` : '';
 
       return `
-Position ${i + 1}: ${p.round?.companyName || 'Unknown Round'}
-- Invested: $${p.investedAmount.toLocaleString()} (${p.percentOfPortfolio.toFixed(1)}% of portfolio)
-- Tokens Held: ${Number(p.investment.tokensReceived).toLocaleString()}
+Investment ${i + 1}: ${p.round?.companyName || 'Unknown Round'}
+- Total Invested: $${p.investedAmount.toLocaleString()} (${p.percentOfPortfolio.toFixed(1)}% of portfolio)
+- Tokens Received: ${p.tokensReceived.toLocaleString()}
+- Current Balance: ${p.currentBalance.toLocaleString()}${soldInfo}
 - Round State: ${roundState}
 - Round Progress: ${roundProgress}% funded
-- Credibility Score: ${p.credibility ? `${p.credibility.score.toFixed(1)}/10 (${p.credibility.label})` : 'N/A'}`;
+- Credibility Score: ${p.credibility ? `${p.credibility.score.toFixed(1)}/10 (${p.credibility.label})` : 'N/A'}
+- Investment Count: ${p.investmentCount} investment(s) in this round`;
     }).join('\n');
 
-    // Calculate monthly yield
-    const monthlyYield = totalInvested * 0.06 / 12;
+    // Format secondary market purchases
+    const purchasesText = purchasePositions.length > 0
+      ? purchasePositions.map((p, i) => {
+          return `
+Purchase ${i + 1}: ${p.round?.companyName || 'Unknown Token'}
+- Paid: $${p.paidAmount.toLocaleString()}
+- Tokens Purchased: ${p.tokensPurchased.toLocaleString()}
+- Price Per Token: $${p.pricePerToken.toLocaleString()}
+- Current Balance: ${p.currentBalance.toLocaleString()}`;
+        }).join('\n')
+      : 'No secondary market purchases.';
+
+    // Calculate monthly yield (only on primary investments)
+    const primaryInvested = totalInvested - totalFromTrades;
+    const monthlyYield = primaryInvested * 0.06 / 12;
 
     return `
 PORTFOLIO ANALYSIS REQUEST:
@@ -196,25 +360,486 @@ PORTFOLIO ANALYSIS REQUEST:
 Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}
 
 **PORTFOLIO SUMMARY**
-- Total Invested: $${totalInvested.toLocaleString()}
-- Number of Positions: ${numPositions}
+- Total Capital Deployed: $${totalInvested.toLocaleString()}
+  - Primary Investments: $${primaryInvested.toLocaleString()}
+  - Secondary Market Purchases: $${totalFromTrades.toLocaleString()}
+- Number of Primary Investments: ${numInvestments}
+- Number of Secondary Purchases: ${numPurchases}
 - Pending Yield: $${totalYield.toFixed(2)}
-- Estimated Monthly Yield: $${monthlyYield.toFixed(2)} (6% APY)
+- Estimated Monthly Yield: $${monthlyYield.toFixed(2)} (6% APY on primary investments)
+
+**TRADING ACTIVITY**
+- Tokens Sold on Secondary Market: ${totalTokensSold.toLocaleString()}
+- Trading Status: ${hasTradeActivity ? 'Active trader' : 'No trading activity'}
 
 **DIVERSIFICATION METRICS**
 - Largest Position: ${largestPosition.toFixed(1)}% of portfolio
 - Average Credibility Score: ${avgCredibility.toFixed(1)}/10
 - Risk Distribution: ${lowRiskCount} low-risk, ${mediumRiskCount} medium-risk, ${highRiskCount} high-risk
 
-**INDIVIDUAL POSITIONS**
-${positionsText}
+**PRIMARY INVESTMENTS (Direct from Fundraising Rounds)**
+${positionsText || 'No primary investments.'}
+
+**SECONDARY MARKET PURCHASES**
+${purchasesText}
 
 Please provide a comprehensive portfolio analysis including:
-1. Diversification assessment
+1. Diversification assessment across primary and secondary holdings
 2. Risk exposure analysis
-3. Concentration risk evaluation
-4. Yield optimization suggestions
-5. Actionable recommendations to improve portfolio health`;
+3. Trading activity evaluation (buying/selling patterns)
+4. Yield optimization suggestions (note: only primary investments earn 6% APY)
+5. Secondary market strategy recommendations
+6. Actionable recommendations to improve portfolio health`;
+  }, []);
+
+  // Format risk profile assessment context
+  const formatRiskProfileContext = useCallback((data: PortfolioData, allRounds: Round[]): string => {
+    const {
+      aggregatedInvestments,
+      trades,
+      rounds,
+      balancesByToken,
+      totalInvested,
+      totalFromTrades,
+    } = data;
+
+    // Calculate risk metrics
+    const positions = aggregatedInvestments.map(inv => {
+      const round = rounds.find(r => r.id.toLowerCase() === inv.roundId.toLowerCase());
+      const investedAmount = Number(inv.totalUsdcAmount) / 1e6;
+      const credibility = round ? calculateCredibilityScore(round) : null;
+      const equityToken = round?.equityToken?.toLowerCase();
+      const currentBalance = equityToken && balancesByToken[equityToken]
+        ? Number(balancesByToken[equityToken])
+        : Number(inv.totalTokensReceived);
+      const tokensSold = Number(inv.totalTokensReceived) - currentBalance;
+
+      return { round, investedAmount, credibility, tokensSold };
+    });
+
+    // Risk behavior indicators
+    const highRiskPositions = positions.filter(p => p.credibility && p.credibility.score < 4);
+    const mediumRiskPositions = positions.filter(p => p.credibility && p.credibility.score >= 4 && p.credibility.score < 6);
+    const lowRiskPositions = positions.filter(p => p.credibility && p.credibility.score >= 6);
+
+    const highRiskAmount = highRiskPositions.reduce((acc, p) => acc + p.investedAmount, 0);
+    const mediumRiskAmount = mediumRiskPositions.reduce((acc, p) => acc + p.investedAmount, 0);
+    const lowRiskAmount = lowRiskPositions.reduce((acc, p) => acc + p.investedAmount, 0);
+
+    const hasTraded = trades.length > 0 || positions.some(p => p.tokensSold > 0);
+    const diversificationScore = positions.length > 0 ? Math.min(10, positions.length * 2) : 0;
+    const avgCredibility = positions.filter(p => p.credibility).length > 0
+      ? positions.filter(p => p.credibility).reduce((acc, p) => acc + (p.credibility?.score || 0), 0) / positions.filter(p => p.credibility).length
+      : 0;
+
+    // Determine risk profile
+    let riskProfile = 'Unknown';
+    let profileDetails = '';
+    const highRiskPercentage = totalInvested > 0 ? (highRiskAmount / totalInvested * 100) : 0;
+    const lowRiskPercentage = totalInvested > 0 ? (lowRiskAmount / totalInvested * 100) : 0;
+
+    if (highRiskPercentage > 50) {
+      riskProfile = 'Aggressive';
+      profileDetails = 'Over 50% in high-risk investments';
+    } else if (lowRiskPercentage > 60) {
+      riskProfile = 'Conservative';
+      profileDetails = 'Over 60% in low-risk investments';
+    } else {
+      riskProfile = 'Moderate';
+      profileDetails = 'Balanced mix of risk levels';
+    }
+
+    return `
+RISK PROFILE ASSESSMENT REQUEST:
+
+**CURRENT PORTFOLIO RISK ANALYSIS**
+
+Investment Behavior:
+- Total Capital Deployed: $${totalInvested.toLocaleString()}
+- Primary Investments: $${(totalInvested - totalFromTrades).toLocaleString()}
+- Secondary Market Purchases: $${totalFromTrades.toLocaleString()}
+- Number of Positions: ${positions.length}
+- Trading Activity: ${hasTraded ? 'Active trader' : 'Buy and hold'}
+
+Risk Distribution:
+- High-Risk Investments: $${highRiskAmount.toLocaleString()} (${highRiskPercentage.toFixed(1)}%)
+- Medium-Risk Investments: $${mediumRiskAmount.toLocaleString()} (${(mediumRiskAmount / totalInvested * 100).toFixed(1)}%)
+- Low-Risk Investments: $${lowRiskAmount.toLocaleString()} (${lowRiskPercentage.toFixed(1)}%)
+
+Risk Metrics:
+- Diversification Score: ${diversificationScore}/10
+- Average Credibility Score: ${avgCredibility.toFixed(1)}/10
+- Estimated Risk Profile: ${riskProfile} (${profileDetails})
+
+**AVAILABLE INVESTMENT OPPORTUNITIES**
+Active Rounds on Platform: ${allRounds.filter(r => r.state === 0).length}
+Completed Rounds (Secondary Market): ${allRounds.filter(r => r.state === 1).length}
+
+Please provide a comprehensive risk profile assessment including:
+1. Detailed risk profile classification (Conservative, Moderate, Aggressive)
+2. Analysis of current portfolio risk exposure
+3. Behavioral patterns (trading frequency, position sizing)
+4. Recommendations based on risk tolerance
+5. Suggested portfolio rebalancing if needed
+6. Warning signs or areas of concern`;
+  }, []);
+
+  // Format market insights context
+  const formatMarketInsightsContext = useCallback((allRounds: Round[]): string => {
+    const activeRounds = allRounds.filter(r => r.state === 0);
+    const completedRounds = allRounds.filter(r => r.state === 1);
+    const cancelledRounds = allRounds.filter(r => r.state === 2);
+
+    // Calculate market metrics
+    const totalTargetRaise = allRounds.reduce((acc, r) => acc + Number(r.targetRaise), 0) / 1e6;
+    const totalRaised = allRounds.reduce((acc, r) => acc + Number(r.totalRaised), 0) / 1e6;
+    const totalInvestors = allRounds.reduce((acc, r) => acc + r.investorCount, 0);
+
+    // Active round metrics
+    const activeTargetRaise = activeRounds.reduce((acc, r) => acc + Number(r.targetRaise), 0) / 1e6;
+    const activeRaised = activeRounds.reduce((acc, r) => acc + Number(r.totalRaised), 0) / 1e6;
+    const avgActiveProgress = activeRounds.length > 0
+      ? activeRounds.reduce((acc, r) => acc + (Number(r.totalRaised) / Number(r.targetRaise) * 100), 0) / activeRounds.length
+      : 0;
+
+    // Calculate average valuations
+    const valuations = allRounds.map(r => {
+      const target = Number(r.targetRaise) / 1e6;
+      const equity = Number(r.equityPercentage) / 10000;
+      return equity > 0 ? target / equity * 100 : 0;
+    }).filter(v => v > 0);
+    const avgValuation = valuations.length > 0 ? valuations.reduce((a, b) => a + b, 0) / valuations.length : 0;
+
+    // Top performing rounds
+    const topRoundsByProgress = [...activeRounds]
+      .sort((a, b) => (Number(b.totalRaised) / Number(b.targetRaise)) - (Number(a.totalRaised) / Number(a.targetRaise)))
+      .slice(0, 3);
+
+    // Best credibility scores
+    const roundsWithCredibility = allRounds.map(r => ({
+      round: r,
+      credibility: calculateCredibilityScore(r)
+    })).sort((a, b) => b.credibility.score - a.credibility.score);
+    const topByCredibility = roundsWithCredibility.slice(0, 3);
+
+    const topProgressText = topRoundsByProgress.map(r => {
+      const progress = (Number(r.totalRaised) / Number(r.targetRaise) * 100).toFixed(1);
+      return `- ${r.companyName || 'Unknown'}: ${progress}% funded (${r.investorCount} investors)`;
+    }).join('\n');
+
+    const topCredibilityText = topByCredibility.map(({ round, credibility }) => {
+      return `- ${round.companyName || 'Unknown'}: ${credibility.score.toFixed(1)}/10 (${credibility.label})`;
+    }).join('\n');
+
+    return `
+MARKET INSIGHTS REQUEST:
+
+**PLATFORM OVERVIEW**
+- Total Rounds: ${allRounds.length}
+- Active Fundraising: ${activeRounds.length}
+- Completed: ${completedRounds.length}
+- Cancelled: ${cancelledRounds.length}
+
+**FUNDING METRICS**
+- Total Target Raise (All Rounds): $${totalTargetRaise.toLocaleString()}K
+- Total Raised (All Rounds): $${totalRaised.toLocaleString()}K
+- Total Investors: ${totalInvestors}
+- Average Valuation: $${avgValuation.toFixed(0)}K
+
+**ACTIVE MARKET**
+- Active Target Raise: $${activeTargetRaise.toLocaleString()}K
+- Active Amount Raised: $${activeRaised.toLocaleString()}K
+- Average Funding Progress: ${avgActiveProgress.toFixed(1)}%
+
+**TOP PERFORMING ROUNDS (By Funding Progress)**
+${topProgressText || 'No active rounds'}
+
+**HIGHEST CREDIBILITY ROUNDS**
+${topCredibilityText || 'No rounds available'}
+
+Please provide comprehensive market insights including:
+1. Overall market health assessment
+2. Trends in fundraising activity
+3. Investment opportunities to watch
+4. Risk considerations for the current market
+5. Comparison to typical early-stage startup metrics
+6. Actionable recommendations for investors`;
+  }, []);
+
+  // Format entry/exit suggestions context
+  const formatEntryExitContext = useCallback((data: PortfolioData | null, allRounds: Round[]): string => {
+    const activeRounds = allRounds.filter(r => r.state === 0);
+    const completedRounds = allRounds.filter(r => r.state === 1);
+
+    // Analyze entry opportunities
+    const entryOpportunities = activeRounds.map(round => {
+      const progress = Number(round.totalRaised) / Number(round.targetRaise) * 100;
+      const credibility = calculateCredibilityScore(round);
+      const impliedValuation = (Number(round.targetRaise) / 1e6) / (Number(round.equityPercentage) / 10000) * 100;
+
+      return {
+        round,
+        progress,
+        credibility,
+        impliedValuation,
+        urgency: progress > 80 ? 'High' : progress > 50 ? 'Medium' : 'Low',
+      };
+    }).sort((a, b) => b.credibility.score - a.credibility.score);
+
+    const entryText = entryOpportunities.slice(0, 5).map(opp => {
+      return `
+${opp.round.companyName || 'Unknown'}:
+- Progress: ${opp.progress.toFixed(1)}% funded
+- Credibility: ${opp.credibility.score.toFixed(1)}/10 (${opp.credibility.label})
+- Valuation: $${opp.impliedValuation.toFixed(0)}K
+- Entry Urgency: ${opp.urgency}`;
+    }).join('\n');
+
+    // Portfolio context for exit analysis
+    let exitText = 'No portfolio data available for exit analysis.';
+    if (data) {
+      const positions = data.aggregatedInvestments.map(inv => {
+        const round = data.rounds.find(r => r.id.toLowerCase() === inv.roundId.toLowerCase());
+        const investedAmount = Number(inv.totalUsdcAmount) / 1e6;
+        const tokensReceived = Number(inv.totalTokensReceived);
+        const equityToken = round?.equityToken?.toLowerCase();
+        const currentBalance = equityToken && data.balancesByToken[equityToken]
+          ? Number(data.balancesByToken[equityToken])
+          : tokensReceived;
+
+        return {
+          round,
+          investedAmount,
+          tokensReceived,
+          currentBalance,
+          roundComplete: round?.state === 1,
+        };
+      });
+
+      const exitablePositions = positions.filter(p => p.roundComplete && p.currentBalance > 0);
+
+      if (exitablePositions.length > 0) {
+        exitText = exitablePositions.map(pos => {
+          const credibility = pos.round ? calculateCredibilityScore(pos.round) : null;
+          return `
+${pos.round?.companyName || 'Unknown'}:
+- Invested: $${pos.investedAmount.toLocaleString()}
+- Current Balance: ${pos.currentBalance.toLocaleString()} tokens
+- Round State: Completed (available on secondary market)
+- Credibility: ${credibility ? `${credibility.score.toFixed(1)}/10` : 'N/A'}`;
+        }).join('\n');
+      } else {
+        exitText = 'No completed positions available for secondary market exit.';
+      }
+    }
+
+    return `
+ENTRY/EXIT ANALYSIS REQUEST:
+
+**ENTRY OPPORTUNITIES (Active Rounds)**
+${entryText || 'No active rounds available.'}
+
+**SECONDARY MARKET CONTEXT**
+- Rounds Available on Secondary Market: ${completedRounds.length}
+${completedRounds.slice(0, 3).map(r => {
+  const credibility = calculateCredibilityScore(r);
+  return `- ${r.companyName || 'Unknown'}: ${credibility.score.toFixed(1)}/10 credibility, ${r.investorCount} investors`;
+}).join('\n')}
+
+**EXIT ANALYSIS (Your Holdings)**
+${exitText}
+
+Please provide entry/exit recommendations including:
+1. Best entry points based on timing, valuation, and credibility
+2. Rounds nearing completion (high urgency to invest)
+3. Exit strategy for completed round positions
+4. Secondary market opportunities
+5. Risk-adjusted recommendations
+6. Timing considerations and warning signs`;
+  }, []);
+
+  // Format comparison context for multiple rounds
+  const formatComparisonContext = useCallback((roundsToCompare: Round[]): string => {
+    const roundsData = roundsToCompare.map(round => {
+      const progress = Number(round.totalRaised) / Number(round.targetRaise) * 100;
+      const credibility = calculateCredibilityScore(round);
+      const impliedValuation = (Number(round.targetRaise) / 1e6) / (Number(round.equityPercentage) / 10000) * 100;
+      const stateInfo = getStateContext(round.state);
+
+      return {
+        round,
+        progress,
+        credibility,
+        impliedValuation,
+        stateInfo,
+      };
+    });
+
+    const comparisonTable = roundsData.map((data, i) => {
+      const { round, progress, credibility, impliedValuation, stateInfo } = data;
+      return `
+**Round ${i + 1}: ${round.companyName || 'Unknown'}**
+- Address: ${round.id.slice(0, 10)}...
+- State: ${stateInfo.label}
+- Target Raise: ${formatUSDC(round.targetRaise)}
+- Amount Raised: ${formatUSDC(round.totalRaised)} (${progress.toFixed(1)}% funded)
+- Investor Count: ${round.investorCount}
+- Equity Offered: ${Number(round.equityPercentage) / 100}%
+- Implied Valuation: $${impliedValuation.toFixed(0)}K
+- Credibility Score: ${credibility.score.toFixed(1)}/10 (${credibility.label})
+  - Traction: ${credibility.breakdown.traction}/10
+  - Social Proof: ${credibility.breakdown.socialProof}/10
+  - Deal Quality: ${credibility.breakdown.dealQuality}/10
+- Created: ${new Date(Number(round.createdAt) * 1000).toLocaleDateString()}`;
+    }).join('\n');
+
+    // Calculate comparison metrics
+    const avgCredibility = roundsData.reduce((acc, d) => acc + d.credibility.score, 0) / roundsData.length;
+    const bestCredibility = roundsData.reduce((best, d) => d.credibility.score > best.credibility.score ? d : best);
+    const lowestValuation = roundsData.reduce((lowest, d) => d.impliedValuation < lowest.impliedValuation ? d : lowest);
+    const mostFunded = roundsData.reduce((most, d) => d.progress > most.progress ? d : most);
+
+    return `
+ROUND COMPARISON REQUEST:
+
+Comparing ${roundsToCompare.length} rounds side-by-side:
+
+${comparisonTable}
+
+**QUICK COMPARISON SUMMARY**
+- Highest Credibility: ${bestCredibility.round.companyName} (${bestCredibility.credibility.score.toFixed(1)}/10)
+- Lowest Valuation: ${lowestValuation.round.companyName} ($${lowestValuation.impliedValuation.toFixed(0)}K)
+- Most Progress: ${mostFunded.round.companyName} (${mostFunded.progress.toFixed(1)}% funded)
+- Average Credibility: ${avgCredibility.toFixed(1)}/10
+
+Please provide a comprehensive comparison analysis including:
+1. Side-by-side comparison of key metrics
+2. Risk assessment for each round
+3. Value proposition analysis (valuation vs equity offered)
+4. Investment timing considerations (based on round state and progress)
+5. Clear recommendation on which round(s) offer the best opportunity and why
+6. Any red flags or concerns to be aware of`;
+  }, []);
+
+  // Format order analysis context for marketplace
+  const formatOrderContext = useCallback((data: OrderAnalysisData): string => {
+    const { order, round, companyName } = data;
+    const pricePerToken = Number(formatUnits(BigInt(order.pricePerToken), USDC_DECIMALS));
+    const totalValue = Number(order.amount) * pricePerToken;
+    const timeRemaining = getTimeRemaining(order.expiryTime);
+
+    // Calculate round metrics if available
+    let roundContext = 'Round information not available.';
+    let dealAssessment = '';
+
+    if (round) {
+      const credibility = calculateCredibilityScore(round);
+      const impliedValuation = (Number(round.targetRaise) / 1e6) / (Number(round.equityPercentage) / 10000) * 100;
+      const originalPricePerToken = Number(round.targetRaise) / Number(round.tokensIssued);
+      const priceChange = ((pricePerToken - originalPricePerToken) / originalPricePerToken) * 100;
+
+      roundContext = `
+**UNDERLYING STARTUP**
+- Company: ${round.companyName || 'Unknown'}
+- Round State: ${round.state === 0 ? 'Fundraising' : round.state === 1 ? 'Completed' : 'Cancelled'}
+- Total Raised: ${formatUSDC(round.totalRaised)}
+- Target Raise: ${formatUSDC(round.targetRaise)}
+- Investors: ${round.investorCount}
+- Equity Offered: ${Number(round.equityPercentage) / 100}%
+- Implied Valuation: $${impliedValuation.toFixed(0)}K
+- Credibility Score: ${credibility.score.toFixed(1)}/10 (${credibility.label})`;
+
+      dealAssessment = `
+**DEAL ASSESSMENT**
+- Original Token Price (from round): $${formatPrice(originalPricePerToken)}
+- Current Ask Price: $${formatPrice(pricePerToken)}
+- Price Change: ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%
+- ${priceChange > 0 ? 'PREMIUM: Seller is asking more than original investment price' : priceChange < 0 ? 'DISCOUNT: Seller is asking less than original investment price' : 'FAIR: Price matches original investment'}`;
+    }
+
+    return `
+SELL ORDER ANALYSIS REQUEST:
+
+**ORDER DETAILS**
+- Seller: ${order.seller.slice(0, 6)}...${order.seller.slice(-4)}
+- Token Contract: ${order.tokenContract.slice(0, 10)}...
+- Company: ${companyName}
+- Amount Available: ${Number(order.amount).toLocaleString()} tokens
+- Price Per Token: $${formatPrice(pricePerToken)}
+- Total Value: $${totalValue.toLocaleString()}
+- Time Remaining: ${timeRemaining}
+- Order Created: ${new Date(Number(order.createdAt) * 1000).toLocaleDateString()}
+
+${roundContext}
+${dealAssessment}
+
+Please provide a comprehensive analysis of this sell order including:
+1. Is this a good deal? (Compare to original investment price if available)
+2. Risk assessment of the underlying startup
+3. Fair value analysis - is the price justified?
+4. Timing considerations (order expiry, round state)
+5. Buy recommendation (Strong Buy, Buy, Hold, or Avoid)
+6. Any red flags or concerns`;
+  }, []);
+
+  // Format price suggestion context for sell modal
+  const formatPriceSuggestionContext = useCallback((data: PriceSuggestionData): string => {
+    const { tokenContract, round, companyName, tokenBalance, existingOrders } = data;
+
+    // Analyze existing orders for this token
+    const tokenOrders = existingOrders.filter(o => o.tokenContract.toLowerCase() === tokenContract.toLowerCase());
+    const orderPrices = tokenOrders.map(o => Number(formatUnits(BigInt(o.pricePerToken), USDC_DECIMALS)));
+    const avgPrice = orderPrices.length > 0 ? orderPrices.reduce((a, b) => a + b, 0) / orderPrices.length : 0;
+    const minPrice = orderPrices.length > 0 ? Math.min(...orderPrices) : 0;
+    const maxPrice = orderPrices.length > 0 ? Math.max(...orderPrices) : 0;
+
+    let roundContext = 'Round information not available.';
+    let originalPrice = 0;
+
+    if (round) {
+      const credibility = calculateCredibilityScore(round);
+      const impliedValuation = (Number(round.targetRaise) / 1e6) / (Number(round.equityPercentage) / 10000) * 100;
+      originalPrice = Number(round.targetRaise) / Number(round.tokensIssued);
+
+      roundContext = `
+**UNDERLYING STARTUP**
+- Company: ${round.companyName || 'Unknown'}
+- Round State: ${round.state === 0 ? 'Fundraising' : round.state === 1 ? 'Completed' : 'Cancelled'}
+- Total Raised: ${formatUSDC(round.totalRaised)}
+- Target Raise: ${formatUSDC(round.targetRaise)}
+- Tokens Issued: ${Number(round.tokensIssued).toLocaleString()}
+- Implied Valuation: $${impliedValuation.toFixed(0)}K
+- Credibility Score: ${credibility.score.toFixed(1)}/10 (${credibility.label})
+- Original Token Price: $${formatPrice(originalPrice)}`;
+    }
+
+    const marketContext = tokenOrders.length > 0 ? `
+**CURRENT MARKET (${tokenOrders.length} active orders)**
+- Lowest Ask: $${formatPrice(minPrice)}
+- Highest Ask: $${formatPrice(maxPrice)}
+- Average Ask: $${formatPrice(avgPrice)}
+- Total Tokens Listed: ${tokenOrders.reduce((acc, o) => acc + Number(o.amount), 0).toLocaleString()}` : `
+**CURRENT MARKET**
+No existing orders for this token. You'll be setting the market price.`;
+
+    return `
+PRICE SUGGESTION REQUEST:
+
+**YOUR LISTING**
+- Token Contract: ${tokenContract.slice(0, 10)}...
+- Company: ${companyName}
+- Your Token Balance: ${tokenBalance.toLocaleString()} tokens
+
+${roundContext}
+${marketContext}
+
+Please provide pricing recommendations including:
+1. Suggested price range (minimum, recommended, maximum)
+2. Rationale based on original investment price and current market
+3. Competitive pricing strategy (undercut market vs premium)
+4. Volume considerations (sell all at once vs partial)
+5. Timing advice (is now a good time to sell?)
+6. Risk of not selling (holding vs liquidating)`;
   }, []);
 
   // Auto-trigger analysis when a round is focused
@@ -233,6 +858,34 @@ Please provide a comprehensive portfolio analysis including:
       sendMessageWithContext('Analyze my investment portfolio', formatPortfolioContext(portfolioData));
     }
   }, [portfolioData, isOpen, lastAnalyzedPortfolio, isLoading, formatPortfolioContext]);
+
+  // Auto-trigger analysis when comparing rounds
+  useEffect(() => {
+    if (comparisonRounds && comparisonRounds.length > 0 && isOpen && !isLoading) {
+      const comparisonKey = comparisonRounds.map(r => r.id).sort().join('-');
+      if (comparisonKey !== lastComparisonKey) {
+        setLastComparisonKey(comparisonKey);
+        const names = comparisonRounds.map(r => r.companyName || 'Unknown').join(' vs ');
+        sendMessageWithContext(`Compare these rounds: ${names}`, formatComparisonContext(comparisonRounds));
+      }
+    }
+  }, [comparisonRounds, isOpen, lastComparisonKey, isLoading, formatComparisonContext]);
+
+  // Auto-trigger analysis when order is focused (marketplace)
+  useEffect(() => {
+    if (orderData && isOpen && orderData.order.id !== lastAnalyzedOrderId && !isLoading) {
+      setLastAnalyzedOrderId(orderData.order.id);
+      sendMessageWithContext(`Analyze this sell order for ${orderData.companyName}`, formatOrderContext(orderData));
+    }
+  }, [orderData, isOpen, lastAnalyzedOrderId, isLoading, formatOrderContext]);
+
+  // Auto-trigger analysis when price suggestion is requested
+  useEffect(() => {
+    if (priceSuggestionData && isOpen && priceSuggestionData.tokenContract !== lastPriceSuggestionToken && !isLoading) {
+      setLastPriceSuggestionToken(priceSuggestionData.tokenContract);
+      sendMessageWithContext(`Suggest a price for selling ${priceSuggestionData.companyName} tokens`, formatPriceSuggestionContext(priceSuggestionData));
+    }
+  }, [priceSuggestionData, isOpen, lastPriceSuggestionToken, isLoading, formatPriceSuggestionContext]);
 
   // Send message with optional focused round context
   const sendMessageWithContext = async (content: string, focusedContext?: string) => {
@@ -304,13 +957,144 @@ Please provide a comprehensive portfolio analysis including:
     }
   };
 
+  // Build portfolio data from investments and trades
+  const buildPortfolioData = useCallback((
+    walletAddress: string,
+    investments: Investment[],
+    trades: Trade[],
+    allRounds: Round[]
+  ): PortfolioData => {
+    // Aggregate investments by round
+    const aggregatedMap = new Map<string, AggregatedInvestmentData>();
+    investments.forEach(inv => {
+      const roundId = inv.roundId.toLowerCase();
+      const existing = aggregatedMap.get(roundId);
+      if (existing) {
+        existing.totalUsdcAmount = existing.totalUsdcAmount + BigInt(inv.usdcAmount);
+        existing.totalTokensReceived = existing.totalTokensReceived + BigInt(inv.tokensReceived);
+        existing.investmentCount += 1;
+      } else {
+        aggregatedMap.set(roundId, {
+          roundId: inv.roundId,
+          totalUsdcAmount: BigInt(inv.usdcAmount),
+          totalTokensReceived: BigInt(inv.tokensReceived),
+          investmentCount: 1,
+        });
+      }
+    });
+    const aggregatedInvestments = Array.from(aggregatedMap.values());
+
+    // Calculate totals
+    const totalInvested = investments.reduce((acc, inv) => acc + Number(inv.usdcAmount) / 1e6, 0);
+    const totalFromTrades = trades.reduce((acc, t) => acc + Number(formatUnits(BigInt(t.totalPrice), USDC_DECIMALS)), 0);
+
+    // Get relevant rounds
+    const investedRoundIds = new Set(investments.map(i => i.roundId.toLowerCase()));
+    const tradeTokens = new Set(trades.map(t => t.tokenContract.toLowerCase()));
+    const relevantRounds = allRounds.filter(r =>
+      investedRoundIds.has(r.id.toLowerCase()) ||
+      (r.equityToken && tradeTokens.has(r.equityToken.toLowerCase()))
+    );
+
+    return {
+      walletAddress,
+      investments,
+      aggregatedInvestments,
+      trades,
+      rounds: relevantRounds,
+      balancesByToken: {}, // Will be populated with on-chain data in real portfolio
+      totalInvested: totalInvested + totalFromTrades,
+      totalFromTrades,
+      totalYield: totalInvested * 0.06 / 12, // Estimated monthly yield
+    };
+  }, []);
+
   // Simple send message using the context-aware function
   const sendMessage = async (content: string) => {
-    // If there's a focused round, include its context
-    if (focusedRound) {
+    const lowerContent = content.toLowerCase();
+
+    // Detect special query types and provide appropriate context
+    const isRiskQuery = lowerContent.includes('risk profile') || lowerContent.includes('risk assessment') || lowerContent.includes('my risk');
+    const isMarketQuery = lowerContent.includes('market insight') || lowerContent.includes('market overview') || lowerContent.includes('market health');
+    const isEntryExitQuery = lowerContent.includes('buy or sell') || lowerContent.includes('entry') || lowerContent.includes('exit') || lowerContent.includes('when should i');
+
+    // Get effective portfolio data (from context or fetch if needed)
+    let effectivePortfolioData = portfolioData || fetchedPortfolioData;
+
+    // For risk queries, try to fetch portfolio data if not available
+    if ((isRiskQuery || isEntryExitQuery) && !effectivePortfolioData && isConnected && address) {
+      try {
+        setIsFetchingPortfolio(true);
+        const { investments, trades } = await fetchPortfolioData(address);
+
+        if (investments.length > 0 || trades.length > 0) {
+          effectivePortfolioData = buildPortfolioData(address, investments, trades, rounds);
+          setFetchedPortfolioData(effectivePortfolioData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch portfolio data:', error);
+      } finally {
+        setIsFetchingPortfolio(false);
+      }
+    }
+
+    // Handle case where risk query is made but no wallet is connected
+    if (isRiskQuery && !isConnected) {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: content.trim(),
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "To assess your risk profile, I need to analyze your portfolio. Please connect your wallet first, and I'll be able to evaluate your investment positions, risk distribution, and provide personalized recommendations.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      return;
+    }
+
+    // Handle case where no portfolio data found
+    if (isRiskQuery && isConnected && !effectivePortfolioData) {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: content.trim(),
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I couldn't find any investment positions in your portfolio. To assess your risk profile, you'll need to have at least one investment. Browse the available rounds and make your first investment, then come back for a comprehensive risk assessment!",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      return;
+    }
+
+    // Include appropriate context based on query type or current focus
+    if (isRiskQuery && effectivePortfolioData) {
+      sendMessageWithContext(content, formatRiskProfileContext(effectivePortfolioData, rounds));
+    } else if (isMarketQuery) {
+      sendMessageWithContext(content, formatMarketInsightsContext(rounds));
+    } else if (isEntryExitQuery) {
+      sendMessageWithContext(content, formatEntryExitContext(effectivePortfolioData, rounds));
+    } else if (orderData) {
+      sendMessageWithContext(content, formatOrderContext(orderData));
+    } else if (priceSuggestionData) {
+      sendMessageWithContext(content, formatPriceSuggestionContext(priceSuggestionData));
+    } else if (focusedRound) {
       sendMessageWithContext(content, formatSingleRoundContext(focusedRound));
-    } else if (portfolioData) {
-      sendMessageWithContext(content, formatPortfolioContext(portfolioData));
+    } else if (effectivePortfolioData) {
+      sendMessageWithContext(content, formatPortfolioContext(effectivePortfolioData));
+    } else if (comparisonRounds && comparisonRounds.length > 0) {
+      sendMessageWithContext(content, formatComparisonContext(comparisonRounds));
     } else {
       sendMessageWithContext(content);
     }
@@ -332,10 +1116,19 @@ Please provide a comprehensive portfolio analysis including:
   };
 
   // Get context label for display
-  const contextLabel = portfolioData
+  const effectivePortfolio = portfolioData || fetchedPortfolioData;
+  const contextLabel = isFetchingPortfolio
+    ? 'Loading your portfolio...'
+    : orderData
+    ? `Analyzing order: ${orderData.companyName}`
+    : priceSuggestionData
+    ? `Pricing: ${priceSuggestionData.companyName}`
+    : effectivePortfolio
     ? 'Analyzing your portfolio'
     : focusedRound
     ? `Analyzing: ${focusedRound.companyName || `Round ${focusedRound.id.slice(0, 8)}...`}`
+    : comparisonRounds && comparisonRounds.length > 0
+    ? `Comparing ${comparisonRounds.length} rounds`
     : null;
 
   return (

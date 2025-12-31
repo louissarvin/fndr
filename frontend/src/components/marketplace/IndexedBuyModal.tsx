@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { type SellOrder, useRound } from '@/hooks/usePonderData';
+import { type SellOrder, useRoundByEquityToken } from '@/hooks/usePonderData';
 import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useBuyTokens,
@@ -72,12 +72,12 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
   const [buyAmount, setBuyAmount] = useState('');
   const [step, setStep] = useState<'form' | 'approve' | 'buy' | 'success'>('form');
 
-  // Fetch round and IPFS metadata for the token
-  const { data: round } = useRound(order?.tokenContract);
+  // Fetch round by equity token address and IPFS metadata
+  const { data: round } = useRoundByEquityToken(order?.tokenContract);
   const { data: metadata, isLoading: isLoadingMetadata } = useRoundMetadata(round?.metadataURI);
 
   const logoUrl = metadata?.logo ? ipfsToHttp(metadata.logo) : null;
-  const companyName = metadata?.name || round?.companyName || (order ? `Round ${order.tokenContract.slice(0, 8)}...` : 'Unknown');
+  const companyName = metadata?.name || round?.companyName || (order ? `Token ${order.tokenContract.slice(0, 8)}...` : 'Unknown');
 
   // Contract hooks
   const { data: usdcBalance } = useUSDCBalance(address);
@@ -220,9 +220,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
               {/* Order Info */}
               <div className="bg-white/5 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center">
-                    <Wallet className="h-5 w-5 text-[#A2D5C6]" />
-                  </div>
+                    <Wallet className="h-8 w-8 text-[#A2D5C6]" />
                   <div className="flex-1">
                     <p className="text-sm text-white/60">Seller</p>
                     <p className="text-white font-medium">{shortenAddress(order.seller)}</p>
@@ -259,13 +257,13 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                     value={buyAmount}
                     onChange={(e) => setBuyAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pr-20 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pr-20 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     step="any"
                   />
                   <button
                     type="button"
                     onClick={handleMaxAmount}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2] bg-[#A2D5C6]/10 px-2 py-1 rounded"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2] bg-[#A2D5C6]/10 px-4 py-2 rounded rounded-sm"
                   >
                     MAX
                   </button>
@@ -401,7 +399,6 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
 
           {step === 'success' && (
             <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-[#A2D5C6] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Purchase Successful!</h3>
               <p className="text-white/60 mb-2">
                 You have successfully purchased {companyName} tokens.
