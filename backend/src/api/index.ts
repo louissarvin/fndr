@@ -175,12 +175,16 @@ app.post("/api/ipfs/upload-json", async (c) => {
       return c.json({ error: "No metadata provided" }, 400);
     }
 
-    // Validate metadata structure
-    if (!metadata.name || !metadata.symbol || !metadata.description) {
-      return c.json({ error: "Metadata must include name, symbol, and description" }, 400);
+    // Validate metadata structure - support both RoundMetadata and FounderProfile
+    const isRoundMetadata = metadata.name && metadata.symbol && metadata.description;
+    const isFounderProfile = metadata.name && metadata.title && metadata.bio;
+
+    if (!isRoundMetadata && !isFounderProfile) {
+      return c.json({ error: "Invalid metadata. Must include either (name, symbol, description) for rounds or (name, title, bio) for founder profiles" }, 400);
     }
 
     // Upload to Pinata
+    const pinataName = name || (metadata.symbol ? `${metadata.symbol}-metadata` : `founder-${metadata.name?.toLowerCase().replace(/\s+/g, '-')}`);
     const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
       method: "POST",
       headers: {
@@ -190,7 +194,7 @@ app.post("/api/ipfs/upload-json", async (c) => {
       body: JSON.stringify({
         pinataContent: metadata,
         pinataMetadata: {
-          name: name || `${metadata.symbol}-metadata`,
+          name: pinataName,
         },
       }),
     });

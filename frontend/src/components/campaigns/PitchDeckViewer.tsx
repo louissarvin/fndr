@@ -41,7 +41,6 @@ export default function PitchDeckViewer({ pitchDeckHash, companyName }: PitchDec
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-[#A2D5C6]" />
                   <DialogPrimitive.Title className="text-lg font-semibold text-white">
                     {companyName ? `${companyName} - Pitch Deck` : 'Pitch Deck'}
                   </DialogPrimitive.Title>

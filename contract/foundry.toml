@@ -11,6 +11,6 @@ optimizer_runs = 1
 mantle_sepolia = "https://rpc.sepolia.mantle.xyz"
 
 [etherscan]
-mantle_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://explorer.sepolia.mantle.xyz/api" }
+mantle_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=5003" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

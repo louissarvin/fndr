@@ -249,9 +249,6 @@ export default function Browse() {
           {/* Empty State */}
           {!isLoading && (!rounds || rounds.length === 0) && (
             <div ref={gridRef} className="text-center py-16">
-              <div className="w-20 h-20 bg-[#A2D5C6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Rocket className="h-10 w-10 text-[#A2D5C6]/40" />
-              </div>
               <p className="text-[#F6F6F6]/60 text-lg mb-2">
                 No fundraising rounds yet.
               </p>

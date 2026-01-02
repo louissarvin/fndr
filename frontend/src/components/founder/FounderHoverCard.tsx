@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import * as HoverCardPrimitive from '@radix-ui/react-hover-card';
 import {
   HoverCard,
   HoverCardContent,
@@ -30,11 +31,13 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
       <HoverCardTrigger asChild>
         {children}
       </HoverCardTrigger>
-      <HoverCardContent
-        className="w-72 bg-[#1A1A1A]/95 backdrop-blur-xl border border-[#2A2A2A] rounded-xl p-4"
-        side="top"
-        sideOffset={8}
-      >
+      <HoverCardPrimitive.Portal>
+        <HoverCardContent
+          className="w-72 bg-[#1A1A1A]/95 backdrop-blur-xl border border-[#2A2A2A] rounded-xl p-4 z-[100]"
+          side="bottom"
+          align="start"
+          sideOffset={8}
+        >
         {isLoading ? (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]" />
@@ -47,7 +50,7 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
                 <img
                   src={profileImageUrl}
                   alt={profile.name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-[#A2D5C6]/30"
+                  className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-[#2A2A2A] flex items-center justify-center border-2 border-[#A2D5C6]/30">
@@ -110,7 +113,8 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
             <p className="text-xs text-white/40 mt-1">No profile set</p>
           </div>
         )}
-      </HoverCardContent>
+        </HoverCardContent>
+      </HoverCardPrimitive.Portal>
     </HoverCard>
   );
 }

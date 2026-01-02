@@ -533,7 +533,6 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
               {currentStep === 'profile' && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 bg-[#A2D5C6]/10 rounded-lg px-3 py-2">
-                    <Briefcase className="h-4 w-4 text-[#A2D5C6]" />
                     <span className="text-sm text-[#A2D5C6]">Registering as Founder</span>
                   </div>
 

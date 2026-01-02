@@ -16,11 +16,11 @@ export const mantleSepolia = defineChain({
 
 // Contract Addresses on Mantle Sepolia
 export const CONTRACTS = {
-  MockUSDC: '0x3cbFC1C75054AcA7E74846494fe4481A25023dD8',
-  MockVault: '0xB45c11258cBa94d7d345e185F352C944dF1bb7dE',
-  FndrIdentity: '0x524CBde873fc615C63AA0a3d87eB368d8B1662A3',
-  RoundFactory: '0xA8223fF0715efDB233A6471507F91E3d363B63c1',
-  StartupSecondaryMarket: '0xB26Ee90E8fd1aa30E404681D5014DA288E48316A',
+  MockUSDC: '0x8D0E73D785f3D1Edd5eebfe1964db44E1F6006eA',
+  MockVault: '0x024536D5Fa558Bbf4FbFb9CBC690A02a8e2Bf9fd',
+  FndrIdentity: '0x53f4331E3BC39625ecbA6c8485e9eF58224E6bba',
+  RoundFactory: '0x2de7373a05C7A54B1485A5a483dA2Aabd3DA090C',
+  StartupSecondaryMarket: '0xCCbBc21C31051128040f685CBD2EddAFc71ce189',
 } as const;
 
 // ABIs

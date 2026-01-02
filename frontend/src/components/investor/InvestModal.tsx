@@ -73,6 +73,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
   const founderRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
+  const pitchDeckRef = useRef<HTMLDivElement>(null);
   const progressSectionRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const investSectionRef = useRef<HTMLDivElement>(null);
@@ -149,6 +150,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
         gsap.set(founderRef.current, { x: -20, opacity: 0 });
         gsap.set(titleRef.current, { y: 30, opacity: 0 });
         gsap.set(taglineRef.current, { y: 20, opacity: 0 });
+        gsap.set(pitchDeckRef.current, { y: 20, opacity: 0 });
         gsap.set(progressSectionRef.current, { y: 30, opacity: 0 });
         gsap.set(progressBarRef.current, { scaleX: 0, transformOrigin: 'left' });
         gsap.set(investSectionRef.current, { y: 30, opacity: 0 });
@@ -161,6 +163,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
         tl.to(founderRef.current, { x: 0, opacity: 1, duration: 0.4 }, '-=0.3');
         tl.to(titleRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.3)' }, '-=0.2');
         tl.to(taglineRef.current, { y: 0, opacity: 1, duration: 0.4 }, '-=0.3');
+        tl.to(pitchDeckRef.current, { y: 0, opacity: 1, duration: 0.4 }, '-=0.2');
         tl.to(progressSectionRef.current, { y: 0, opacity: 1, duration: 0.5 }, '-=0.2');
         tl.to(progressBarRef.current, { scaleX: 1, duration: 0.8, ease: 'power2.out' }, '-=0.3');
         tl.to(investSectionRef.current, { y: 0, opacity: 1, duration: 0.4 }, '-=0.4');
@@ -311,13 +314,13 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
               ) : step === 'form' ? (
                 <>
                   {/* Founder Profile Card */}
-                  <div ref={founderRef} className="bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl p-4">
+                  <div ref={founderRef} className="rounded-xl">
                     <div className="flex items-start gap-3">
                       {founderImageUrl ? (
                         <img
                           src={founderImageUrl}
                           alt={founderProfile?.name || 'Founder'}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-[#A2D5C6]/30"
+                          className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center border-2 border-[#A2D5C6]/30">
@@ -380,15 +383,12 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                       {companyName}
                     </DialogPrimitive.Title>
                     {metadata?.description && (
-                      <p className="text-sm text-white/60 line-clamp-3">{metadata.description}</p>
+                      <p ref={taglineRef} className="text-sm text-white/60 line-clamp-3">{metadata.description}</p>
                     )}
-                    <DialogPrimitive.Description ref={taglineRef} className="text-[#A2D5C6] font-medium">
-                      Invest and earn 6% APY while supporting this startup
-                    </DialogPrimitive.Description>
 
                     {/* Pitch Deck */}
                     {metadata?.pitchDeck && (
-                      <div className="pt-1">
+                      <div ref={pitchDeckRef} className="pt-1">
                         <PitchDeckViewer pitchDeckHash={metadata.pitchDeck} companyName={companyName} />
                       </div>
                     )}

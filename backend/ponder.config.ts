@@ -10,9 +10,9 @@ import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
 // Contract addresses on Mantle Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x524CBde873fc615C63AA0a3d87eB368d8B1662A3",
-  RoundFactory: "0xA8223fF0715efDB233A6471507F91E3d363B63c1",
-  StartupSecondaryMarket: "0xB26Ee90E8fd1aa30E404681D5014DA288E48316A",
+  FndrIdentity: "0x53f4331E3BC39625ecbA6c8485e9eF58224E6bba",
+  RoundFactory: "0x2de7373a05C7A54B1485A5a483dA2Aabd3DA090C",
+  StartupSecondaryMarket: "0xCCbBc21C31051128040f685CBD2EddAFc71ce189",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
