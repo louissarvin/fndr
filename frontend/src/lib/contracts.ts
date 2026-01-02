@@ -1,26 +1,26 @@
 import { defineChain } from 'viem';
 
-// Mantle Sepolia Chain Configuration
-export const mantleSepolia = defineChain({
-  id: 5003,
-  name: 'Mantle Sepolia',
-  nativeCurrency: { name: 'MNT', symbol: 'MNT', decimals: 18 },
+// Lisk Sepolia Chain Configuration
+export const liskSepolia = defineChain({
+  id: 4202,
+  name: 'Lisk Sepolia',
+  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.sepolia.mantle.xyz'] },
+    default: { http: ['https://lisk-sepolia.drpc.org'] },
   },
   blockExplorers: {
-    default: { name: 'Mantle Explorer', url: 'https://sepolia.mantlescan.xyz' },
+    default: { name: 'Lisk Explorer', url: 'https://sepolia-blockscout.lisk.com' },
   },
   testnet: true,
 });
 
-// Contract Addresses on Mantle Sepolia
+// Contract Addresses on Lisk Sepolia
 export const CONTRACTS = {
-  MockUSDC: '0x8D0E73D785f3D1Edd5eebfe1964db44E1F6006eA',
-  MockVault: '0x024536D5Fa558Bbf4FbFb9CBC690A02a8e2Bf9fd',
-  FndrIdentity: '0x53f4331E3BC39625ecbA6c8485e9eF58224E6bba',
-  RoundFactory: '0x2de7373a05C7A54B1485A5a483dA2Aabd3DA090C',
-  StartupSecondaryMarket: '0xCCbBc21C31051128040f685CBD2EddAFc71ce189',
+  MockUSDC: '0x38832285FedA376F4a84B2230b0f4F1E1577A70B',
+  MockVault: '0xDDc8AB87B160026E6c6a2Df750CBe2d5E08da8E3',
+  FndrIdentity: '0x51b8808dD9E46933c345B58Ec7fa0ce16eC3c68E',
+  RoundFactory: '0x4b188E84c7946Acd21aeB3F718E42C0f1b558950',
+  StartupSecondaryMarket: '0x3363363702f98e8CE93871996c5163b79238cE5a',
 } as const;
 
 // ABIs

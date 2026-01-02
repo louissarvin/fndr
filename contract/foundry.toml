@@ -8,9 +8,8 @@ optimizer_runs = 1
 
 # Mantle Sepolia Testnet
 [rpc_endpoints]
-mantle_sepolia = "https://rpc.sepolia.mantle.xyz"
+lisk_sepolia = "https://lisk-sepolia.drpc.org"
 
 [etherscan]
-mantle_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=5003" }
-
+lisk_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=4202" }
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

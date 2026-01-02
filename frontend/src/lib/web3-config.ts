@@ -1,11 +1,11 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { mantleSepolia } from './contracts';
+import { liskSepolia } from './contracts';
 
 // Fndr Web3 Configuration
 export const config = getDefaultConfig({
   appName: 'Fndr',
   projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
-  chains: [mantleSepolia],
+  chains: [liskSepolia],
   ssr: false,
 });
 

@@ -73,7 +73,7 @@ contract RoundManager {
     uint256 public founderYieldClaimed;
     uint256 public lastYieldUpdate;
 
-    uint256 public constant SECONDS_PER_MONTH = 30 days;
+    uint256 public constant SECONDS_PER_MONTH = 1 days;
     uint256 public constant BASIS_POINTS = 10000;
     uint256 public constant PLATFORM_SUCCESS_FEE = 50;
     uint256 public constant MAX_WITHDRAWAL_RATE = 200;

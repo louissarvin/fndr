@@ -50,7 +50,7 @@ contract StartupSecondaryMarket {
     uint256 public nextOrderId = 1;
     
     mapping(address => mapping(address => uint256)) public firstPurchaseTime;
-    uint256 public constant MIN_HOLDING_PERIOD =  180 days; 
+    uint256 public constant MIN_HOLDING_PERIOD =  1 days; 
     uint256 public constant MAX_ORDER_DURATION = 30 days;
     uint256 public constant MARKET_FEE_BPS = 25;
     

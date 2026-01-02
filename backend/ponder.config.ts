@@ -1,32 +1,32 @@
 import { createConfig, factory, mergeAbis } from "ponder";
 import { parseAbiItem } from "abitype";
 import { http, createPublicClient, type Address } from "viem";
-import { mantleSepoliaTestnet } from "viem/chains";
+import { liskSepolia } from "viem/chains";
 
 import { FndrIdentityABI } from "./abis/FndrIdentityAbi";
 import { RoundFactoryABI } from "./abis/RoundFactoryAbi";
 import { RoundManagerABI } from "./abis/RoundManagerAbi";
 import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
-// Contract addresses on Mantle Sepolia
+// Contract addresses on Lisk Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x53f4331E3BC39625ecbA6c8485e9eF58224E6bba",
-  RoundFactory: "0x2de7373a05C7A54B1485A5a483dA2Aabd3DA090C",
-  StartupSecondaryMarket: "0xCCbBc21C31051128040f685CBD2EddAFc71ce189",
+  FndrIdentity: "0x51b8808dD9E46933c345B58Ec7fa0ce16eC3c68E",
+  RoundFactory: "0x4b188E84c7946Acd21aeB3F718E42C0f1b558950",
+  StartupSecondaryMarket: "0x3363363702f98e8CE93871996c5163b79238cE5a",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 32905413;
+const START_BLOCK = 31027539;
 
 // Fetch all deployed round addresses from RoundFactory at build time
 async function getDeployedRoundAddresses(): Promise<Address[]> {
-  const rpcUrl = process.env.PONDER_RPC_URL_5003 || "https://rpc.sepolia.mantle.xyz";
+  const rpcUrl = process.env.PONDER_RPC_URL_4202 || "https://lisk-sepolia.drpc.org";
 
   const client = createPublicClient({
-    chain: mantleSepoliaTestnet,
+    chain: liskSepolia,
     transport: http(rpcUrl),
   });
 
@@ -71,21 +71,21 @@ const deployedRounds = await getDeployedRoundAddresses();
 
 export default createConfig({
   chains: {
-    mantleSepoliaTestnet: {
-      id: 5003,
-      rpc: process.env.PONDER_RPC_URL_5003,
+    liskSepolia: {
+      id: 4202,
+      rpc: process.env.PONDER_RPC_URL_4202,
     },
   },
   contracts: {
     FndrIdentity: {
-      chain: "mantleSepoliaTestnet",
+      chain: "liskSepolia",
       abi: FndrIdentityABI,
       address: CONTRACTS.FndrIdentity,
       startBlock: START_BLOCK,
     },
 
     RoundFactory: {
-      chain: "mantleSepoliaTestnet",
+      chain: "liskSepolia",
       abi: RoundFactoryABI,
       address: CONTRACTS.RoundFactory,
       startBlock: START_BLOCK,
@@ -93,7 +93,7 @@ export default createConfig({
 
     // Use explicitly fetched addresses for historical events + factory for new ones
     RoundManager: {
-      chain: "mantleSepoliaTestnet",
+      chain: "liskSepolia",
       abi: RoundManagerABI,
       address: deployedRounds.length > 0
         ? deployedRounds
@@ -106,7 +106,7 @@ export default createConfig({
     },
 
     StartupSecondaryMarket: {
-      chain: "mantleSepoliaTestnet",
+      chain: "liskSepolia",
       abi: StartupSecondaryMarketABI,
       address: CONTRACTS.StartupSecondaryMarket,
       startBlock: START_BLOCK,
