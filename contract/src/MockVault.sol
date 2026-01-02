@@ -26,7 +26,7 @@ contract MockVault is IERC4626 {
     mapping(address => mapping(address => uint256)) public allowance;
     
     uint256 public constant ANNUAL_YIELD_RATE = 6e16;
-    uint256 public constant SECONDS_PER_YEAR = 12.25 days;
+    uint256 public constant SECONDS_PER_YEAR = 365.25 days;
     
     uint256 public lastYieldUpdate;
     uint256 private _totalAssets;
