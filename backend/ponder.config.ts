@@ -19,7 +19,7 @@ const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 32510000;
+const START_BLOCK = 32905413;
 
 // Fetch all deployed round addresses from RoundFactory at build time
 async function getDeployedRoundAddresses(): Promise<Address[]> {
