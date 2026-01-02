@@ -13,6 +13,18 @@ export const user = onchainTable("user", (t) => ({
   updatedAt: t.bigint().notNull(),
 }));
 
+export const founderProfile = onchainTable("founder_profile", (t) => ({
+  id: t.text().primaryKey(), // founder wallet address
+  metadataURI: t.text().notNull(), // IPFS URI (ipfs://...)
+  createdAt: t.bigint().notNull(),
+  updatedAt: t.bigint().notNull(),
+  transactionHash: t.text().notNull(),
+}));
+
+export const founderProfileRelations = relations(founderProfile, ({ one }) => ({
+  user: one(user, { fields: [founderProfile.id], references: [user.id] }),
+}));
+
 // ============================================
 // Funding Round Tables
 // ============================================

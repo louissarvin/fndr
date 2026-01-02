@@ -4,13 +4,14 @@ import { parseUnits } from 'viem';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { gsap } from 'gsap';
 import { useRound } from '@/hooks/usePonderData';
-import { useRoundMetadata, ipfsToHttp } from '@/hooks/useIPFS';
+import { useRoundMetadata, useFounderProfileMetadata, ipfsToHttp } from '@/hooks/useIPFS';
 import {
   useInvest,
   useUSDCBalance,
   useUSDCApprove,
   useUSDCAllowance,
   useRoundConfig,
+  useFounderProfileURI,
   formatUSDCDisplay,
   USDC_DECIMALS,
 } from '@/hooks/useContracts';
@@ -23,7 +24,12 @@ import {
   Clock,
   TrendingUp,
   Wallet,
+  User,
+  BadgeCheck,
+  Linkedin,
+  Twitter,
 } from 'lucide-react';
+import PitchDeckViewer from '@/components/campaigns/PitchDeckViewer';
 
 interface InvestModalProps {
   isOpen: boolean;
@@ -78,6 +84,11 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
 
   // Fetch IPFS metadata
   const { data: metadata } = useRoundMetadata(round?.metadataURI);
+
+  // Founder profile
+  const { data: founderProfileURI } = useFounderProfileURI(round?.founder as `0x${string}` | undefined);
+  const { data: founderProfile } = useFounderProfileMetadata(founderProfileURI);
+  const founderImageUrl = founderProfile?.profileImage ? ipfsToHttp(founderProfile.profileImage) : null;
 
   // Contract hooks
   const { data: usdcBalance } = useUSDCBalance(address);
@@ -299,21 +310,88 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                 </div>
               ) : step === 'form' ? (
                 <>
-                  {/* Founder & Title */}
-                  <div className="space-y-3">
-                    <div ref={founderRef} className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center border-2 border-[#A2D5C6]/30">
-                        <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+                  {/* Founder Profile Card */}
+                  <div ref={founderRef} className="bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      {founderImageUrl ? (
+                        <img
+                          src={founderImageUrl}
+                          alt={founderProfile?.name || 'Founder'}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-[#A2D5C6]/30"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center border-2 border-[#A2D5C6]/30">
+                          {founderProfile ? (
+                            <User className="h-5 w-5 text-[#A2D5C6]" />
+                          ) : (
+                            <Wallet className="h-5 w-5 text-[#A2D5C6]" />
+                          )}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {founderProfile ? (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-semibold text-white truncate">{founderProfile.name}</h4>
+                              <BadgeCheck className="h-4 w-4 text-[#A2D5C6] flex-shrink-0" />
+                            </div>
+                            <p className="text-sm text-[#A2D5C6] truncate">{founderProfile.title}</p>
+                            <p className="text-xs text-white/50 mt-1 line-clamp-2">{founderProfile.bio}</p>
+                            {(founderProfile.linkedin || founderProfile.twitter) && (
+                              <div className="flex items-center gap-3 mt-2">
+                                {founderProfile.linkedin && (
+                                  <a
+                                    href={founderProfile.linkedin.startsWith('http') ? founderProfile.linkedin : `https://${founderProfile.linkedin}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-white/40 hover:text-[#A2D5C6] transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Linkedin className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {founderProfile.twitter && (
+                                  <a
+                                    href={founderProfile.twitter.startsWith('http') ? founderProfile.twitter : `https://twitter.com/${founderProfile.twitter.replace('@', '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-white/40 hover:text-[#A2D5C6] transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Twitter className="h-4 w-4" />
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm text-white/70 font-mono">{round?.founder ? shortenAddress(round.founder) : 'Unknown'}</p>
+                            <p className="text-xs text-white/40 mt-0.5">Founder</p>
+                          </>
+                        )}
                       </div>
-                      <span className="text-sm text-white/70">{round?.founder ? shortenAddress(round.founder) : 'Unknown'}</span>
                     </div>
+                  </div>
 
+                  {/* Company Info */}
+                  <div className="space-y-3">
                     <DialogPrimitive.Title ref={titleRef} className="text-2xl md:text-3xl font-bold text-white">
                       {companyName}
                     </DialogPrimitive.Title>
+                    {metadata?.description && (
+                      <p className="text-sm text-white/60 line-clamp-3">{metadata.description}</p>
+                    )}
                     <DialogPrimitive.Description ref={taglineRef} className="text-[#A2D5C6] font-medium">
                       Invest and earn 6% APY while supporting this startup
                     </DialogPrimitive.Description>
+
+                    {/* Pitch Deck */}
+                    {metadata?.pitchDeck && (
+                      <div className="pt-1">
+                        <PitchDeckViewer pitchDeckHash={metadata.pitchDeck} companyName={companyName} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Progress Section */}

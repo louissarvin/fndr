@@ -8,17 +8,20 @@ contract FndrIdentity {
     error InvalidIdentifier();
     error UserNotVerified();
     error InvalidRole();
+    error NotFounder();
 
     mapping(address => bytes32) public zkPassportIdentifiers;
     mapping(bytes32 => bool) public usedIdentifiers;
     
     enum UserRole { None, Founder, Investor }
     mapping(address => UserRole) public userRoles;
-    
+    mapping(address => string) public founderProfileURIs;
+
     address public owner;
     
     event ZKPassportVerified(address indexed user, bytes32 nullifierHash);
     event UserRoleRegistered(address indexed user, UserRole role);
+    event FounderProfileUpdated(address indexed founder, string metadataURI);
     
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
@@ -69,10 +72,20 @@ contract FndrIdentity {
     function registerUserRole(UserRole role) external onlyVerifiedUsers{
         if (role == UserRole.None) revert InvalidRole();
         if (userRoles[msg.sender] != UserRole.None) revert UserAlreadyRegistered();
-        
+
         userRoles[msg.sender] = role;
-        
+
         emit UserRoleRegistered(msg.sender, role);
+    }
+
+    function registerFounderWithProfile(string calldata metadataURI) external onlyVerifiedUsers {
+        if (userRoles[msg.sender] != UserRole.None) revert UserAlreadyRegistered();
+
+        userRoles[msg.sender] = UserRole.Founder;
+        founderProfileURIs[msg.sender] = metadataURI;
+
+        emit UserRoleRegistered(msg.sender, UserRole.Founder);
+        emit FounderProfileUpdated(msg.sender, metadataURI);
     }
     
     function getUserRole(address user) external view returns (UserRole) {
@@ -89,5 +102,19 @@ contract FndrIdentity {
     
     function isUserRegistered(address user) external view returns (bool) {
         return userRoles[user] != UserRole.None;
+    }
+
+    function setFounderProfile(string calldata metadataURI) external onlyVerifiedUsers {
+        if (userRoles[msg.sender] != UserRole.Founder) revert NotFounder();
+        founderProfileURIs[msg.sender] = metadataURI;
+        emit FounderProfileUpdated(msg.sender, metadataURI);
+    }
+
+    function getFounderProfileURI(address founder) external view returns (string memory) {
+        return founderProfileURIs[founder];
+    }
+
+    function hasFounderProfile(address founder) external view returns (bool) {
+        return bytes(founderProfileURIs[founder]).length > 0;
     }
 }

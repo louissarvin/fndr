@@ -98,6 +98,14 @@ export interface User {
   updatedAt: string;
 }
 
+export interface FounderProfile {
+  id: string;
+  metadataURI: string;
+  createdAt: string;
+  updatedAt: string;
+  transactionHash: string;
+}
+
 export interface PlatformStats {
   id: string;
   totalUsers: number;
@@ -540,6 +548,54 @@ export function useBuyerTrades(buyerAddress: string | undefined) {
       return data.trades.items;
     },
     enabled: !!buyerAddress,
+    staleTime: 30000,
+  });
+}
+
+// Fetch founder profile by address
+export function useFounderProfileFromPonder(founderAddress: string | undefined) {
+  return useQuery({
+    queryKey: ["ponder", "founderProfile", founderAddress],
+    queryFn: async () => {
+      if (!founderAddress) return null;
+      const data = await queryPonder<{ founderProfile: FounderProfile | null }>(`
+        query GetFounderProfile($id: String!) {
+          founderProfile(id: $id) {
+            id
+            metadataURI
+            createdAt
+            updatedAt
+            transactionHash
+          }
+        }
+      `, { id: founderAddress.toLowerCase() });
+      return data.founderProfile;
+    },
+    enabled: !!founderAddress,
+    staleTime: 30000,
+  });
+}
+
+// Fetch all founder profiles
+export function useAllFounderProfiles() {
+  return useQuery({
+    queryKey: ["ponder", "founderProfiles"],
+    queryFn: async () => {
+      const data = await queryPonder<{ founderProfiles: { items: FounderProfile[] } }>(`
+        query GetAllFounderProfiles {
+          founderProfiles(orderBy: "createdAt", orderDirection: "desc") {
+            items {
+              id
+              metadataURI
+              createdAt
+              updatedAt
+              transactionHash
+            }
+          }
+        }
+      `);
+      return data.founderProfiles.items;
+    },
     staleTime: 30000,
   });
 }

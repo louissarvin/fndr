@@ -80,3 +80,32 @@ ponder.on("FndrIdentity:ZKPassportVerified", async ({ event, context }) => {
     });
   }
 });
+
+// Handle Founder Profile updates
+ponder.on("FndrIdentity:FounderProfileUpdated", async ({ event, context }) => {
+  const founderId = event.args.founder.toLowerCase();
+  const metadataURI = event.args.metadataURI;
+  const timestamp = event.block.timestamp;
+  const txHash = event.transaction.hash;
+
+  // Check if profile already exists
+  const existingProfile = await context.db.find(schema.founderProfile, { id: founderId });
+
+  if (existingProfile) {
+    // Update existing profile
+    await context.db.update(schema.founderProfile, { id: founderId }).set({
+      metadataURI: metadataURI,
+      updatedAt: timestamp,
+      transactionHash: txHash,
+    });
+  } else {
+    // Create new profile
+    await context.db.insert(schema.founderProfile).values({
+      id: founderId,
+      metadataURI: metadataURI,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      transactionHash: txHash,
+    });
+  }
+});

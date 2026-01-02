@@ -12,6 +12,7 @@ import { formatUnits } from "viem";
 import type { Round } from "@/hooks/usePonderData";
 import { useRoundMetadata, ipfsToHttp } from "@/hooks/useIPFS";
 import InvestModal from "@/components/investor/InvestModal";
+import FounderHoverCard from "@/components/founder/FounderHoverCard";
 import { useAI } from "@/components/ai/AIContext";
 import { calculateCredibilityScore } from "@/lib/credibilityScore";
 
@@ -147,14 +148,16 @@ export default function RoundCard({ round }: RoundCardProps) {
       <div className="p-5 space-y-4">
         {/* Founder */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 flex items-center justify-center">
-              <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+          <FounderHoverCard founderAddress={round.founder as `0x${string}`}>
+            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="h-6 w-6 flex items-center justify-center">
+                <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+              </div>
+              <span className="text-sm text-white/60">
+                {shortenAddress(round.founder)}
+              </span>
             </div>
-            <span className="text-sm text-white/60">
-              {shortenAddress(round.founder)}
-            </span>
-          </div>
+          </FounderHoverCard>
           <a
             href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
             target="_blank"

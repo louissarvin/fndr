@@ -92,6 +92,13 @@ export const FndrIdentityABI = [
   },
   {
     type: "function",
+    name: "registerFounderWithProfile",
+    inputs: [{ name: "metadataURI", type: "string", internalType: "string" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "registerZKPassportUser",
     inputs: [{ name: "uniqueIdentifier", type: "bytes32", internalType: "bytes32" }],
     outputs: [{ name: "", type: "bool", internalType: "bool" }],
@@ -119,6 +126,34 @@ export const FndrIdentityABI = [
     stateMutability: "view",
   },
   {
+    type: "function",
+    name: "founderProfileURIs",
+    inputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setFounderProfile",
+    inputs: [{ name: "metadataURI", type: "string", internalType: "string" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getFounderProfileURI",
+    inputs: [{ name: "founder", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "string", internalType: "string" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "hasFounderProfile",
+    inputs: [{ name: "founder", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
     type: "event",
     name: "UserRoleRegistered",
     inputs: [
@@ -136,12 +171,22 @@ export const FndrIdentityABI = [
     ],
     anonymous: false,
   },
+  {
+    type: "event",
+    name: "FounderProfileUpdated",
+    inputs: [
+      { name: "founder", type: "address", indexed: true, internalType: "address" },
+      { name: "metadataURI", type: "string", indexed: false, internalType: "string" },
+    ],
+    anonymous: false,
+  },
   { type: "error", name: "IdentifierAlreadyUsed", inputs: [] },
   { type: "error", name: "InvalidIdentifier", inputs: [] },
   { type: "error", name: "InvalidRole", inputs: [] },
   { type: "error", name: "NotOwner", inputs: [] },
   { type: "error", name: "UserAlreadyRegistered", inputs: [] },
   { type: "error", name: "UserNotVerified", inputs: [] },
+  { type: "error", name: "NotFounder", inputs: [] },
 ] as const;
 
 export const RoundFactoryABI = [

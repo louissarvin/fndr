@@ -192,3 +192,131 @@ export function useRoundLogo(metadataURI: string | null | undefined) {
   if (!metadata?.logo) return null;
   return ipfsToHttp(metadata.logo);
 }
+
+// ============================================
+// Founder Profile IPFS Types and Hooks
+// ============================================
+
+export interface FounderProfile {
+  name: string;
+  title: string;
+  bio: string;
+  profileImage?: string;
+  linkedin?: string;
+  twitter?: string;
+}
+
+// Fetch founder profile from IPFS
+async function fetchFounderProfile(metadataURI: string): Promise<FounderProfile | null> {
+  const url = ipfsToHttp(metadataURI);
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch founder profile: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching founder profile from IPFS:', error);
+    return null;
+  }
+}
+
+// Hook to fetch and cache founder profile from IPFS
+export function useFounderProfileMetadata(metadataURI: string | null | undefined) {
+  return useQuery({
+    queryKey: ['ipfs', 'founderProfile', metadataURI],
+    queryFn: async () => {
+      if (!metadataURI) return null;
+      return fetchFounderProfile(metadataURI);
+    },
+    enabled: !!metadataURI,
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours
+  });
+}
+
+// Hook to upload founder profile to IPFS
+export function useFounderProfileUpload() {
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadFounderProfile = useCallback(async (
+    profile: FounderProfile,
+    profileImageFile?: File | null
+  ): Promise<string | null> => {
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      let profileImageHash: string | undefined;
+
+      // Upload profile image if provided
+      if (profileImageFile) {
+        const formData = new FormData();
+        formData.append('file', profileImageFile);
+        formData.append('type', 'image');
+
+        const imageResponse = await fetch(`${BACKEND_API_URL}/api/ipfs/upload-file`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const imageData: UploadFileResponse = await imageResponse.json();
+
+        if (!imageResponse.ok || !imageData.success) {
+          throw new Error(imageData.error || 'Failed to upload profile image');
+        }
+
+        profileImageHash = imageData.ipfsHash;
+      }
+
+      // Create full profile with image hash
+      const fullProfile: FounderProfile = {
+        ...profile,
+        profileImage: profileImageHash || profile.profileImage,
+      };
+
+      // Upload profile JSON
+      const response = await fetch(`${BACKEND_API_URL}/api/ipfs/upload-json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          metadata: fullProfile,
+          name: `founder-profile-${profile.name.toLowerCase().replace(/\s+/g, '-')}`,
+        }),
+      });
+
+      const data: UploadJSONResponse = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to upload founder profile to IPFS');
+      }
+
+      return data.ipfsHash;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  return {
+    uploadFounderProfile,
+    isUploading,
+    error,
+  };
+}
+
+// Hook to get founder profile image URL
+export function useFounderProfileImage(metadataURI: string | null | undefined) {
+  const { data: profile } = useFounderProfileMetadata(metadataURI);
+
+  if (!profile?.profileImage) return null;
+  return ipfsToHttp(profile.profileImage);
+}

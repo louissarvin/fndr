@@ -133,6 +133,76 @@ export function useRegisterZKPassport() {
   };
 }
 
+export function useFounderProfileURI(address: `0x${string}` | undefined) {
+  return useReadContract({
+    address: CONTRACTS.FndrIdentity as `0x${string}`,
+    abi: FndrIdentityABI,
+    functionName: 'getFounderProfileURI',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    },
+  });
+}
+
+export function useHasFounderProfile(address: `0x${string}` | undefined) {
+  return useReadContract({
+    address: CONTRACTS.FndrIdentity as `0x${string}`,
+    abi: FndrIdentityABI,
+    functionName: 'hasFounderProfile',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    },
+  });
+}
+
+export function useSetFounderProfile() {
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const setFounderProfile = (metadataURI: string) => {
+    writeContract({
+      address: CONTRACTS.FndrIdentity as `0x${string}`,
+      abi: FndrIdentityABI,
+      functionName: 'setFounderProfile',
+      args: [metadataURI],
+    });
+  };
+
+  return {
+    setFounderProfile,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  };
+}
+
+export function useRegisterFounderWithProfile() {
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const registerFounderWithProfile = (metadataURI: string) => {
+    writeContract({
+      address: CONTRACTS.FndrIdentity as `0x${string}`,
+      abi: FndrIdentityABI,
+      functionName: 'registerFounderWithProfile',
+      args: [metadataURI],
+    });
+  };
+
+  return {
+    registerFounderWithProfile,
+    hash,
+    isPending,
+    isConfirming,
+    isSuccess,
+    error,
+  };
+}
+
 // ============================================
 // RoundFactory Hooks
 // ============================================
