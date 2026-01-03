@@ -2,7 +2,11 @@ import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:42069';
-const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
+
+// Use dedicated Pinata gateway to avoid rate limits and CORS issues
+// Format: https://your-gateway.mypinata.cloud/ipfs
+const PINATA_GATEWAY = import.meta.env.VITE_PINATA_GATEWAY || 'rose-xerothermic-shrimp-767.mypinata.cloud';
+const IPFS_GATEWAY = `https://${PINATA_GATEWAY}/ipfs`;
 
 export interface RoundMetadata {
   name: string;
