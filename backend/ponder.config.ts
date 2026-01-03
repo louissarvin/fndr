@@ -10,16 +10,16 @@ import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
 // Contract addresses on Mantle Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x53f4331E3BC39625ecbA6c8485e9eF58224E6bba",
-  RoundFactory: "0x2de7373a05C7A54B1485A5a483dA2Aabd3DA090C",
-  StartupSecondaryMarket: "0xCCbBc21C31051128040f685CBD2EddAFc71ce189",
+  FndrIdentity: "0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE",
+  RoundFactory: "0x9D05244Bf4D091734da61e21396c74Cd92346E6f",
+  StartupSecondaryMarket: "0x7fB1E1C25F47acf921d9d89480586111dEf65CBb",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 32905413;
+const START_BLOCK = 32935200;
 
 // Fetch all deployed round addresses from RoundFactory at build time
 async function getDeployedRoundAddresses(): Promise<Address[]> {
