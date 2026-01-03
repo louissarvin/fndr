@@ -169,7 +169,7 @@ function OrderCard({
           <Bot className="h-4 w-4" />
         </button>
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${order.transactionHash}`}
+          href={`https://sepolia-blockscout.lisk.com/tx/${order.transactionHash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-shrink-0 p-3 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"

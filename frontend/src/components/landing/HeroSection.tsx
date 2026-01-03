@@ -27,7 +27,7 @@ const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(
                 ))}
               </h1>
               <p ref={subtitleRef} className="text-xl text-[#F6F6F6]/60 mb-10 hero-subtitle-text">
-                Tokenized startup equity with on-chain yield — built on Mantle.
+                Tokenized startup equity with on-chain yield — built on Lisk.
               </p>
               <div ref={buttonsRef} className="flex space-x-6 justify-center mb-12">
                 <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">

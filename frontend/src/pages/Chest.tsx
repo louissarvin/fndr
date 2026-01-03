@@ -394,7 +394,7 @@ const Chest = () => {
       hoverTextColor: 'group-hover:text-[#000000]',
       hoverDescColor: 'group-hover:text-[#000000]/70',
       title: 'Instant',
-      description: 'Instant settlement on Mantle. Low fees, fast transactions, no middlemen.'
+      description: 'Instant settlement on Lisk Sepolia. Low fees, fast transactions, no middlemen.'
     },
   ];
 

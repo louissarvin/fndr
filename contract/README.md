@@ -233,7 +233,7 @@ forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 cp .env.example .env
 
 # Configure variables
-MANTLE_RPC=https://rpc.mantle.xyz
+LISK_RPC=https://
 PRIVATE_KEY=your_private_key
 ETHERSCAN_API_KEY=your_api_key
 ```
@@ -258,7 +258,7 @@ Campaigns store rich metadata on IPFS while keeping on-chain data minimal:
 
 See `examples/techstartup-metadata.json` for complete schema.
 
-## 🔍 Contract Addresses (Mantle Network)
+## 🔍 Contract Addresses (Lisk Network)
 
 | Contract | Address | Purpose |
 |----------|---------|---------|

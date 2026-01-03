@@ -16,7 +16,7 @@ contract DeployFndr is Script {
         address deployer = vm.addr(deployerPrivateKey);
 
         console.log("===========================================");
-        console.log("FNDR Protocol Deployment to Mantle Sepolia");
+        console.log("FNDR Protocol Deployment to Lisk Sepolia");
         console.log("===========================================");
         console.log("Deployer:", deployer);
         console.log("Platform Wallet:", PLATFORM_WALLET);
@@ -83,7 +83,7 @@ contract DeployFndr is Script {
         console.log("StartupSecondaryMarket:", address(market));
         console.log("-------------------------------------------");
         console.log("");
-        console.log("Network: Mantle Sepolia (Chain ID: 5003)");
-        console.log("Explorer: https://explorer.sepolia.mantle.xyz");
+        console.log("Network: Lisk Sepolia (Chain ID: 4202)");
+        console.log("Explorer: https://sepolia-blockscout.lisk.com");
     }
 }

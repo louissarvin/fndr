@@ -405,7 +405,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
 
           {/* View on Explorer */}
           <a
-            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
+            href={`https://sepolia-blockscout.lisk.com/address/${round.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 border border-white/20 text-white/60 py-3 rounded-xl hover:bg-white/5 hover:text-white transition-colors"

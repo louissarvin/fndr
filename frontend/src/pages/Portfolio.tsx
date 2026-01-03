@@ -136,7 +136,7 @@ function InvestmentCard({ investment, currentBalance }: { investment: Aggregated
 
         {/* Action Button - link to latest transaction */}
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${investment.transactionHashes[0]}`}
+          href={`https://sepolia-blockscout.lisk.com/tx/${investment.transactionHashes[0]}`}
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"
@@ -248,7 +248,7 @@ function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?
 
         {/* Action Button */}
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${trade.transactionHash}`}
+          href={`https://sepolia-blockscout.lisk.com/tx/${trade.transactionHash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"

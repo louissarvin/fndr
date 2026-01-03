@@ -6,7 +6,7 @@ viaIR = true
 optimizer = true
 optimizer_runs = 1
 
-# Mantle Sepolia Testnet
+# Lisk Sepolia Testnet
 [rpc_endpoints]
 lisk_sepolia = "https://lisk-sepolia.drpc.org"
 

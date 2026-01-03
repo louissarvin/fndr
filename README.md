@@ -177,13 +177,13 @@ npm run test:integration
 ## 🌐 Deployments
 
 ### Mainnet (Production)
-- **Network**: Mantle Network
+- **Network**: Lisk Network
 - **CampaignFactory**: `TBD`
 - **FndrIdentity**: `TBD`
 - **Frontend**: `https://fndr.app`
 
 ### Testnet (Staging)
-- **Network**: Mantle Sepolia
+- **Network**: Lisk Sepolia
 - **CampaignFactory**: `TBD`
 - **FndrIdentity**: `TBD`
 - **Frontend**: `https://staging.fndr.app`

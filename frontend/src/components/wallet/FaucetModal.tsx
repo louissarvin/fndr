@@ -70,7 +70,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
             Test USDC Faucet
           </DialogTitle>
           <DialogDescription className="text-white/60">
-            Claim test USDC tokens to try out the platform on Mantle Sepolia testnet.
+            Claim test USDC tokens to try out the platform on Lisk Sepolia testnet.
           </DialogDescription>
         </DialogHeader>
 
@@ -137,7 +137,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
           {/* Info */}
           <div className="text-center">
             <p className="text-white/40 text-xs">
-              These are test tokens on Mantle Sepolia with no real value.
+              These are test tokens on Lisk Sepolia with no real value.
             </p>
           </div>
         </div>

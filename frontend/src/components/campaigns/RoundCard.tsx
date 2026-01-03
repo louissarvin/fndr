@@ -159,7 +159,7 @@ export default function RoundCard({ round }: RoundCardProps) {
             </div>
           </FounderHoverCard>
           <a
-            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
+            href={`https://sepolia-blockscout.lisk.com/address/${round.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-lg text-white/40 hover:text-white transition-all"
