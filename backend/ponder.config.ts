@@ -10,16 +10,16 @@ import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
 // Contract addresses on Lisk Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x51b8808dD9E46933c345B58Ec7fa0ce16eC3c68E",
-  RoundFactory: "0x4b188E84c7946Acd21aeB3F718E42C0f1b558950",
-  StartupSecondaryMarket: "0x3363363702f98e8CE93871996c5163b79238cE5a",
+  FndrIdentity: "0xDC987dF013d655c8eEb89ACA2c14BdcFeEee850a",
+  RoundFactory: "0x482DB11F63cC06CD5Fb56d54C942450871775c6B",
+  StartupSecondaryMarket: "0xF09216A363FC5D88E899aa92239B2eeB1913913B",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 31027539;
+const START_BLOCK = 31050043;
 
 // Fetch all deployed round addresses from RoundFactory at build time
 async function getDeployedRoundAddresses(): Promise<Address[]> {

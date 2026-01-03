@@ -290,17 +290,16 @@ contract RoundManager {
         }
 
         uint256 shares = vault.convertToShares(usdcAmount);
+        uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
 
-        vault.redeem(shares, address(this), address(this));
-
-        if(!usdc.transfer(round.founder, usdcAmount)) {
+        if(!usdc.transfer(round.founder, actualRedeemed)) {
             revert InvalidOperation("USDC transfer failed");
         }
 
-        round.totalWithdrawn += usdcAmount;
+        round.totalWithdrawn += actualRedeemed;
         round.lastWithdrawal = block.timestamp;
 
-        emit FounderWithdrawal(round.founder, usdcAmount, 0, usdcAmount);
+        emit FounderWithdrawal(round.founder, actualRedeemed, 0, actualRedeemed);
 
         uint256 remainingBalance = vault.convertToAssets(vault.balanceOf(address(this)));
         if (remainingBalance < 1e6) {
@@ -315,16 +314,17 @@ contract RoundManager {
 
         uint256 claimableYield = investorYieldBalance[msg.sender];
         investorYieldBalance[msg.sender] = 0;
-        investorYieldClaimed[msg.sender] += claimableYield;
 
         uint256 shares = vault.convertToShares(claimableYield);
-        vault.redeem(shares, address(this), address(this));
+        uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
 
-        if(!usdc.transfer(msg.sender, claimableYield)) {
+        investorYieldClaimed[msg.sender] += actualRedeemed;
+
+        if(!usdc.transfer(msg.sender, actualRedeemed)) {
             revert InvalidOperation("USDC transfer failed");
         }
 
-        emit InvestorYieldClaimed(msg.sender, claimableYield);
+        emit InvestorYieldClaimed(msg.sender, actualRedeemed);
     }
 
     function updateYield() external {
@@ -423,10 +423,10 @@ contract RoundManager {
 
             if (vaultBalance >= platformFee) {
                 uint256 shares = vault.convertToShares(platformFee);
-                vault.redeem(shares, address(this), address(this));
-                usdc.transfer(platformWallet, platformFee);
+                uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
+                usdc.transfer(platformWallet, actualRedeemed);
 
-                emit PlatformFeeCollected(platformWallet, platformFee, round.totalRaised);
+                emit PlatformFeeCollected(platformWallet, actualRedeemed, round.totalRaised);
             }
         }
 

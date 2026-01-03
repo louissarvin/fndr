@@ -339,7 +339,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                               <BadgeCheck className="h-4 w-4 text-[#A2D5C6] flex-shrink-0" />
                             </div>
                             <p className="text-sm text-[#A2D5C6] truncate">{founderProfile.title}</p>
-                            <p className="text-xs text-white/50 mt-1 line-clamp-2">{founderProfile.bio}</p>
+                            <p className="text-xs text-white/50 mt-1 text-justify">{founderProfile.bio}</p>
                             {(founderProfile.linkedin || founderProfile.twitter) && (
                               <div className="flex items-center gap-3 mt-2">
                                 {founderProfile.linkedin && (
@@ -383,7 +383,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                       {companyName}
                     </DialogPrimitive.Title>
                     {metadata?.description && (
-                      <p ref={taglineRef} className="text-sm text-white/60 line-clamp-3">{metadata.description}</p>
+                      <p ref={taglineRef} className="text-sm text-white/60 text-justify">{metadata.description}</p>
                     )}
 
                     {/* Pitch Deck */}
