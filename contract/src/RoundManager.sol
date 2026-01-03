@@ -291,13 +291,13 @@ contract RoundManager {
 
         uint256 shares = vault.convertToShares(usdcAmount);
 
-        vault.redeem(shares, address(this), address(this));
+        uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
 
-        if(!usdc.transfer(round.founder, usdcAmount)) {
+        if(!usdc.transfer(round.founder, actualRedeemed)) {
             revert InvalidOperation("USDC transfer failed");
         }
 
-        round.totalWithdrawn += usdcAmount;
+        round.totalWithdrawn += actualRedeemed;
         round.lastWithdrawal = block.timestamp;
 
         emit FounderWithdrawal(round.founder, usdcAmount, 0, usdcAmount);
@@ -318,9 +318,9 @@ contract RoundManager {
         investorYieldClaimed[msg.sender] += claimableYield;
 
         uint256 shares = vault.convertToShares(claimableYield);
-        vault.redeem(shares, address(this), address(this));
+        uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
 
-        if(!usdc.transfer(msg.sender, claimableYield)) {
+        if(!usdc.transfer(msg.sender, actualRedeemed)) {
             revert InvalidOperation("USDC transfer failed");
         }
 
@@ -423,10 +423,10 @@ contract RoundManager {
 
             if (vaultBalance >= platformFee) {
                 uint256 shares = vault.convertToShares(platformFee);
-                vault.redeem(shares, address(this), address(this));
-                usdc.transfer(platformWallet, platformFee);
+                uint256 actualRedeemed = vault.redeem(shares, address(this), address(this));
+                usdc.transfer(platformWallet, actualRedeemed);
 
-                emit PlatformFeeCollected(platformWallet, platformFee, round.totalRaised);
+                emit PlatformFeeCollected(platformWallet, actualRedeemed, round.totalRaised);
             }
         }
 

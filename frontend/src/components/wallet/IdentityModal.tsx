@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import QRCode from 'react-qr-code';
 import {
@@ -22,7 +23,6 @@ import {
   Upload,
   User,
   Linkedin,
-  Twitter,
 } from 'lucide-react';
 import {
   useIsUserRegistered,
@@ -52,6 +52,7 @@ const roleLabels: Record<number, string> = {
 type Step = 'zkpass' | 'role' | 'profile';
 
 export default function IdentityModal({ open, onOpenChange }: IdentityModalProps) {
+  const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -159,10 +160,12 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
       setSelectedRole(null);
       const timer = setTimeout(() => {
         setShowSuccess(false);
-      }, 3000);
+        onOpenChange(false);
+        navigate('/founder');
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [isFounderRegSuccess, refetchRegistered, refetchRole, refetchHasProfile]);
+  }, [isFounderRegSuccess, refetchRegistered, refetchRole, refetchHasProfile, onOpenChange, navigate]);
 
   // Handle successful profile update
   useEffect(() => {
@@ -619,9 +622,11 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-white/60 mb-1.5">Twitter</label>
+                      <label className="block text-sm text-white/60 mb-1.5">X (Twitter)</label>
                       <div className="relative">
-                        <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
                         <input
                           type="text"
                           value={profileTwitter}
