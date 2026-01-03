@@ -25,7 +25,7 @@ const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10MB
 // Enable CORS for frontend requests
 app.use("*", cors({
   origin: [
-    "https://fndr.vercel.app",
+    "https://fndr-lisk.vercel.app",
     "http://localhost:5173",
     "http://localhost:8080",
     "http://localhost:3000",

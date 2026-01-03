@@ -1,218 +1,268 @@
-# Fndr - Decentralized Startup Fundraising Ecosystem
+# Fndr - Decentralized Startup Fundraising Platform
 
-🚀 **Revolutionary yield-enhanced startup fundraising platform combining tokenized equity with automatic 6% APY yield generation on invested capital.**
+A yield-enhanced startup fundraising platform combining tokenized equity with automatic 6% APY yield generation on invested capital. Built on Lisk Sepolia.
 
-## 🎯 What Is Fndr?
+## Overview
 
 Fndr transforms startup fundraising by solving three critical problems:
+
 1. **Idle Capital** - Invested funds generate 6% APY while supporting startup growth
-2. **Lack of Liquidity** - Secondary market trading after holding periods
-3. **Compliance Complexity** - Built-in KYC/AML and regulatory compliance
+2. **Lack of Liquidity** - Secondary market trading after 180-day holding periods
+3. **Compliance Complexity** - Built-in KYC via ZKPassport verification
 
-### Core Innovation
-- ⚡ **Yield-Enhanced Capital**: Every dollar invested immediately generates 6% APY
-- 🤝 **Fair Distribution**: 50% yield to founders, 50% to investors (pro-rata)
-- 🏛️ **Tokenized Equity**: ERC-1400 security tokens with built-in compliance
-- 🔒 **Campaign Isolation**: Each startup gets dedicated contract infrastructure
-- 💱 **Secondary Market**: Post-holding period trading for investor exits
+### Key Features
 
-## 🏗️ Monorepo Structure
+- **Yield-Enhanced Capital**: Every dollar invested immediately generates 6% APY through ERC-4626 vault
+- **Fair Distribution**: 50% yield to founders, 50% to investors (pro-rata by token holdings)
+- **Tokenized Equity**: ERC-1400 security tokens with built-in compliance
+- **Campaign Isolation**: Each startup gets dedicated contract infrastructure (RoundManager)
+- **Secondary Market**: Post-holding period trading with order book system
+- **ZKPassport Integration**: Privacy-preserving identity verification
+
+## Project Structure
 
 ```
-fndr/
-├── fndr-contracts/                   # Smart contracts (Solidity/Foundry)
-├── fndr-frontend/                   # Web application (React/Next.js)
-├── fndr-backend/                    # API services (Node.js/Express)
-└── README.md                   # This file
+fndrv2/
+├── contract/          # Smart contracts (Solidity/Foundry)
+├── frontend/          # Web application (React/Vite/TypeScript)
+├── backend/           # Ponder indexer + API services
+└── README.md
 ```
 
-## 📦 Packages
+## Smart Contracts
 
-### 🔗 Smart Contracts (`./fndr-contracts/`)
-Core blockchain infrastructure built with Foundry and Solidity.
+Built with Foundry and Solidity ^0.8.20.
 
-**Key Contracts:**
-- `CampaignFactory.sol` - Deploy isolated fundraising campaigns
-- `CampaignManager.sol` - Manage campaign lifecycle and yield distribution
-- `StartupEquityToken.sol` - ERC-1400 security tokens with compliance
-- `StartupSecondaryMarket.sol` - Order book for secondary trading
-- `FndrIdentity.sol` - KYC/verification system
+| Contract | Description |
+|----------|-------------|
+| `RoundFactory.sol` | Deploy isolated fundraising campaigns |
+| `RoundManager.sol` | Manage campaign lifecycle, investments, and yield distribution |
+| `StartupEquityToken.sol` | ERC-1400 security tokens with compliance controls |
+| `StartupSecondaryMarket.sol` | Order book for secondary trading |
+| `FndrIdentity.sol` | User registration and ZKPassport verification |
+| `MockUSDC.sol` | Test USDC token with airdrop functionality |
+| `MockVault.sol` | ERC-4626 yield vault (6% APY simulation) |
 
-**Features:**
-- ✅ Yield-enhanced fundraising (6% APY automatic)
-- ✅ Campaign isolation (separate infrastructure per startup)
-- ✅ Immutable 2% monthly withdrawal limits
-- ✅ ERC-1400 security token compliance
-- ✅ 180-day holding period enforcement
-- ✅ Secondary market with order book
+### Contract Features
 
-### 🌐 Frontend Application (`./fndr-frontend/`)
-Modern React/Next.js web application for founders and investors.
+- Yield-enhanced fundraising (6% APY automatic)
+- Campaign isolation (separate infrastructure per startup)
+- Immutable 2% monthly withdrawal limits for founders
+- 180-day holding period enforcement before trading
+- 0.5% platform success fee on completed rounds
+- 0.25% trading fee on secondary market transactions
 
-**Features:**
-- Campaign creation and management dashboard
-- Investment flow with yield tracking
-- Secondary market trading interface
-- Real-time yield distribution analytics
-- KYC/verification integration
+## Deployments
 
-### ⚙️ Backend Services (`./fndr-backend/`)
-Node.js/Express API services supporting the platform.
+### Lisk Sepolia (Chain ID: 4202)
 
-**Services:**
-- IPFS metadata management
-- Email notifications and alerts
-- Analytics and reporting
-- Admin dashboard APIs
-- Integration webhooks
+| Contract | Address |
+|----------|---------|
+| MockUSDC | `0x96F14a42d612Ab1C69eF71E5Ee02c0267A9a45D3` |
+| MockVault | `0xA24646C277Bd10AEb76e4086C6B6956aE2DB1321` |
+| FndrIdentity | `0xDC987dF013d655c8eEb89ACA2c14BdcFeEee850a` |
+| RoundFactory | `0x482DB11F63cC06CD5Fb56d54C942450871775c6B` |
+| StartupSecondaryMarket | `0xF09216A363FC5D88E899aa92239B2eeB1913913B` |
 
-## 🚀 Quick Start
+**Explorer**: https://sepolia-blockscout.lisk.com
+
+### Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | https://fndr-lisk.vercel.app |
+| Backend (GraphQL) | https://fndr-lisk-production.up.railway.app/graphql |
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Smart Contracts | Solidity + Foundry |
+| Frontend | React + Vite + TypeScript + TailwindCSS |
+| Backend/Indexer | Ponder + PostgreSQL |
+| Web3 | Wagmi + Viem + WalletConnect |
+| Identity | ZKPassport SDK |
+| Storage | IPFS (Pinata) |
+| Hosting | Vercel (Frontend) + Railway (Backend) |
+
+## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- Git
+- pnpm
 
 ### Installation
+
 ```bash
 # Clone the repository
-git clone https://github.com/louissarvin/Fndr.git
-cd Fndr
+git clone https://github.com/louissarvin/fndr.git
+cd fndr
 
-# Install smart contracts dependencies
-cd fndr-contract
+# Install contract dependencies
+cd contract
 forge install
 
 # Install frontend dependencies
-cd ../fndr-frontend
-npm install
+cd ../frontend
+pnpm install
 
 # Install backend dependencies
-cd ../fndr-backend
-npm install
-
+cd ../backend
+pnpm install
 ```
 
-### Development Setup
+### Local Development
+
 ```bash
 # Terminal 1: Start local blockchain
-cd fndr-contract
+cd contract
 anvil
 
-# Terminal 2: Deploy contracts locally
+# Terminal 2: Deploy contracts
 forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 
-# Terminal 3: Start backend services
+# Terminal 3: Start backend
 cd backend
-npm run dev
+pnpm dev
 
-# Terminal 4: Start frontend application
+# Terminal 4: Start frontend
 cd frontend
-npm run dev
+pnpm dev
 ```
 
-## 📊 Platform Metrics
+### Environment Variables
+
+**Frontend** (`frontend/.env`):
+```
+VITE_WALLETCONNECT_PROJECT_ID=your_project_id
+VITE_BACKEND_API_URL=http://localhost:42069
+```
+
+**Backend** (`backend/.env`):
+```
+PONDER_RPC_URL_4202=https://lisk-sepolia.drpc.org
+DATABASE_URL=your_postgres_url
+DATABASE_SCHEMA=ponder
+PINATA_JWT=your_pinata_jwt
+PINATA_GATEWAY=gateway.pinata.cloud
+GROQ_API_KEY=your_groq_key
+```
+
+## Platform Economics
 
 ### Revenue Model
+
 | Stream | Rate | Description |
 |--------|------|-------------|
-| Campaign Creation | 10 USDC | One-time fee per startup |
-| Success Fee | 0.5% | On total funds raised |
+| Success Fee | 0.5% | On total funds raised at round completion |
 | Trading Fee | 0.25% | Per secondary market transaction |
 
 ### Yield Distribution
+
 ```
-Investment Example: $100K → Vault (6% APY = $500/month)
+Investment: $100K → Vault (6% APY = ~$500/month)
 ├── $250/month → Founder yield (50%)
-└── $250/month → Investor yield (50%, pro-rata)
+└── $250/month → Investor yield (50%, pro-rata by tokens)
 ```
 
 ### Security Features
-- 🔒 **Immutable withdrawal limits** (2% monthly maximum)
-- 🏛️ **Campaign isolation** (no cross-contamination)
-- ✅ **ERC-1400 compliance** (regulatory ready)
-- 🕐 **Holding periods** (180 days before trading)
-- 🚫 **Blacklist functionality** (bad actor protection)
 
-## 🧪 Testing
+- **Immutable withdrawal limits** (2% monthly maximum)
+- **Campaign isolation** (no cross-contamination between rounds)
+- **ERC-1400 compliance** (regulatory ready security tokens)
+- **Holding periods** (180 days before secondary trading)
+- **Blacklist functionality** (bad actor protection)
+- **ZKPassport verification** (privacy-preserving KYC)
+
+## Testing
 
 ```bash
-# Smart contracts
-cd fndr-contract
+# Smart contract tests
+cd contract
 forge test -vv
 
-# Frontend
-cd fndr-frontend
-npm test
-
-# Backend
-cd fndr-backend
-npm test
-
-# Integration tests
-npm run test:integration
+# Run specific test
+forge test --match-test testInvestment -vvv
 ```
 
-## 🛠️ Technology Stack
+## Deployment
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Smart Contracts | Solidity + Foundry | Core platform logic |
-| Frontend | React + Next.js + TypeScript | User interface |
-| Backend | Node.js + Express + TypeScript | API services |
-| Database | PostgreSQL + Prisma | Data persistence |
-| IPFS | Pinata/Web3.Storage | Metadata storage |
-| Authentication | Privy/WalletConnect | Web3 auth |
-| Notifications | Resend/SendGrid | Email services |
+### Deploy Contracts
 
-## 📚 Documentation
+```bash
+cd contract
 
-- [Smart Contracts Documentation](./contracts/README.md)
-- [Frontend Setup Guide](./frontend/README.md)
-- [Backend API Reference](./backend/README.md)
-- [SDK Documentation](./sdk/README.md)
-- [Deployment Guide](./docs/DEPLOYMENT.md)
-- [Contributing Guidelines](./docs/CONTRIBUTING.md)
+# Deploy to Lisk Sepolia
+forge script script/Deploy.s.sol --rpc-url https://rpc.sepolia.lisk.com --broadcast
 
-## 🌐 Deployments
+# Verify on Blockscout
+forge verify-contract <ADDRESS> src/ContractName.sol:ContractName \
+  --verifier blockscout \
+  --verifier-url https://sepolia-blockscout.lisk.com/api/
+```
 
-### Mainnet (Production)
-- **Network**: Lisk Network
-- **CampaignFactory**: `TBD`
-- **FndrIdentity**: `TBD`
-- **Frontend**: `https://fndr.app`
+### Deploy Frontend (Vercel)
 
-### Testnet (Staging)
-- **Network**: Lisk Sepolia
-- **CampaignFactory**: `TBD`
-- **FndrIdentity**: `TBD`
-- **Frontend**: `https://staging.fndr.app`
+1. Connect GitHub repository to Vercel
+2. Set Root Directory: `frontend`
+3. Add environment variables
+4. Deploy
 
-## 🤝 Contributing
+### Deploy Backend (Railway)
 
-We welcome contributions! Please see our [Contributing Guidelines](./docs/CONTRIBUTING.md).
+1. Create new project from GitHub
+2. Set Root Directory: `backend`
+3. Add environment variables including `DATABASE_SCHEMA=ponder`
+4. Configure port to `8080`
+5. Deploy
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## API Endpoints
 
-## 📄 License
+### GraphQL
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```
+POST /graphql
 
-## ⚠️ Security Notice
+# Example query
+query {
+  rounds(orderBy: "createdAt", orderDirection: "desc") {
+    items {
+      id
+      founder
+      targetRaise
+      totalRaised
+      state
+    }
+  }
+}
+```
 
-This software handles real financial value. All smart contracts should be thoroughly audited before mainnet deployment. The team is not responsible for any financial losses.
+### IPFS Upload
 
-## 🔗 Links
+```
+POST /api/ipfs/upload-file    # Upload images/documents
+POST /api/ipfs/upload-json    # Upload metadata JSON
+GET  /api/ipfs/gateway        # Get IPFS gateway info
+```
 
-- **Website**: [fndr.app](https://fndr.app)
-- **Documentation**: [docs.fndr.app](https://docs.fndr.app)
-- **Discord**: [discord.gg/fndr](https://discord.gg/fndr)
-- **Twitter**: [@fndr_platform](https://twitter.com/fndr_platform)
+### ZKPassport
+
+```
+POST /api/zkpass/verify       # Verify ZKPassport proof
+```
+
+## License
+
+MIT License
+
+## Links
+
+- **GitHub**: https://github.com/louissarvin/fndr
+- **Frontend**: https://fndr-lisk.vercel.app
+- **Explorer**: https://sepolia-blockscout.lisk.com
 
 ---
 
-**Built with ❤️ for the decentralized future of startup funding**
+Built for the Lisk ecosystem
