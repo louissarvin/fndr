@@ -178,15 +178,17 @@ npm run test:integration
 
 ### Mainnet (Production)
 - **Network**: Mantle Network
-- **CampaignFactory**: `TBD`
-- **FndrIdentity**: `TBD`
-- **Frontend**: `https://fndr.app`
+- **Status**: Coming Soon
+- **Frontend**: `https://fndr.site`
 
-### Testnet (Staging)
-- **Network**: Mantle Sepolia
-- **CampaignFactory**: `TBD`
-- **FndrIdentity**: `TBD`
-- **Frontend**: `https://staging.fndr.app`
+### Testnet - Mantle Sepolia
+- **Network**: Mantle Sepolia (Chain ID: 5003)
+- **MockUSDC**: `0xc6C927c77D9BFaFb7b9e003db6D96F3605ba2514`
+- **MockVault**: `0xE8163650f9e5bdAcd1e449f2fB70a5677bbA62ED`
+- **FndrIdentity**: `0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE`
+- **RoundFactory**: `0x9D05244Bf4D091734da61e21396c74Cd92346E6f`
+- **StartupSecondaryMarket**: `0x7fB1E1C25F47acf921d9d89480586111dEf65CBb`
+- **Frontend**: `https://fndr.site`
 
 ## 🤝 Contributing
 
