@@ -906,7 +906,7 @@ Please provide pricing recommendations including:
       // Prepare context - use focused context if available, otherwise all rounds
       const roundsContext = focusedContext || formatRoundsContext(rounds);
 
-      const response = await fetch('http://localhost:42069/api/ai/chat', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
