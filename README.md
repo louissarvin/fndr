@@ -20,20 +20,20 @@ Fndr transforms startup fundraising by solving three critical problems:
 
 ```
 fndr/
-├── fndr-contracts/                   # Smart contracts (Solidity/Foundry)
-├── fndr-frontend/                   # Web application (React/Next.js)
-├── fndr-backend/                    # API services (Node.js/Express)
+├── contracts/                   # Smart contracts (Solidity/Foundry)
+├── frontend/                   # Web application (React/Next.js)
+├── backend/                    # API services (Node.js/Express)
 └── README.md                   # This file
 ```
 
 ## 📦 Packages
 
-### 🔗 Smart Contracts (`./fndr-contracts/`)
+### 🔗 Smart Contracts (`./contracts/`)
 Core blockchain infrastructure built with Foundry and Solidity.
 
 **Key Contracts:**
-- `CampaignFactory.sol` - Deploy isolated fundraising campaigns
-- `CampaignManager.sol` - Manage campaign lifecycle and yield distribution
+- `RoundFactory.sol` - Deploy isolated fundraising campaigns
+- `RoundManager.sol` - Manage campaign lifecycle and yield distribution
 - `StartupEquityToken.sol` - ERC-1400 security tokens with compliance
 - `StartupSecondaryMarket.sol` - Order book for secondary trading
 - `FndrIdentity.sol` - KYC/verification system
@@ -46,17 +46,17 @@ Core blockchain infrastructure built with Foundry and Solidity.
 - ✅ 180-day holding period enforcement
 - ✅ Secondary market with order book
 
-### 🌐 Frontend Application (`./fndr-frontend/`)
+### 🌐 Frontend Application (`./frontend/`)
 Modern React/Next.js web application for founders and investors.
 
 **Features:**
-- Campaign creation and management dashboard
+- Round creation and management dashboard
 - Investment flow with yield tracking
 - Secondary market trading interface
 - Real-time yield distribution analytics
-- KYC/verification integration
+- ZK-KYC/verification integration
 
-### ⚙️ Backend Services (`./fndr-backend/`)
+### ⚙️ Backend Services (`./backend/`)
 Node.js/Express API services supporting the platform.
 
 **Services:**
@@ -80,16 +80,16 @@ git clone https://github.com/louissarvin/Fndr.git
 cd Fndr
 
 # Install smart contracts dependencies
-cd fndr-contract
+cd contract
 forge install
 
 # Install frontend dependencies
-cd ../fndr-frontend
-npm install
+cd ../frontend
+bun install
 
 # Install backend dependencies
-cd ../fndr-backend
-npm install
+cd ../backend
+pnpm install
 
 ```
 
@@ -104,11 +104,11 @@ forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 
 # Terminal 3: Start backend services
 cd backend
-npm run dev
+pnpm run dev
 
 # Terminal 4: Start frontend application
 cd frontend
-npm run dev
+bun run dev
 ```
 
 ## 📊 Platform Metrics
@@ -142,12 +142,12 @@ cd fndr-contract
 forge test -vv
 
 # Frontend
-cd fndr-frontend
-npm test
+cd frontend
+bun test
 
 # Backend
-cd fndr-backend
-npm test
+cd backend
+pnpm test
 
 # Integration tests
 npm run test:integration
@@ -210,10 +210,7 @@ This software handles real financial value. All smart contracts should be thorou
 
 ## 🔗 Links
 
-- **Website**: [fndr.app](https://fndr.app)
-- **Documentation**: [docs.fndr.app](https://docs.fndr.app)
-- **Discord**: [discord.gg/fndr](https://discord.gg/fndr)
-- **Twitter**: [@fndr_platform](https://twitter.com/fndr_platform)
+- **Website**: [fndr.app](https://fndr.site)
 
 ---
 
