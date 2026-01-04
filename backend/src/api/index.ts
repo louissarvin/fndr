@@ -24,7 +24,14 @@ const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Enable CORS for frontend requests
 app.use("*", cors({
-  origin: ["http://localhost:5173", "http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:5173"],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "https://fndr.site",
+    "https://www.fndr.site",
+  ],
   allowMethods: ["GET", "POST", "OPTIONS"],
   allowHeaders: ["Content-Type"],
 }));
