@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { client, graphql } from "ponder";
 import { ZKPassport, QueryResult, ProofResult } from "@zkpassport/sdk";
 import Groq from "groq-sdk";
+import pdf from "pdf-parse";
 
 const app = new Hono();
 
@@ -20,7 +21,7 @@ const PINATA_GATEWAY = process.env.PINATA_GATEWAY || "gateway.pinata.cloud";
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const ALLOWED_DOC_TYPES = ["application/pdf"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_DOC_SIZE = 100 * 1024 * 1024; // 100MB
 
 // Enable CORS for frontend requests
 app.use("*", cors({
@@ -57,18 +58,15 @@ app.post("/api/zkpass/verify", async (c) => {
     const { verified, uniqueIdentifier } = await zkpassport.verify({
       proofs,
       queryResult,
-      devMode: true, // Enable dev mode for testing
+      devMode: true,
     });
 
     console.log("Verified:", verified);
     console.log("Unique identifier:", uniqueIdentifier);
 
-    // Convert uniqueIdentifier to bytes32 format for smart contract
     let uniqueIdentifierBytes32: string | undefined;
     if (uniqueIdentifier) {
-      // Convert decimal string to BigInt, then to hex
       const bigIntId = BigInt(uniqueIdentifier);
-      // Convert to hex string (without 0x prefix) and pad to 64 characters (32 bytes)
       const hexId = bigIntId.toString(16).padStart(64, "0");
       uniqueIdentifierBytes32 = hexId;
     }
@@ -463,6 +461,189 @@ app.post("/api/ai/chat", async (c) => {
     } else if (status === 403) {
       userMessage = "AI service access denied. API key may be invalid.";
       errorCode = "ACCESS_DENIED";
+    }
+
+    return c.json(
+      {
+        error: userMessage,
+        errorCode,
+        success: false,
+      },
+      status
+    );
+  }
+});
+
+// ==========================================
+// Pitch Deck Analysis Endpoint
+// ==========================================
+
+const PITCHDECK_ANALYSIS_PROMPT = `You are an expert startup analyst reviewing a pitch deck. Analyze the provided pitch deck content and provide a comprehensive investment analysis.
+
+## YOUR TASK
+
+Analyze the pitch deck and extract/evaluate the following:
+
+### 1. EXECUTIVE SUMMARY
+- What does the company do? (1-2 sentences)
+- What problem are they solving?
+- What is their proposed solution?
+
+### 2. TEAM ASSESSMENT
+- Who are the founders/key team members mentioned?
+- What relevant experience do they have?
+- Team strength rating: Strong / Moderate / Weak / Not Mentioned
+
+### 3. MARKET ANALYSIS
+- What is the target market?
+- Market size mentioned (TAM/SAM/SOM)?
+- Market opportunity rating: Large / Medium / Niche / Unclear
+
+### 4. BUSINESS MODEL
+- How do they make money?
+- Revenue model: SaaS / Marketplace / Transaction fees / Advertising / Other
+- Business model clarity: Clear / Somewhat Clear / Unclear
+
+### 5. TRACTION & METRICS
+- Any traction mentioned (users, revenue, growth)?
+- Key metrics highlighted?
+- Traction rating: Strong / Early / Pre-launch / Not Mentioned
+
+### 6. COMPETITIVE LANDSCAPE
+- Who are their competitors?
+- What is their competitive advantage/moat?
+- Differentiation: Strong / Moderate / Weak / Not Clear
+
+### 7. FINANCIALS & ASK
+- What are they raising?
+- Use of funds?
+- Valuation mentioned?
+
+### 8. RED FLAGS & CONCERNS
+- List any concerns or missing information
+- Unrealistic claims?
+- Gaps in the pitch?
+
+### 9. OVERALL ASSESSMENT
+- Investment attractiveness: High / Medium / Low
+- Confidence level in analysis: High / Medium / Low (based on pitch deck quality)
+- Key strengths (top 3)
+- Key risks (top 3)
+
+### 10. RECOMMENDATION
+Provide a clear recommendation for investors considering this opportunity.
+
+---
+
+Remember:
+- Be objective and data-driven
+- If information is missing, note it explicitly
+- Don't make assumptions - state what's in the pitch deck
+- End with: "This analysis is based on the pitch deck content and is not financial advice."`;
+
+app.post("/api/ai/analyze-pitchdeck", async (c) => {
+  try {
+    if (!groq) {
+      return c.json({ error: "AI service not configured. Please set GROQ_API_KEY." }, 500);
+    }
+
+    const { pitchDeckHash, roundContext } = await c.req.json();
+
+    if (!pitchDeckHash) {
+      return c.json({ error: "No pitch deck hash provided" }, 400);
+    }
+
+    console.log("Analyzing pitch deck:", pitchDeckHash);
+
+    // Fetch PDF from IPFS
+    const pdfUrl = `https://${PINATA_GATEWAY}/ipfs/${pitchDeckHash}`;
+    console.log("Fetching PDF from:", pdfUrl);
+
+    const pdfResponse = await fetch(pdfUrl);
+    if (!pdfResponse.ok) {
+      console.error("Failed to fetch PDF:", pdfResponse.statusText);
+      return c.json({ error: "Failed to fetch pitch deck from IPFS" }, 500);
+    }
+
+    // Get PDF as buffer
+    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+    console.log("PDF fetched, size:", pdfBuffer.length, "bytes");
+
+    // Extract text from PDF
+    let pdfText: string;
+    try {
+      const pdfData = await pdf(pdfBuffer);
+      pdfText = pdfData.text;
+      console.log("PDF text extracted, length:", pdfText.length, "characters");
+    } catch (pdfError) {
+      console.error("PDF parsing error:", pdfError);
+      return c.json({ error: "Failed to parse pitch deck PDF. The file may be corrupted or image-based." }, 500);
+    }
+
+    // Truncate if too long (Groq has token limits)
+    const maxChars = 15000; // ~4000 tokens
+    if (pdfText.length > maxChars) {
+      pdfText = pdfText.substring(0, maxChars) + "\n\n[Content truncated due to length...]";
+      console.log("PDF text truncated to", maxChars, "characters");
+    }
+
+    if (pdfText.trim().length < 100) {
+      return c.json({
+        error: "Could not extract meaningful text from the pitch deck. It may be image-based or scanned."
+      }, 400);
+    }
+
+    // Build messages for Groq
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      {
+        role: "system",
+        content: PITCHDECK_ANALYSIS_PROMPT,
+      },
+    ];
+
+    // Add round context if provided
+    if (roundContext) {
+      messages.push({
+        role: "system",
+        content: `Additional context about this fundraising round:\n${roundContext}`,
+      });
+    }
+
+    // Add the pitch deck content
+    messages.push({
+      role: "user",
+      content: `Please analyze this pitch deck:\n\n---\n${pdfText}\n---`,
+    });
+
+    // Call Groq API
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: 0.5, // Lower temperature for more focused analysis
+      max_tokens: 2048, // Allow longer response for detailed analysis
+      top_p: 0.9,
+    });
+
+    const aiResponse = response.choices[0]?.message?.content || "I couldn't generate an analysis.";
+
+    return c.json({
+      response: aiResponse,
+      success: true,
+      pdfTextLength: pdfText.length,
+    });
+  } catch (error: any) {
+    console.error("Pitch deck analysis error:", error);
+
+    const status = error?.status || 500;
+    let userMessage = "Failed to analyze pitch deck. Please try again.";
+    let errorCode = "ANALYSIS_ERROR";
+
+    if (status === 429) {
+      const retryAfter = error?.message?.match(/retry in ([\d.]+)s/i)?.[1];
+      userMessage = retryAfter
+        ? `AI service is busy. Please wait ${Math.ceil(parseFloat(retryAfter))} seconds and try again.`
+        : "AI service rate limit reached. Please wait a moment and try again.";
+      errorCode = "RATE_LIMIT";
     }
 
     return c.json(
