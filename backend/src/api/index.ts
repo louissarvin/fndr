@@ -6,8 +6,6 @@ import { client, graphql } from "ponder";
 import { ZKPassport, QueryResult, ProofResult } from "@zkpassport/sdk";
 import Groq from "groq-sdk";
 import pdf from "pdf-parse";
-import { createWorker } from "tesseract.js";
-import { pdf as pdfToImg } from "pdf-to-img";
 
 const app = new Hono();
 
@@ -24,48 +22,6 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp
 const ALLOWED_DOC_TYPES = ["application/pdf"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_DOC_SIZE = 100 * 1024 * 1024;
-
-// OCR helper function for image-based PDFs
-async function extractTextWithOCR(pdfBuffer: Buffer): Promise<string> {
-  console.log("Starting OCR extraction for image-based PDF...");
-
-  const texts: string[] = [];
-  const maxPages = 10; // Limit to first 10 pages for performance
-  let pageCount = 0;
-
-  try {
-    // Convert PDF pages to images and OCR each one
-    const pages = await pdfToImg(pdfBuffer, { scale: 2.0 });
-
-    // Create a single worker for all pages (more efficient)
-    const worker = await createWorker("eng");
-
-    for await (const page of pages) {
-      if (pageCount >= maxPages) {
-        console.log(`OCR: Reached max page limit (${maxPages}), stopping...`);
-        texts.push(`\n[OCR limited to first ${maxPages} pages]`);
-        break;
-      }
-
-      pageCount++;
-      console.log(`OCR: Processing page ${pageCount}...`);
-
-      // Convert page to buffer for tesseract
-      const { data: { text } } = await worker.recognize(page);
-      if (text.trim()) {
-        texts.push(`--- Page ${pageCount} ---\n${text}`);
-      }
-    }
-
-    await worker.terminate();
-    console.log(`OCR: Extracted text from ${pageCount} pages`);
-
-    return texts.join("\n\n");
-  } catch (error) {
-    console.error("OCR extraction error:", error);
-    throw new Error("Failed to extract text using OCR");
-  }
-}
 
 // Enable CORS for frontend requests
 app.use("*", cors({
@@ -619,36 +575,19 @@ app.post("/api/ai/analyze-pitchdeck", async (c) => {
 
     // Extract text from PDF
     let pdfText: string;
-    let usedOCR = false;
-
     try {
       const pdfData = await pdf(pdfBuffer);
       pdfText = pdfData.text;
       console.log("PDF text extracted, length:", pdfText.length, "characters");
     } catch (pdfError) {
       console.error("PDF parsing error:", pdfError);
-      pdfText = ""; // Will trigger OCR fallback
+      return c.json({ error: "Failed to parse pitch deck PDF. The file may be corrupted or image-based." }, 500);
     }
 
-    // If text extraction yielded insufficient content, try OCR
-    if (pdfText.trim().length < 100) {
-      console.log("Insufficient text extracted, attempting OCR fallback...");
-      try {
-        pdfText = await extractTextWithOCR(pdfBuffer);
-        usedOCR = true;
-        console.log("OCR text extracted, length:", pdfText.length, "characters");
-      } catch (ocrError) {
-        console.error("OCR fallback failed:", ocrError);
-        return c.json({
-          error: "Could not extract text from the pitch deck. Both text extraction and OCR failed. The file may be corrupted."
-        }, 400);
-      }
-    }
-
-    // Final check after OCR attempt
+    // Check if we got meaningful text
     if (pdfText.trim().length < 100) {
       return c.json({
-        error: "Could not extract meaningful text from the pitch deck even with OCR. The document may be empty or unreadable."
+        error: "Could not extract meaningful text from the pitch deck. It may be image-based or scanned. Please upload a text-based PDF."
       }, 400);
     }
 
@@ -696,7 +635,6 @@ app.post("/api/ai/analyze-pitchdeck", async (c) => {
       response: aiResponse,
       success: true,
       pdfTextLength: pdfText.length,
-      usedOCR,
     });
   } catch (error: any) {
     console.error("Pitch deck analysis error:", error);
