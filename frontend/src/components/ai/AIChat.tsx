@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Loader2, Bot, User } from 'lucide-react';
+import { X, Send, Loader2, Bot, User, FileText } from 'lucide-react';
 import type { Round, Investment, Trade, SellOrder } from '@/hooks/usePonderData';
 import { formatUnits } from 'viem';
 import ReactMarkdown from 'react-markdown';
 import { useAI, type PortfolioData, type AggregatedInvestmentData, type OrderAnalysisData, type PriceSuggestionData } from './AIContext';
 import { calculateCredibilityScore, getScoreExplanation } from '@/lib/credibilityScore';
 import { useAccount } from 'wagmi';
+import { useRoundMetadata } from '@/hooks/useIPFS';
 
 interface Message {
   id: string;
@@ -145,6 +146,10 @@ export default function AIChat({ rounds = [] }: AIChatProps) {
   const { address, isConnected } = useAccount();
   const [fetchedPortfolioData, setFetchedPortfolioData] = useState<PortfolioData | null>(null);
   const [isFetchingPortfolio, setIsFetchingPortfolio] = useState(false);
+  const [isAnalyzingPitchDeck, setIsAnalyzingPitchDeck] = useState(false);
+
+  // Get focused round metadata for pitch deck analysis
+  const { data: focusedRoundMetadata } = useRoundMetadata(focusedRound?.metadataURI);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -842,6 +847,73 @@ Please provide pricing recommendations including:
 6. Risk of not selling (holding vs liquidating)`;
   }, []);
 
+  // Analyze pitch deck
+  const analyzePitchDeck = async () => {
+    if (!focusedRound || !focusedRoundMetadata?.pitchDeck || isAnalyzingPitchDeck || isLoading) return;
+
+    const pitchDeckHash = focusedRoundMetadata.pitchDeck;
+    const companyName = focusedRound.companyName || 'Unknown';
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Analyze the pitch deck for ${companyName}`,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsAnalyzingPitchDeck(true);
+
+    try {
+      // Format round context for additional info
+      const roundContext = formatSingleRoundContext(focusedRound);
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/ai/analyze-pitchdeck`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pitchDeckHash,
+          roundContext,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        const errorContent = data.error || "I couldn't analyze the pitch deck. Please try again.";
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: errorContent,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        return;
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response || "I couldn't generate an analysis.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Pitch deck analysis error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble analyzing the pitch deck. Please make sure the backend is running and try again.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsAnalyzingPitchDeck(false);
+    }
+  };
+
   // Auto-trigger analysis when a round is focused
   useEffect(() => {
     if (focusedRound && isOpen && focusedRound.id !== lastAnalyzedRoundId && !isLoading) {
@@ -1234,6 +1306,29 @@ Please provide pricing recommendations including:
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Pitch Deck Analysis Button (show when focused round has pitch deck) */}
+          {focusedRound && focusedRoundMetadata?.pitchDeck && (
+            <div className="px-4 pb-2">
+              <button
+                onClick={analyzePitchDeck}
+                disabled={isAnalyzingPitchDeck || isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6]/10 hover:bg-[#A2D5C6]/20 text-[#A2D5C6] px-4 py-2.5 rounded-xl transition-colors border border-[#A2D5C6]/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAnalyzingPitchDeck ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm font-medium">Analyzing Pitch Deck...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    <span className="text-sm font-medium">Analyze Pitch Deck with AI</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
 
