@@ -1,8 +1,8 @@
-# Fndr - Yield-Enhanced Startup Fundraising Platform
+# Fndr Smart Contracts - Yield-Enhanced Startup Fundraising Protocol
 
-A revolutionary decentralized platform that transforms startup fundraising by combining tokenized equity with automatic yield generation on idle capital.
+A decentralized platform that transforms startup fundraising by combining tokenized equity with automatic yield generation on idle capital. Built on Lisk Sepolia.
 
-## 🎯 What We're Building
+## Overview
 
 **Fndr** is the first platform where startup investments generate yield while supporting company growth. Instead of traditional fundraising where capital sits idle until withdrawn, Fndr automatically deposits investor funds into yield-generating vaults (6% APY) and distributes returns fairly between founders and investors.
 
@@ -13,284 +13,285 @@ A revolutionary decentralized platform that transforms startup fundraising by co
 - **Tokenized Equity**: ERC-1400 security tokens representing startup ownership
 - **Built-in Compliance**: Automated KYC/AML through FndrIdentity system
 - **Secondary Market**: Post-holding period trading for investor liquidity
-- **Campaign Isolation**: Each startup gets dedicated contract infrastructure
+- **Round Isolation**: Each startup gets dedicated contract infrastructure
 
-## 🏗️ Architecture Overview
+## Deployed Contracts (Lisk Sepolia)
 
-### Core Contracts
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| MockUSDC | `0x96F14a42d612Ab1C69eF71E5Ee02c0267A9a45D3` | Test stablecoin for transactions |
+| MockVault | `0xA24646C277Bd10AEb76e4086C6B6956aE2DB1321` | ERC-4626 yield vault (6% APY) |
+| FndrIdentity | `0xDC987dF013d655c8eEb89ACA2c14BdcFeEee850a` | ZK-passport verification & roles |
+| RoundFactory | `0x482DB11F63cC06CD5Fb56d54C942450871775c6B` | Funding round deployment factory |
+| StartupSecondaryMarket | `0xF09216A363FC5D88E899aa92239B2eeB1913913B` | Equity token trading platform |
 
-| Contract | Purpose | Key Features |
-|----------|---------|--------------|
-| `CampaignFactory.sol` | Deploy isolated campaigns | Factory pattern, fee collection, campaign discovery |
-| `CampaignManager.sol` | Manage campaign lifecycle | Investment handling, yield distribution, withdrawal controls |
-| `StartupEquityToken.sol` | ERC-1400 security tokens | Compliance integration, transfer restrictions, partition support |
-| `StartupSecondaryMarket.sol` | Secondary trading | Order book, holding period enforcement, market fees |
-| `FndrIdentity.sol` | KYC/verification system | ZK-passport integration, role-based access control |
-| `MockVault.sol` | Yield generation (testing) | ERC-4626 vault, 6% APY simulation |
+**Network:** Lisk Sepolia (Chain ID: 4202)
+**Platform Wallet:** `0x564323aE0D8473103F3763814c5121Ca9e48004B`
 
-### Campaign Isolation Design
+## Smart Contract Architecture
 
-```solidity
-// Each startup gets its own isolated infrastructure
-CampaignFactory → CampaignManager (per startup)
-                ├── StartupEquityToken (company-specific)
-                ├── Independent yield tracking
-                ├── Isolated fund pools
-                └── Separate compliance rules
+### Contract Relationships
+
+```
+Deployment Flow:
+MockUSDC (primary asset)
+    ↓
+MockVault (yields on USDC)
+    ↓
+FndrIdentity (user verification)
+    ↓
+StartupSecondaryMarket (needs Identity + USDC)
+    ↓
+RoundFactory (orchestrates ecosystem)
+    ├── Creates RoundManager instances
+    ├── Links Secondary Market
+    └── Requires: USDC, Vault, Identity, SecondaryMarket
+
+RoundManager (per-round instance)
+    ├── Creates StartupEquityToken
+    ├── Deposits to MockVault
+    ├── Calls FndrIdentity for transfer checks
+    └── Links to StartupSecondaryMarket
 ```
 
-**Benefits:**
-- ✅ No cross-campaign fund contamination
-- ✅ Independent governance per startup
-- ✅ Isolated risk management
-- ✅ Company-specific compliance rules
+## Contract Functions
 
-## 🔄 Platform Flow
+### 1. MockUSDC
+Test stablecoin for platform transactions.
 
-### Phase 1: Infrastructure Deployment
-```bash
-# Deploy shared components
-forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast
+| Function | Description |
+|----------|-------------|
+| `airdrop()` | Claim 1,000 USDC for free (one-time per wallet) |
+| `airdropCustom(amount)` | Claim custom amount up to 10,000 USDC |
+| `mint(to, amount)` | Admin minting for specific addresses |
+| `mintToMultiple(recipients[], amount)` | Batch minting to multiple wallets |
+
+### 2. MockVault
+ERC4626-compliant yield vault generating 6% APY.
+
+| Function | Description |
+|----------|-------------|
+| `deposit(assets, receiver)` | Deposit USDC and receive yield-bearing shares |
+| `withdraw(assets, receiver, owner)` | Withdraw USDC from the vault |
+| `redeem(shares, receiver, owner)` | Burn shares to receive underlying USDC |
+| `totalAssets()` | View total assets including accumulated yield |
+| `convertToShares(assets)` | Calculate shares for a given USDC amount |
+| `convertToAssets(shares)` | Calculate USDC value of shares |
+| `getCurrentAPY()` | Returns current annual yield rate (6%) |
+
+### 3. FndrIdentity
+Decentralized identity using ZK-passport verification.
+
+| Function | Description |
+|----------|-------------|
+| `registerZKPassportUser(uniqueIdentifier)` | Register with ZK passport proof |
+| `registerUserRole(role)` | Register as Founder or Investor |
+| `registerFounderWithProfile(metadataURI)` | Register as founder with profile metadata |
+| `setFounderProfile(metadataURI)` | Update founder profile information |
+| `isVerifiedUser(account)` | Check if wallet is ZK-verified |
+| `isFounder(user)` | Check if user is a registered founder |
+| `isInvestor(user)` | Check if user is a registered investor |
+| `getUserRole(user)` | Get user's role (None/Founder/Investor) |
+
+### 4. RoundFactory
+Factory for creating isolated funding rounds.
+
+| Function | Description |
+|----------|-------------|
+| `createRound(targetRaise, equityPercentage, sharePrice, deadline, companySymbol, metadataURI)` | Deploy a new funding round (10 USDC fee) |
+| `getAllRounds()` | Get list of all deployed round addresses |
+| `getRoundByFounder(founder)` | Find a founder's funding round |
+| `getTotalRoundsCount()` | Get total rounds created |
+| `markRoundInactive(roundAddress)` | Deactivate a completed round |
+
+### 5. RoundManager (Per-Round Instance)
+Manages individual funding round lifecycle.
+
+| Function | Description |
+|----------|-------------|
+| `invest(amount)` | Invest USDC, receive equity tokens |
+| `founderWithdraw(amount)` | Withdraw capital (2% monthly limit) |
+| `claimYield()` | Claim accumulated yield rewards |
+| `updateYield()` | Trigger yield distribution |
+| `checkRoundState()` | Update round state |
+| `getRoundInfo()` | Get round details |
+
+### 6. StartupEquityToken (ERC-1400)
+Tokenized equity with compliance features.
+
+| Function | Description |
+|----------|-------------|
+| `mintToInvestor(address, amount)` | Mint tokens during fundraising |
+| `transfer(to, amount)` | Transfer with restrictions |
+| `addToWhitelist(address)` | Allow transfers to address |
+| `addToBlacklist(address)` | Block address from transfers |
+| `disableTransfers()` / `enableTransfers()` | Toggle transfer state |
+
+### 7. StartupSecondaryMarket
+Peer-to-peer marketplace for equity tokens.
+
+| Function | Description |
+|----------|-------------|
+| `createSellOrder(tokenContract, amount, pricePerToken, durationHours)` | List tokens for sale |
+| `buyTokens(orderId, amount)` | Purchase from sell order |
+| `cancelSellOrder(orderId)` | Cancel and retrieve tokens |
+| `getActiveOrdersForToken(tokenContract)` | Browse active listings |
+| `getOrdersByPriceRange(tokenContract, minPrice, maxPrice)` | Filter by price |
+| `getMarketSummary(tokenContract)` | Get market statistics |
+| `canSellTokens(seller, tokenContract, amount)` | Check sell eligibility |
+
+## Platform Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| Yield APY | 6% | Annual yield on invested capital |
+| Yield Split | 50/50 | Founder/Investor distribution |
+| Round Creation Fee | 10 USDC | One-time fee per round |
+| Success Fee | 0.5% | Fee on total funds raised |
+| Trading Fee | 0.25% | Secondary market transaction fee |
+| Withdrawal Limit | 2% monthly | Founder withdrawal restriction |
+| Holding Period | 180 days | Before secondary market trading |
+| Max Order Duration | 30 days | Secondary market order expiry |
+
+## Platform Flow
+
+### Phase 1: User Registration
+```solidity
+// Register with ZK Passport
+fndrIdentity.registerZKPassportUser(uniqueIdentifier);
+
+// Choose role
+fndrIdentity.registerUserRole(UserRole.Founder); // or Investor
 ```
 
-### Phase 2: Campaign Creation
+### Phase 2: Round Creation (Founders)
 ```solidity
-// Founder creates campaign (10 USDC fee)
-CampaignFactory.CampaignConfig memory config = CampaignFactory.CampaignConfig({
-    targetRaise: 500000 * 1e6,        // $500K target
-    equityPercentage: 2000,           // 20% equity offered
-    sharePrice: 5 * 1e6,              // $5 per token
-    deadline: block.timestamp + 180 days,
-    ipfsMetadata: "QmCompanyMetadata..." // Rich off-chain data
-});
+// Approve creation fee
+usdc.approve(roundFactoryAddress, 10 * 1e6);
 
-address campaignAddress = factory.createCampaign(config, "COMPANY");
+// Create funding round
+roundFactory.createRound(
+    500000 * 1e6,        // $500K target
+    2000,                // 20% equity (basis points)
+    5 * 1e6,             // $5 per token
+    block.timestamp + 180 days,
+    "STARTUP",           // Token symbol
+    "ipfs://QmMetadata..."
+);
 ```
 
-### Phase 3: Investment & Automatic Yield
+### Phase 3: Investment
 ```solidity
-// Investors contribute → automatic yield generation begins
-CampaignManager campaign = CampaignManager(campaignAddress);
-usdc.approve(campaignAddress, 10000 * 1e6);
-campaign.invest(10000 * 1e6);
+// Approve investment amount
+usdc.approve(roundManagerAddress, 10000 * 1e6);
+
+// Invest and receive equity tokens
+roundManager.invest(10000 * 1e6);
 
 // Automatic process:
 // 1. USDC → Yield Vault (6% APY)
 // 2. Equity tokens minted to investor
 // 3. Yield distribution starts (50/50 split)
-// 4. Holding period initialized for secondary trading
 ```
 
-### Phase 4: Campaign Management
+### Phase 4: Yield & Withdrawals
 ```solidity
-// Campaign completion (target reached or deadline)
-campaign.state = CampaignState.COMPLETED;
+// Founder withdraws capital (2% monthly limit)
+roundManager.founderWithdraw(amount);
 
-// Founder withdrawals (2% monthly limit - immutable security feature)
-uint256 maxWithdrawal = (vaultBalance * 200) / 10000; // 2% max
-campaign.founderWithdraw(maxWithdrawal);
-
-// Investor yield claiming
-campaign.claimYield(); // Claims accumulated yield rewards
+// Investor claims yield
+roundManager.claimYield();
 ```
 
-### Phase 5: Secondary Market Trading
+### Phase 5: Secondary Market (After 180 Days)
 ```solidity
-// After 180-day holding period
-secondaryMarket.createSellOrder(tokenContract, amount, pricePerToken, duration);
+// Approve tokens for sale
+equityToken.approve(secondaryMarketAddress, amount);
+
+// Create sell order
+secondaryMarket.createSellOrder(
+    tokenContractAddress,
+    1000 * 1e18,         // Amount
+    10 * 1e6,            // Price per token (USDC)
+    168                  // Duration in hours (7 days)
+);
+
+// Buy tokens
+usdc.approve(secondaryMarketAddress, totalPrice);
 secondaryMarket.buyTokens(orderId, amount);
 ```
 
-## 💰 Revenue Model
-
-| Revenue Stream | Rate | Description |
-|----------------|------|-------------|
-| Campaign Creation Fee | 10 USDC | One-time fee per campaign |
-| Success Fee | 0.5% | Charged on total funds raised |
-| Secondary Market Fee | 0.25% | Per trade transaction fee |
-
-## 🛡️ Security Features
-
-### Campaign Isolation
-- ✅ Separate fund pools per startup
-- ✅ Independent yield tracking
-- ✅ Isolated compliance controls
-- ✅ No cross-campaign interference
-
-### Withdrawal Protection
-- ✅ **Immutable 2% monthly withdrawal limit**
-- ✅ Time-based withdrawal controls
-- ✅ Yield-protected capital preservation
-- ✅ Emergency controls for founder protection
-
-### Compliance Integration
-- ✅ ERC-1400 security token standard
-- ✅ KYC/AML through FndrIdentity
-- ✅ Transfer restrictions and whitelisting
-- ✅ 180-day holding period enforcement
-- ✅ Blacklist functionality for bad actors
-
-## 📊 Yield Distribution Mechanics
-
-```
-Investment Flow:
-Investor USDC → Yield Vault (6% APY) → Yield Generation
-
-Yield Distribution (50/50 Split):
-├── 50% → Founders (immediate access)
-└── 50% → Investors (claimable, pro-rata by token holdings)
-
-Example: $100K invested generating $500/month
-├── $250/month → Founder yield
-└── $250/month → Distributed among all investors
-```
-
-## 🧪 Testing
-
-### Core Test Suites
-
-```bash
-# Complete integration flow
-forge test --match-test testCompleteFlow -vv
-
-# Yield distribution mechanics
-forge test --match-test testYieldDistribution -vv
-
-# Transfer restrictions & compliance
-forge test --match-test testTransferRestrictions -vv
-
-# Secondary market trading
-forge test --match-test testSecondaryMarket -vv
-
-# Run all tests
-forge test -vv
-```
-
-### Test Scenarios Covered
-- ✅ End-to-end campaign lifecycle
-- ✅ Multi-investor yield distribution
-- ✅ Withdrawal limit enforcement
-- ✅ Transfer restriction compliance
-- ✅ Secondary market trading flow
-- ✅ Edge cases and error conditions
-
-## 📁 Project Structure
-
-```
-fndr-contract/
-├── src/
-│   ├── CampaignFactory.sol      # Campaign deployment factory
-│   ├── CampaignManager.sol      # Individual campaign management
-│   ├── StartupEquityToken.sol   # ERC-1400 security tokens
-│   ├── StartupSecondaryMarket.sol # Secondary trading platform
-│   ├── FndrIdentity.sol         # KYC/verification system
-│   └── MockVault.sol            # Yield generation (testing)
-├── test/
-│   ├── CoreFlow.t.sol           # Core platform functionality
-│   ├── FullFlowIntegration.t.sol # End-to-end integration
-│   ├── StartupEquityToken.t.sol # Token compliance tests
-│   └── StartupSecondaryMarket.t.sol # Trading functionality
-├── examples/
-│   └── techstartup-metadata.json # Sample IPFS metadata
-├── schemas/
-│   └── campaign-metadata.json   # Metadata schema definition
-└── docs/
-    ├── ARCHITECTURE.md          # Technical architecture
-    ├── IPFS_INTEGRATION.md     # IPFS metadata guide
-    ├── SECONDARY_MARKET_INTEGRATION.md
-    └── TESTING_GUIDE.md         # Comprehensive testing guide
-```
-
-## 🚀 Quick Start
+## Development
 
 ### Prerequisites
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- Node.js 16+ (for IPFS integration)
 
 ### Installation
 ```bash
-git clone <repository-url>
-cd fndr-contract
+cd contract
 forge install
 ```
 
-### Development
+### Build
 ```bash
-# Build contracts
 forge build
-
-# Run tests
-forge test
-
-# Deploy locally
-anvil # In separate terminal
-forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
 
-### Environment Setup
+### Test
 ```bash
-# Create .env file
-cp .env.example .env
+# Run all tests
+forge test -vv
 
-# Configure variables
-LISK_RPC=https://
-PRIVATE_KEY=your_private_key
-ETHERSCAN_API_KEY=your_api_key
+# Run specific test
+forge test --match-test testCompleteFlow -vv
+
+# Run with gas report
+forge test --gas-report
 ```
 
-## 🎨 IPFS Metadata Integration
-
-Campaigns store rich metadata on IPFS while keeping on-chain data minimal:
-
-```json
-{
-  "basic": {
-    "companyName": "TechStartup Inc",
-    "description": "Revolutionary AI platform...",
-    "category": "AI/ML"
-  },
-  "team": [...],
-  "roadmap": [...],
-  "financials": {...},
-  "useOfFunds": [...]
-}
+### Deploy
+```bash
+# Deploy to Lisk Sepolia
+forge script script/Deploy.s.sol --rpc-url https://lisk-sepolia.drpc.org --broadcast
 ```
 
-See `examples/techstartup-metadata.json` for complete schema.
+## Project Structure
 
-## 🔍 Contract Addresses (Lisk Network)
+```
+contract/
+├── src/
+│   ├── MockUSDC.sol              # Test stablecoin
+│   ├── MockVault.sol             # ERC-4626 yield vault
+│   ├── FndrIdentity.sol          # ZK-passport verification
+│   ├── RoundFactory.sol          # Round deployment factory
+│   ├── RoundManager.sol          # Individual round management
+│   ├── StartupEquityToken.sol    # ERC-1400 security tokens
+│   └── StartupSecondaryMarket.sol # Secondary trading
+├── test/
+│   ├── CoreFlow.t.sol            # Core functionality tests
+│   └── FullFlowIntegration.t.sol # End-to-end integration tests
+├── script/
+│   └── Deploy.s.sol              # Deployment script
+├── examples/
+│   └── techstartup-metadata.json # Sample IPFS metadata
+├── schemas/
+│   └── campaign-metadata.json    # Metadata schema
+└── foundry.toml                  # Foundry configuration
+```
 
-| Contract | Address | Purpose |
-|----------|---------|---------|
-| CampaignFactory | `TBD` | Campaign deployment |
-| FndrIdentity | `TBD` | User verification |
-| SharedVault | `TBD` | Yield generation |
-| SecondaryMarket | `TBD` | Token trading |
+## Security Features
 
-## 📚 Additional Documentation
+- **Round Isolation**: Separate fund pools per startup
+- **Immutable Withdrawal Limits**: 2% monthly cap cannot be changed
+- **Transfer Restrictions**: ERC-1400 compliance with whitelist/blacklist
+- **Holding Period Enforcement**: 180-day lock before secondary trading
+- **ZK-Passport Verification**: Sybil-resistant identity system
+- **Role-Based Access**: Founder/Investor permissions
 
-- [Technical Architecture](./ARCHITECTURE.md) - Deep dive into contract design
-- [IPFS Integration Guide](./IPFS_INTEGRATION.md) - Metadata management
-- [Secondary Market Guide](./SECONDARY_MARKET_INTEGRATION.md) - Trading mechanics
-- [Testing Guide](./TESTING_GUIDE.md) - Comprehensive test coverage
-- [Withdrawal Rate Updates](./WITHDRAWAL_RATE_UPDATE.md) - Security mechanisms
+## License
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## ⚠️ Disclaimer
-
-This software is provided "as is" without warranty. Smart contracts handle real value - audit thoroughly before mainnet deployment. The team is not responsible for any financial losses.
+MIT License
 
 ---
 
-**Built with ❤️ for the decentralized future of startup funding**
+**Built for the decentralized future of startup funding**
