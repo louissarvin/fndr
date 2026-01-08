@@ -1,0 +1,28 @@
+{
+  "name": "fndr-circuits",
+  "version": "1.0.0",
+  "description": "ZK circuits for Fndr private investment identity",
+  "scripts": {
+    "compile:commitment": "./scripts/compile.sh commitment",
+    "compile:membership": "./scripts/compile.sh membership",
+    "compile:minInvestment": "./scripts/compile.sh minInvestment",
+    "compile:claim": "./scripts/compile.sh claim",
+    "compile:all": "./scripts/compile.sh all",
+    "setup:commitment": "./scripts/setup.sh commitment",
+    "setup:membership": "./scripts/setup.sh membership",
+    "setup:minInvestment": "./scripts/setup.sh minInvestment",
+    "setup:claim": "./scripts/setup.sh claim",
+    "setup:all": "./scripts/setup.sh all",
+    "generate:verifiers": "./scripts/generateVerifiers.sh",
+    "test": "mocha test/**/*.js",
+    "clean": "rm -rf build/*"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.5"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0"
+  }
+}
