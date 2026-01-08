@@ -17,13 +17,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Circuits
-CIRCUITS=("commitment" "membership" "minInvestment" "claim")
-
 generate_verifier() {
     local circuit=$1
+    local capitalized=$2
     local zkey_file="$BUILD_DIR/$circuit/${circuit}_final.zkey"
-    local verifier_file="$VERIFIERS_DIR/${circuit^}Verifier.sol"
+    local verifier_file="$VERIFIERS_DIR/${capitalized}Verifier.sol"
 
     if [ ! -f "$zkey_file" ]; then
         echo -e "${RED}Error: zkey not found: $zkey_file${NC}"
@@ -39,7 +37,7 @@ generate_verifier() {
 
     # Rename the contract to match our naming convention
     # snarkjs generates "Groth16Verifier", we want "{Circuit}Verifier"
-    local contract_name="${circuit^}Verifier"
+    local contract_name="${capitalized}Verifier"
     sed -i.bak "s/Groth16Verifier/${contract_name}/g" "$verifier_file"
     rm -f "${verifier_file}.bak"
 
@@ -55,9 +53,11 @@ echo ""
 mkdir -p "$VERIFIERS_DIR"
 mkdir -p "$CONTRACT_DIR"
 
-for circuit in "${CIRCUITS[@]}"; do
-    generate_verifier "$circuit"
-done
+# Generate each verifier
+generate_verifier "commitment" "Commitment"
+generate_verifier "membership" "Membership"
+generate_verifier "minInvestment" "MinInvestment"
+generate_verifier "claim" "Claim"
 
 # Create combined interface contract
 echo -e "${YELLOW}Creating combined verifier interface...${NC}"
@@ -141,9 +141,10 @@ echo "Verifier generation complete!"
 echo "========================================${NC}"
 echo ""
 echo "Generated files:"
-for circuit in "${CIRCUITS[@]}"; do
-    echo "  - ${circuit^}Verifier.sol"
-done
+echo "  - CommitmentVerifier.sol"
+echo "  - MembershipVerifier.sol"
+echo "  - MinInvestmentVerifier.sol"
+echo "  - ClaimVerifier.sol"
 echo "  - IZKVerifier.sol (interface)"
 echo ""
 echo "Verifiers copied to: $CONTRACT_DIR"
