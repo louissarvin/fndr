@@ -17,9 +17,8 @@ const LandingFooter = () => {
               <div>
                 <h4 className="text-[#FFFFFF] font-semibold mb-4">Resources</h4>
                 <ul className="space-y-3">
-                  <li><a href="#" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">Documentation</a></li>
-                  <li><a href="#" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">GitHub</a></li>
-                  <li><a href="#" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">Support & Feedback</a></li>
+                  <li><a href="/docs" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">Documentation</a></li>
+                  <li><a href="https://github.com/louissarvin/fndr/tree/lisk" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">GitHub</a></li>
                 </ul>
               </div>
 
@@ -27,7 +26,7 @@ const LandingFooter = () => {
               <div>
                 <h4 className="text-[#FFFFFF] font-semibold mb-4">Company</h4>
                 <ul className="space-y-3">
-                  <li><a href="#" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">Telegram</a></li>
+                  <li><a href="https://t.me/louissarvin" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">Telegram</a></li>
                   <li><a href="#" className="text-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors">X (Twitter)</a></li>
                 </ul>
               </div>

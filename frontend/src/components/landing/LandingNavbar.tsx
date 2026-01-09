@@ -11,7 +11,7 @@ const LandingNavbar = forwardRef<HTMLElement>((_, ref) => {
         <div className="flex items-center space-x-6">
           <a href="/browse" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Browse</a>
           <a href="/marketplace" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Marketplace</a>
-          <a href="/dashboard" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Dashboard</a>
+          <a href="/docs" className="text-[#F6F6F6] hover:text-[#CFFFE2] transition-colors font-medium text-sm">Documentation</a>
           <Link to="/browse" className="bg-[#A2D5C6] px-4 py-2 rounded-full font-semibold text-sm hover:bg-[#CFFFE2] transition-colors" style={{ color: '#000000' }}>
             Launch App
           </Link>

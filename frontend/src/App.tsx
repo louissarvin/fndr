@@ -16,6 +16,7 @@ import FounderDashboard from "./pages/FounderDashboard";
 import NotFound from "./pages/NotFound";
 
 import "@rainbow-me/rainbowkit/styles.css";
+import Docs from "./pages/Docs";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/founder" element={<FounderDashboard />} />
                 <Route path="/old-index" element={<Index />} />
+                <Route path='/docs' element={<Docs />} />
                 <Route path="/how-it-works" element={<Chest />} />
                 <Route path="/create-campaign" element={<Browse />} />
                 <Route path="/campaign/:id" element={<Browse />} />
