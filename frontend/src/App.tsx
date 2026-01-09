@@ -13,6 +13,7 @@ import Portfolio from "./pages/Portfolio";
 import Chest from "./pages/Chest";
 import Marketplace from "./pages/Marketplace";
 import FounderDashboard from "./pages/FounderDashboard";
+import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
 
 import "@rainbow-me/rainbowkit/styles.css";
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Portfolio />} />
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/founder" element={<FounderDashboard />} />
+                <Route path="/docs" element={<Docs />} />
                 <Route path="/old-index" element={<Index />} />
                 <Route path="/how-it-works" element={<Chest />} />
                 <Route path="/create-campaign" element={<Browse />} />
