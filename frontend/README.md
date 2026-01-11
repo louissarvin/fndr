@@ -77,7 +77,7 @@ The Fndr frontend provides a seamless interface for founders to create funding r
 | RoundFactory | `0x9D05244Bf4D091734da61e21396c74Cd92346E6f` | Round deployment |
 | StartupSecondaryMarket | `0x7fB1E1C25F47acf921d9d89480586111dEf65CBb` | Token trading |
 
-**Network:** Mantle Sepolia (Chain ID: 5003)
+**Network:** Arbitrum Sepolia (Chain ID: 421614)
 
 ## Project Structure
 
@@ -249,7 +249,7 @@ const { data: trades } = useRecentTrades();
 | Color | Value | Usage |
 |-------|-------|-------|
 | Primary | `#5D54C0` | Buttons, links |
-| Accent | `#A2D5C6` | Highlights, yield indicators |
+| Accent | `#1C4D8D` | Highlights, yield indicators |
 | Background | `#000000` | Dark mode background |
 | Foreground | `#FAFAFA` | Text on dark |
 

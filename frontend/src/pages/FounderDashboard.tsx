@@ -135,14 +135,14 @@ export default function FounderDashboard() {
 
           {/* Stats Cards - Always show structure */}
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-white/50 text-sm">Total Rounds</p>
               </div>
               <p className="text-2xl font-bold text-white">{stats.totalRounds}</p>
             </div>
 
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-white/50 text-sm">Total Raised</p>
               </div>
@@ -151,14 +151,14 @@ export default function FounderDashboard() {
               </p>
             </div>
 
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-white/50 text-sm">Total Investors</p>
               </div>
               <p className="text-2xl font-bold text-white">{stats.totalInvestors}</p>
             </div>
 
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 ">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5 ">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-white/50 text-sm">Active Rounds</p>
               </div>
@@ -170,7 +170,7 @@ export default function FounderDashboard() {
           <div ref={contentRef}>
             {/* Not Connected State */}
             {!isConnected && (
-              <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+              <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
                 <Wallet className="h-16 w-16 text-white/20 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
                   Connect Your Wallet
@@ -184,14 +184,14 @@ export default function FounderDashboard() {
             {/* Loading State */}
             {isConnected && isLoading && (
               <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="h-12 w-12 animate-spin text-[#A2D5C6] mb-4" />
+                <Loader2 className="h-12 w-12 animate-spin text-[#4988C4] mb-4" />
                 <p className="text-white/60">Loading your rounds...</p>
               </div>
             )}
 
             {/* Not Verified Founder State */}
             {isConnected && !isLoading && (!isFounder || !isVerified) && (
-              <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+              <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
                 <AlertCircle className="h-16 w-16 text-yellow-500/60 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
                   Founder Verification Required
@@ -219,7 +219,7 @@ export default function FounderDashboard() {
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
                       hasExistingRound
                         ? 'bg-white/10 text-white/40 cursor-not-allowed'
-                        : 'bg-[#A2D5C6] text-black hover:bg-[#CFFFE2]'
+                        : 'bg-[#4988C4] text-black hover:bg-[#1C4D8D]'
                     }`}
                   >
                     <Plus className="h-5 w-5" />
@@ -246,9 +246,9 @@ export default function FounderDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
-                    <div className="w-20 h-20 bg-[#A2D5C6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Building2 className="h-10 w-10 text-[#A2D5C6]/40" />
+                  <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                    <div className="w-20 h-20 bg-[#4988C4]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Building2 className="h-10 w-10 text-[#4988C4]/40" />
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-2">
                       No Rounds Yet
@@ -258,7 +258,7 @@ export default function FounderDashboard() {
                     </p>
                     <button
                       onClick={() => setIsCreateModalOpen(true)}
-                      className="inline-flex items-center gap-2 bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                      className="inline-flex items-center gap-2 bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                     >
                       <Plus className="h-5 w-5" />
                       Create Your First Round

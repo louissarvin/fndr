@@ -282,7 +282,7 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
           className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] p-4"
         >
           {/* Glassmorphism Container */}
-          <div ref={containerRef} className="relative bg-[#1A1A1A]/90 backdrop-blur-xl border border-[#A2D5C6]/20 rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
+          <div ref={containerRef} className="relative bg-[#1A1A1A]/90 backdrop-blur-xl border border-[#4988C4]/20 rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
             {/* Close Button */}
             <button
               onClick={handleClose}
@@ -306,12 +306,12 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
                 {campaign.category}
               </span>
               {campaign.featured && (
-                <span className="bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full">
+                <span className="bg-[#1C4D8D] text-black text-xs font-bold px-3 py-1 rounded-full">
                   Featured
                 </span>
               )}
             </div>
-            <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
+            <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#4988C4] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
               <TrendingUp className="h-3 w-3" />
               {campaign.apy}% APY
             </span>
@@ -325,18 +325,18 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
                 <img
                   src={campaign.founder.avatar}
                   alt={campaign.founder.name}
-                  className="h-8 w-8 rounded-full object-cover border-2 border-[#A2D5C6]/30"
+                  className="h-8 w-8 rounded-full object-cover border-2 border-[#4988C4]/30"
                 />
                 <span className="text-sm text-white/70">{campaign.founder.name}</span>
                 {campaign.founder.verified && (
-                  <BadgeCheck className="h-4 w-4 text-[#A2D5C6]" />
+                  <BadgeCheck className="h-4 w-4 text-[#4988C4]" />
                 )}
               </div>
 
               <DialogPrimitive.Title ref={titleRef} className="text-2xl md:text-3xl font-bold text-white">
                 {campaign.name}
               </DialogPrimitive.Title>
-              <DialogPrimitive.Description ref={taglineRef} className="text-[#A2D5C6] font-medium">
+              <DialogPrimitive.Description ref={taglineRef} className="text-[#4988C4] font-medium">
                 {campaign.tagline}
               </DialogPrimitive.Description>
             </div>
@@ -347,20 +347,20 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
             </p>
 
             {/* Progress Section */}
-            <div ref={progressSectionRef} className="bg-[#A2D5C6]/10 rounded-2xl p-4 space-y-3">
+            <div ref={progressSectionRef} className="bg-[#4988C4]/10 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-2xl font-bold text-white">{formatCurrency(campaign.raised)}</p>
                   <p className="text-sm text-white/50">raised of {formatCurrency(campaign.target)}</p>
                 </div>
-                <p className="text-lg font-semibold text-[#A2D5C6]">{progress}%</p>
+                <p className="text-lg font-semibold text-[#4988C4]">{progress}%</p>
               </div>
 
               {/* Progress Bar */}
               <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                 <div
                   ref={progressBarRef}
-                  className="h-full bg-gradient-to-r from-[#A2D5C6] to-[#CFFFE2] rounded-full"
+                  className="h-full bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] rounded-full"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -388,13 +388,13 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
                     value={investAmount}
                     onChange={(e) => setInvestAmount(e.target.value)}
                     placeholder="Enter amount"
-                    className="w-full bg-[#0A0A0A] border border-[#A2D5C6]/20 rounded-2xl pl-8 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#A2D5C6]/50 transition-colors"
+                    className="w-full bg-[#0A0A0A] border border-[#4988C4]/20 rounded-2xl pl-8 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#4988C4]/50 transition-colors"
                   />
                 </div>
                 <button
                   onClick={handleInvest}
                   disabled={!investAmount}
-                  className="px-8 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-[#4988C4] text-black font-semibold rounded-2xl hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Invest Now
                 </button>
@@ -406,7 +406,7 @@ export default function CampaignDetailModal({ campaign, open, onOpenChange }: Ca
                   <button
                     key={amount}
                     onClick={() => setInvestAmount(amount.toString())}
-                    className="flex-1 py-3 bg-[#A2D5C6]/10 text-[#A2D5C6] text-sm font-medium rounded-2xl hover:bg-[#A2D5C6]/20 transition-colors"
+                    className="flex-1 py-3 bg-[#4988C4]/10 text-[#4988C4] text-sm font-medium rounded-2xl hover:bg-[#4988C4]/20 transition-colors"
                   >
                     ${amount.toLocaleString()}
                   </button>

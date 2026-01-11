@@ -58,13 +58,13 @@ function TokenLogo({ tokenContract }: { tokenContract: string }) {
   const isLoading = isRoundLoading || isMetadataLoading;
 
   return (
-    <div className="w-10 h-10 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+    <div className="w-10 h-10 rounded-lg bg-[#4988C4]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
       {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+        <Loader2 className="h-4 w-4 animate-spin text-[#4988C4]/50" />
       ) : logoUrl ? (
         <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
       ) : (
-        <span className="text-sm font-bold text-[#A2D5C6]">
+        <span className="text-sm font-bold text-[#4988C4]">
           {companyName ? companyName.charAt(0).toUpperCase() : <Tag className="h-5 w-5" />}
         </span>
       )}
@@ -114,8 +114,8 @@ export default function MyOrders() {
 
   if (isLoading) {
     return (
-      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-8 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6] mx-auto mb-2" />
+      <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#4988C4] mx-auto mb-2" />
         <p className="text-white/60 text-sm">Loading your orders...</p>
       </div>
     );
@@ -126,7 +126,7 @@ export default function MyOrders() {
 
   if (activeOrders.length === 0) {
     return (
-      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-8 text-center">
+      <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-8 text-center">
         <Tag className="h-12 w-12 text-white/20 mx-auto mb-3" />
         <p className="text-white/60 mb-1">No active sell orders</p>
         <p className="text-white/40 text-sm">Create a sell order to list your tokens</p>
@@ -163,7 +163,7 @@ function OrderCard({ order, onCancel, isCancelling, isCancelled, cancelError }: 
   const displayName = companyName || `Order #${order.orderId}`;
 
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-xl p-4">
+    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-xl p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <TokenLogo tokenContract={order.tokenContract} />
@@ -175,7 +175,7 @@ function OrderCard({ order, onCancel, isCancelling, isCancelled, cancelError }: 
 
         <div className="flex items-center gap-2">
           {isCancelled ? (
-            <span className="flex items-center gap-1 text-[#A2D5C6] text-sm">
+            <span className="flex items-center gap-1 text-[#4988C4] text-sm">
               <CheckCircle className="h-4 w-4" />
               Cancelled
             </span>
@@ -210,7 +210,7 @@ function OrderCard({ order, onCancel, isCancelling, isCancelled, cancelError }: 
         </div>
         <div className="text-center">
           <p className="text-xs text-white/40 mb-1">Total Value</p>
-          <p className="font-semibold text-[#A2D5C6]">
+          <p className="font-semibold text-[#4988C4]">
             {formatUSDC(BigInt(order.amount) * BigInt(order.pricePerToken))}
           </p>
         </div>

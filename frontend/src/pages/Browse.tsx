@@ -134,8 +134,8 @@ export default function Browse() {
                     Compare Rounds
                   </button>
                 ) : (
-                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#A2D5C6]/20 text-white rounded-xl">
-                    <Scale className="h-4 w-4 text-[#A2D5C6]" />
+                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-[#4988C4]/20 text-white rounded-xl">
+                    <Scale className="h-4 w-4 text-[#4988C4]" />
                     <span className="text-sm">Select 2-4 rounds to compare</span>
                     <button
                       onClick={exitCompareMode}
@@ -156,7 +156,7 @@ export default function Browse() {
                 {selectedRounds.map((round) => (
                   <div
                     key={round.id}
-                    className="flex items-center gap-2 bg-[#A2D5C6]/20 px-3 py-1.5 rounded-lg"
+                    className="flex items-center gap-2 bg-[#4988C4]/20 px-3 py-1.5 rounded-lg"
                   >
                     <span className="text-sm text-white font-medium">
                       {round.companyName || round.id.slice(0, 8)}
@@ -177,7 +177,7 @@ export default function Browse() {
               <button
                 onClick={handleCompare}
                 disabled={selectedRounds.length < 2}
-                className="px-4 py-2 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Scale className="h-4 w-4" />
                 Compare with AI
@@ -203,7 +203,7 @@ export default function Browse() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-12 w-12 animate-spin text-[#A2D5C6] mb-4" />
+              <Loader2 className="h-12 w-12 animate-spin text-[#4988C4] mb-4" />
               <p className="text-white/60">Loading rounds from indexer...</p>
             </div>
           )}
@@ -218,8 +218,8 @@ export default function Browse() {
                       onClick={() => toggleRoundSelection(round)}
                       className={`absolute -top-2 -right-2 z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                         isRoundSelected(round.id)
-                          ? 'bg-[#A2D5C6] border-[#A2D5C6] text-black'
-                          : 'bg-[#1a1a1a] border-white/30 text-white/60 hover:border-[#A2D5C6] hover:text-[#A2D5C6]'
+                          ? 'bg-[#4988C4] border-[#4988C4] text-black'
+                          : 'bg-[#1a1a1a] border-white/30 text-white/60 hover:border-[#4988C4] hover:text-[#4988C4]'
                       }`}
                     >
                       {isRoundSelected(round.id) ? (
@@ -233,7 +233,7 @@ export default function Browse() {
                     className={`transition-all duration-200 ${
                       compareMode
                         ? isRoundSelected(round.id)
-                          ? 'ring-2 ring-[#A2D5C6] rounded-2xl'
+                          ? 'ring-2 ring-[#4988C4] rounded-2xl'
                           : 'cursor-pointer hover:ring-2 hover:ring-white/20 rounded-2xl'
                         : ''
                     }`}
@@ -268,7 +268,7 @@ export default function Browse() {
                   className={`p-2 rounded-lg transition-all duration-200 ${
                     currentPage === 1
                       ? 'text-white/20 cursor-not-allowed'
-                      : 'text-white/60 hover:text-white hover:bg-[#A2D5C6]/20'
+                      : 'text-white/60 hover:text-white hover:bg-[#4988C4]/20'
                   }`}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -281,8 +281,8 @@ export default function Browse() {
                       onClick={() => handlePageChange(page)}
                       className={`min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                         currentPage === page
-                          ? 'bg-[#A2D5C6] text-black'
-                          : 'text-white/60 hover:text-white hover:bg-[#A2D5C6]/20'
+                          ? 'bg-[#4988C4] text-black'
+                          : 'text-white/60 hover:text-white hover:bg-[#4988C4]/20'
                       }`}
                     >
                       {page}
@@ -296,7 +296,7 @@ export default function Browse() {
                   className={`p-2 rounded-lg transition-all duration-200 ${
                     currentPage === totalPages
                       ? 'text-white/20 cursor-not-allowed'
-                      : 'text-white/60 hover:text-white hover:bg-[#A2D5C6]/20'
+                      : 'text-white/60 hover:text-white hover:bg-[#4988C4]/20'
                   }`}
                 >
                   <ChevronRight className="h-5 w-5" />

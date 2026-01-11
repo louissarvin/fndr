@@ -97,7 +97,7 @@ export default function Navbar() {
           {isConnected && (
             <button
               onClick={() => setFaucetModalOpen(true)}
-              className="flex items-center gap-2 bg-transparent text-[#A2D5C6] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#A2D5C6] hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 transition-all duration-300"
+              className="flex items-center gap-2 bg-transparent text-[#4988C4] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#4988C4] hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:scale-105 transition-all duration-300"
             >
               <Droplets className="h-4 w-4" />
               Faucet
@@ -108,7 +108,7 @@ export default function Navbar() {
           {isConnected && (
             <button
               onClick={() => setIdentityModalOpen(true)}
-              className="flex items-center gap-2 bg-transparent text-[#A2D5C6] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#A2D5C6] hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 transition-all duration-300"
+              className="flex items-center gap-2 bg-transparent text-[#4988C4] px-4 py-2 rounded-2xl text-sm font-semibold border border-[#4988C4] hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:scale-105 transition-all duration-300"
             >
               <UserCheck className="h-4 w-4" />
               Identity
@@ -119,13 +119,13 @@ export default function Navbar() {
           {isConnected && address ? (
             <DropdownMenu open={walletDropdownOpen} onOpenChange={setWalletDropdownOpen}>
               <DropdownMenuTrigger asChild>
-                <button className={`flex items-center gap-2 bg-[#A2D5C6] text-black px-5 py-2.5 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#CFFFE2] hover:border-[#CFFFE2] transition-all duration-200 ${walletDropdownOpen ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'}`}>
+                <button className={`flex items-center gap-2 bg-[#4988C4] text-black px-5 py-2.5 text-sm font-semibold border border-[#4988C4] hover:bg-[#1C4D8D] hover:border-[#1C4D8D] transition-all duration-200 ${walletDropdownOpen ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'}`}>
                   <Wallet className="h-4 w-4" />
                   <span className="font-mono text-xs">{shortenAddress(address)}</span>
                   <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${walletDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={0} className="bg-[#A2D5C6] border-0 rounded-t-none rounded-b-xl min-w-[var(--radix-dropdown-menu-trigger-width)] animate-in fade-in-0 zoom-in-95 duration-200 py-1 pb-2">
+              <DropdownMenuContent align="end" sideOffset={0} className="bg-[#4988C4] border-0 rounded-t-none rounded-b-xl min-w-[var(--radix-dropdown-menu-trigger-width)] animate-in fade-in-0 zoom-in-95 duration-200 py-1 pb-2">
                 <DropdownMenuItem asChild className="text-black hover:bg-transparent focus:bg-transparent focus:text-black cursor-pointer relative overflow-hidden group">
                   <Link to="/dashboard">
                     <span className="relative z-10">View Portfolio</span>
@@ -153,7 +153,7 @@ export default function Navbar() {
               {({ openConnectModal }) => (
                 <button
                   onClick={openConnectModal}
-                  className="flex items-center gap-2 bg-[#A2D5C6] text-black rounded-2xl px-5 py-2.5 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#CFFFE2] hover:border-[#CFFFE2] transition-colors"
+                  className="flex items-center gap-2 bg-[#4988C4] text-black rounded-2xl px-5 py-2.5 text-sm font-semibold border border-[#4988C4] hover:bg-[#1C4D8D] hover:border-[#1C4D8D] transition-colors"
                 >
                   Connect Wallet
                 </button>
@@ -200,7 +200,7 @@ export default function Navbar() {
                   <Link
                     to="/founder"
                     onClick={() => setIsOpen(false)}
-                    className="text-[#A2D5C6] hover:text-[#CFFFE2] px-4 py-3 rounded-lg hover:bg-[#A2D5C6]/10 transition-colors flex items-center gap-2"
+                    className="text-[#4988C4] hover:text-[#1C4D8D] px-4 py-3 rounded-lg hover:bg-[#4988C4]/10 transition-colors flex items-center gap-2"
                   >
                     <Briefcase className="h-4 w-4" />
                     Founder Dashboard
@@ -217,7 +217,7 @@ export default function Navbar() {
                     setFaucetModalOpen(true);
                     setIsOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 bg-transparent text-[#A2D5C6] rounded-lg px-4 py-3 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all duration-300"
+                  className="flex items-center justify-center gap-2 bg-transparent text-[#4988C4] rounded-lg px-4 py-3 text-sm font-semibold border border-[#4988C4] hover:bg-[#4988C4]/10 hover:border-[#1C4D8D] hover:text-[#1C4D8D] transition-all duration-300"
                 >
                   <Droplets className="h-4 w-4" />
                   Get Test USDC
@@ -231,7 +231,7 @@ export default function Navbar() {
                     setIdentityModalOpen(true);
                     setIsOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 bg-transparent text-[#A2D5C6] rounded-lg px-4 py-3 text-sm font-semibold border border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] transition-all duration-300"
+                  className="flex items-center justify-center gap-2 bg-transparent text-[#4988C4] rounded-lg px-4 py-3 text-sm font-semibold border border-[#4988C4] hover:bg-[#4988C4]/10 hover:border-[#1C4D8D] hover:text-[#1C4D8D] transition-all duration-300"
                 >
                   <UserCheck className="h-4 w-4" />
                   Verify Identity

@@ -242,7 +242,7 @@ app.get("/api/ipfs/gateway", async (c) => {
 // AI Chat Endpoint (Groq - Llama 3.3 70B)
 // ==========================================
 
-const SYSTEM_PROMPT = `You are a senior investment analyst AI for FNDR, a decentralized startup fundraising platform on Mantle blockchain. You have expertise in venture capital, startup valuation, and DeFi yield strategies. Your role is to provide data-driven investment analysis with clear, actionable insights.
+const SYSTEM_PROMPT = `You are a senior investment analyst AI for FNDR, a decentralized startup fundraising platform on Arbitrum blockchain. You have expertise in venture capital, startup valuation, and DeFi yield strategies. Your role is to provide data-driven investment analysis with clear, actionable insights.
 
 
 ## PLATFORM CONTEXT

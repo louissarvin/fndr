@@ -72,18 +72,18 @@ function formatTimeRemaining(seconds: number): string {
 function getRoundStateLabel(state: number, progress: number): { label: string; color: string } {
   // If 100% funded but state is still 0, show "Ready to Complete"
   if (state === 0 && progress >= 100) {
-    return { label: 'Ready to Complete', color: 'bg-[#A2D5C6] text-black' };
+    return { label: 'Ready to Complete', color: 'bg-[#4988C4] text-black' };
   }
 
   switch (state) {
     case 0:
-      return { label: 'Fundraising', color: 'bg-[#A2D5C6] text-black' };
+      return { label: 'Fundraising', color: 'bg-[#4988C4] text-black' };
     case 1:
-      return { label: 'Completed', color: 'bg-[#A2D5C6] text-black' };
+      return { label: 'Completed', color: 'bg-[#4988C4] text-black' };
     case 2:
-      return { label: 'Fully Deployed', color: 'bg-[#A2D5C6] text-black' };
+      return { label: 'Fully Deployed', color: 'bg-[#4988C4] text-black' };
     default:
-      return { label: 'Unknown', color: 'bg-[#A2D5C6] text-black' };
+      return { label: 'Unknown', color: 'bg-[#4988C4] text-black' };
   }
 }
 
@@ -164,18 +164,18 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
   };
 
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden">
+    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="p-5 border-b border-white/10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden">
+            <div className="h-12 w-12 rounded-xl bg-[#4988C4]/20 flex items-center justify-center overflow-hidden">
               {isLoadingMetadata ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]/50" />
+                <Loader2 className="h-5 w-5 animate-spin text-[#4988C4]/50" />
               ) : logoUrl ? (
                 <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-bold text-[#A2D5C6]">
+                <span className="text-lg font-bold text-[#4988C4]">
                   {companyName.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -206,7 +206,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#A2D5C6] rounded-full transition-all duration-500"
+              className="h-full bg-[#4988C4] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -228,7 +228,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
           <div className="flex items-center justify-center gap-1 text-white/60 mb-1">
             <span className="text-xs">APY</span>
           </div>
-          <p className="text-lg font-bold text-[#A2D5C6]">6%</p>
+          <p className="text-lg font-bold text-[#4988C4]">6%</p>
         </div>
         <div className="p-4 text-center">
           <div className="flex items-center justify-center gap-1 text-white/60 mb-1">
@@ -260,10 +260,10 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
         <div className="p-5 bg-black/20 border-t border-white/10 space-y-4">
           {/* Info: Round needs completion */}
           {needsCompletion && !isCompleteSuccess && (
-            <div className="bg-[#A2D5C6]/10 rounded-xl p-4 space-y-4">
+            <div className="bg-[#4988C4]/10 rounded-xl p-4 space-y-4">
               <div className="flex items-start gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-[#A2D5C6]">Round Ready to Complete</p>
+                  <p className="text-sm font-semibold text-[#4988C4]">Round Ready to Complete</p>
                   <p className="text-xs text-white/60 mt-1">
                     Your round is 100% funded! Click the button below to complete the round on-chain.
                     Once completed, you can withdraw up to 2% of funds per month.
@@ -273,7 +273,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
               <button
                 onClick={completeRound}
                 disabled={isCompletePending || isCompleteConfirming}
-                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6] text-black py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-[#4988C4] text-black py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50"
               >
                 {isCompletePending || isCompleteConfirming ? (
                   <>
@@ -298,11 +298,11 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
 
           {/* Success state: waiting for indexer to update */}
           {isCompleteSuccess && needsCompletion && (
-            <div className="bg-[#A2D5C6]/20 rounded-xl p-4 space-y-3">
+            <div className="bg-[#4988C4]/20 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-6 w-6 text-[#A2D5C6]" />
+                <CheckCircle className="h-6 w-6 text-[#4988C4]" />
                 <div>
-                  <p className="text-sm font-semibold text-[#A2D5C6]">Round Completed!</p>
+                  <p className="text-sm font-semibold text-[#4988C4]">Round Completed!</p>
                   <p className="text-xs text-white/60 mt-1">
                     Transaction confirmed. Waiting for data to sync...
                   </p>
@@ -325,7 +325,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-white/60">Max Withdrawal (2%/month)</span>
-              <span className="text-lg font-bold text-[#A2D5C6]">
+              <span className="text-lg font-bold text-[#4988C4]">
                 {formatUSDCValue(maxMonthlyWithdrawal)}
               </span>
             </div>
@@ -348,7 +348,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
               <button
                 onClick={handleWithdrawMax}
                 disabled={isWithdrawPending || isWithdrawConfirming}
-                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-[#4988C4] text-black py-4 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50"
               >
                 {isWithdrawPending || isWithdrawConfirming ? (
                   <>
@@ -386,7 +386,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
               <div className="bg-white/5 rounded-xl p-3 text-center">
                 <p className="text-sm text-white/60">
                   Next withdrawal available in{' '}
-                  <span className="font-semibold text-[#A2D5C6]">
+                  <span className="font-semibold text-[#4988C4]">
                     {formatTimeRemaining(timeUntilNextWithdrawal)}
                   </span>
                 </p>
@@ -405,7 +405,7 @@ export default function FounderRoundCard({ round }: FounderRoundCardProps) {
 
           {/* View on Explorer */}
           <a
-            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
+            href={`https://sepolia.arbiscan.io/address/${round.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 border border-white/20 text-white/60 py-3 rounded-xl hover:bg-white/5 hover:text-white transition-colors"

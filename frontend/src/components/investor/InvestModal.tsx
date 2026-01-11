@@ -270,7 +270,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
           className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] p-4"
         >
           {/* Glassmorphism Container */}
-          <div ref={containerRef} className="relative bg-[#1A1A1A]/90 backdrop-blur-xl border border-[#A2D5C6]/20 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto">
+          <div ref={containerRef} className="relative bg-[#1A1A1A]/90 backdrop-blur-xl border border-[#4988C4]/20 rounded-2xl overflow-hidden shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={handleClose}
@@ -291,16 +291,16 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
 
               {/* Badges */}
               <div ref={badgesRef} className="absolute top-5 left-4 flex gap-2">
-                <span className="bg-[#CFFFE2] backdrop-blur-sm text-black text-xs font-medium px-3 py-1 rounded-full">
+                <span className="bg-[#1C4D8D] backdrop-blur-sm text-black text-xs font-medium px-3 py-1 rounded-full">
                   {round?.state === 0 ? 'Fundraising' : round?.state === 1 ? 'Completed' : 'Cancelled'}
                 </span>
                 {round?.equityPercentage && (
-                  <span className="bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full">
+                  <span className="bg-[#1C4D8D] text-black text-xs font-bold px-3 py-1 rounded-full">
                     {Number(round.equityPercentage) / 100}% Equity
                   </span>
                 )}
               </div>
-              <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
+              <span ref={apyBadgeRef} className="absolute top-5 right-16 bg-[#1C4D8D] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
                 6% APY
               </span>
             </div>
@@ -309,7 +309,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
             <div className="p-6 space-y-6">
               {isLoadingRound ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]" />
+                  <Loader2 className="h-8 w-8 animate-spin text-[#4988C4]" />
                 </div>
               ) : step === 'form' ? (
                 <>
@@ -323,11 +323,11 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-[#A2D5C6]/30 flex items-center justify-center border-2 border-[#A2D5C6]/30">
+                        <div className="w-12 h-12 rounded-full bg-[#4988C4]/30 flex items-center justify-center border-2 border-[#4988C4]/30">
                           {founderProfile ? (
-                            <User className="h-5 w-5 text-[#A2D5C6]" />
+                            <User className="h-5 w-5 text-[#4988C4]" />
                           ) : (
-                            <Wallet className="h-5 w-5 text-[#A2D5C6]" />
+                            <Wallet className="h-5 w-5 text-[#4988C4]" />
                           )}
                         </div>
                       )}
@@ -336,9 +336,9 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                           <>
                             <div className="flex items-center gap-1.5">
                               <h4 className="font-semibold text-white truncate">{founderProfile.name}</h4>
-                              <BadgeCheck className="h-4 w-4 text-[#A2D5C6] flex-shrink-0" />
+                              <BadgeCheck className="h-4 w-4 text-[#4988C4] flex-shrink-0" />
                             </div>
-                            <p className="text-sm text-[#A2D5C6] truncate">{founderProfile.title}</p>
+                            <p className="text-sm text-[#4988C4] truncate">{founderProfile.title}</p>
                             <p className="text-xs text-white/50 mt-1 line-clamp-2">{founderProfile.bio}</p>
                             {(founderProfile.linkedin || founderProfile.twitter) && (
                               <div className="flex items-center gap-3 mt-2">
@@ -347,7 +347,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                                     href={founderProfile.linkedin.startsWith('http') ? founderProfile.linkedin : `https://${founderProfile.linkedin}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-white/40 hover:text-[#A2D5C6] transition-colors"
+                                    className="text-white/40 hover:text-[#4988C4] transition-colors"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <Linkedin className="h-4 w-4" />
@@ -358,7 +358,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                                     href={founderProfile.twitter.startsWith('http') ? founderProfile.twitter : `https://twitter.com/${founderProfile.twitter.replace('@', '')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-white/40 hover:text-[#A2D5C6] transition-colors"
+                                    className="text-white/40 hover:text-[#4988C4] transition-colors"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <Twitter className="h-4 w-4" />
@@ -395,7 +395,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                   </div>
 
                   {/* Progress Section */}
-                  <div ref={progressSectionRef} className="bg-[#A2D5C6]/10 rounded-2xl p-4 space-y-3">
+                  <div ref={progressSectionRef} className="bg-[#4988C4]/10 rounded-2xl p-4 space-y-3">
                     <div className="flex justify-between items-end">
                       <div>
                         <p className="text-2xl font-bold text-white">
@@ -405,14 +405,14 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                           raised of {round && formatUSDCDisplay(BigInt(round.targetRaise))}
                         </p>
                       </div>
-                      <p className="text-lg font-semibold text-[#A2D5C6]">{progress}%</p>
+                      <p className="text-lg font-semibold text-[#4988C4]">{progress}%</p>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                       <div
                         ref={progressBarRef}
-                        className="h-full bg-gradient-to-r from-[#A2D5C6] to-[#CFFFE2] rounded-full"
+                        className="h-full bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] rounded-full"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -442,13 +442,13 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                           value={investAmount}
                           onChange={(e) => setInvestAmount(e.target.value)}
                           placeholder="Enter amount"
-                          className="w-full bg-[#0A0A0A] border border-[#A2D5C6]/20 rounded-2xl pl-8 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#A2D5C6]/50 transition-colors"
+                          className="w-full bg-[#0A0A0A] border border-[#4988C4]/20 rounded-2xl pl-8 pr-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#4988C4]/50 transition-colors"
                         />
                       </div>
                       <button
                         onClick={handleSubmit}
                         disabled={!investAmount || !hasEnoughBalance || amountWei > remainingCapacity || amountWei <= 0}
-                        className="px-8 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-8 py-3 bg-[#4988C4] text-black font-semibold rounded-2xl hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {hasEnoughAllowance ? 'Invest Now' : 'Approve & Invest'}
                       </button>
@@ -460,7 +460,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                         <button
                           key={amount}
                           onClick={() => setInvestAmount(amount.toString())}
-                          className="flex-1 py-3 bg-[#A2D5C6]/10 text-[#A2D5C6] text-sm font-medium rounded-2xl hover:bg-[#A2D5C6]/20 transition-colors"
+                          className="flex-1 py-3 bg-[#4988C4]/10 text-[#4988C4] text-sm font-medium rounded-2xl hover:bg-[#4988C4]/20 transition-colors"
                         >
                           ${amount.toLocaleString()}
                         </button>
@@ -471,7 +471,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                     <div className="flex justify-between text-sm text-white/50">
                       <span>Balance: {usdcBalance ? formatUSDCDisplay(usdcBalance) : '$0.00'}</span>
                       {investAmount && tokensToReceive > 0 && (
-                        <span className="text-[#A2D5C6]">
+                        <span className="text-[#4988C4]">
                           Receive: {Number(tokensToReceive).toLocaleString()} tokens
                         </span>
                       )}
@@ -496,7 +496,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                 <div className="text-center py-8">
                   {isApprovePending || isApproveConfirming ? (
                     <>
-                      <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                      <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-white mb-2">
                         {isApprovePending ? 'Confirm in Wallet' : 'Approving USDC...'}
                       </h3>
@@ -515,7 +515,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                       </p>
                       <button
                         onClick={handleApprove}
-                        className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                        className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                       >
                         Try Again
                       </button>
@@ -526,7 +526,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                 <div className="text-center py-8">
                   {isInvestPending || isInvestConfirming ? (
                     <>
-                      <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                      <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-white mb-2">
                         {isInvestPending ? 'Confirm in Wallet' : 'Processing Investment...'}
                       </h3>
@@ -545,7 +545,7 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                       </p>
                       <button
                         onClick={handleInvest}
-                        className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                        className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                       >
                         Try Again
                       </button>
@@ -558,12 +558,12 @@ export default function InvestModal({ isOpen, onClose, roundId }: InvestModalPro
                   <p className="text-white/60 mb-2">
                     You have successfully invested {formatUSDCDisplay(amountWei)} in this round.
                   </p>
-                  <p className="text-sm text-[#A2D5C6] mb-6">
+                  <p className="text-sm text-[#4988C4] mb-6">
                     You received {Number(tokensToReceive).toLocaleString()} equity tokens
                   </p>
                   <button
                     onClick={handleClose}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Done
                   </button>

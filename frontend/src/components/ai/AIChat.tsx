@@ -1208,7 +1208,7 @@ Please provide pricing recommendations including:
       {/* Floating Chat Button */}
       <button
         onClick={openChat}
-        className={`fixed bottom-6 right-6 z-50 bg-[#A2D5C6] text-black p-4 rounded-full shadow-lg hover:bg-[#CFFFE2] transition-all duration-300 hover:scale-110 ${
+        className={`fixed bottom-6 right-6 z-50 bg-[#4988C4] text-black p-4 rounded-full shadow-lg hover:bg-[#1C4D8D] transition-all duration-300 hover:scale-110 ${
           isOpen ? 'hidden' : 'flex'
         } items-center gap-2`}
       >
@@ -1219,12 +1219,12 @@ Please provide pricing recommendations including:
       {isOpen && (
         <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[600px] bg-[#1a1a1a] rounded-2xl shadow-2xl border border-white/10 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-[#A2D5C6]/10 px-4 py-3 flex items-center justify-between border-b border-white/10">
+          <div className="bg-[#4988C4]/10 px-4 py-3 flex items-center justify-between border-b border-white/10">
             <div className="flex items-center gap-3">
               <div>
                 <h3 className="font-semibold text-white">AI Investment Advisor</h3>
                 {contextLabel && (
-                  <p className="text-xs text-[#A2D5C6]">{contextLabel}</p>
+                  <p className="text-xs text-[#4988C4]">{contextLabel}</p>
                 )}
               </div>
             </div>
@@ -1248,25 +1248,25 @@ Please provide pricing recommendations including:
                 <div
                   className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
                     message.role === 'user'
-                      ? 'bg-[#A2D5C6]'
+                      ? 'bg-[#4988C4]'
                       : 'bg-white/10'
                   }`}
                 >
                   {message.role === 'user' ? (
                     <User className="h-4 w-4 text-black" />
                   ) : (
-                    <Bot className="h-4 w-4 text-[#A2D5C6]" />
+                    <Bot className="h-4 w-4 text-[#4988C4]" />
                   )}
                 </div>
                 <div
                   className={`max-w-[300px] px-4 py-3 rounded-2xl ${
                     message.role === 'user'
-                      ? 'bg-[#A2D5C6] text-black'
+                      ? 'bg-[#4988C4] text-black'
                       : 'bg-white/10 text-white'
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <div className="text-sm prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-strong:text-[#A2D5C6] prose-headings:text-white prose-headings:text-sm prose-headings:font-semibold prose-headings:my-2">
+                    <div className="text-sm prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-strong:text-[#4988C4] prose-headings:text-white prose-headings:text-sm prose-headings:font-semibold prose-headings:my-2">
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                   ) : (
@@ -1280,10 +1280,10 @@ Please provide pricing recommendations including:
             {isLoading && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-[#A2D5C6]" />
+                  <Bot className="h-4 w-4 text-[#4988C4]" />
                 </div>
                 <div className="bg-white/10 px-4 py-3 rounded-2xl">
-                  <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]" />
+                  <Loader2 className="h-5 w-5 animate-spin text-[#4988C4]" />
                 </div>
               </div>
             )}
@@ -1315,7 +1315,7 @@ Please provide pricing recommendations including:
               <button
                 onClick={analyzePitchDeck}
                 disabled={isAnalyzingPitchDeck || isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[#A2D5C6]/10 hover:bg-[#A2D5C6]/20 text-[#A2D5C6] px-4 py-2.5 rounded-xl transition-colors border border-[#A2D5C6]/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 bg-[#4988C4]/10 hover:bg-[#4988C4]/20 text-[#4988C4] px-4 py-2.5 rounded-xl transition-colors border border-[#4988C4]/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAnalyzingPitchDeck ? (
                   <>
@@ -1342,12 +1342,12 @@ Please provide pricing recommendations including:
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about any startup..."
                 disabled={isLoading}
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#A2D5C6]/50 transition-colors disabled:opacity-50"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#4988C4]/50 transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="bg-[#A2D5C6] text-black p-3 rounded-xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#4988C4] text-black p-3 rounded-xl hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-5 w-5" />
               </button>

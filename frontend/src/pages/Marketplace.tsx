@@ -70,13 +70,13 @@ function TokenLogo({ tokenContract }: { tokenContract: string }) {
   const isLoading = isRoundLoading || isMetadataLoading;
 
   return (
-    <div className="w-10 h-10 rounded-2xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+    <div className="w-10 h-10 rounded-2xl bg-[#4988C4]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
       {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+        <Loader2 className="h-4 w-4 animate-spin text-[#4988C4]/50" />
       ) : logoUrl ? (
         <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
       ) : (
-        <span className="text-sm font-bold text-[#A2D5C6]">
+        <span className="text-sm font-bold text-[#4988C4]">
           {companyName ? companyName.charAt(0).toUpperCase() : <Tag className="h-5 w-5" />}
         </span>
       )}
@@ -115,7 +115,7 @@ function OrderCard({
   const companyName = metadata?.name || round?.companyName || `Order #${order.orderId}`;
 
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
+    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
       {/* Token Contract with IPFS Logo */}
       <div className="flex items-center gap-3 mb-4">
         <TokenLogo tokenContract={order.tokenContract} />
@@ -123,7 +123,7 @@ function OrderCard({
           <p className="font-bold text-white truncate">{companyName}</p>
           <p className="text-sm text-white/50 truncate">{shortenAddress(order.tokenContract)}</p>
         </div>
-        <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full flex items-center gap-1">
+        <span className="text-xs bg-[#4988C4]/20 text-[#4988C4] px-2 py-1 rounded-full flex items-center gap-1">
           <Clock className="h-3 w-3" />
           {getTimeRemaining(order.expiryTime)}
         </span>
@@ -131,7 +131,7 @@ function OrderCard({
 
       {/* Seller Info */}
       <div className="flex items-center gap-2 mb-4">
-        <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+        <Wallet className="h-4 w-4 text-[#4988C4]" />
         <span className="text-sm text-white/70">{shortenAddress(order.seller)}</span>
       </div>
 
@@ -147,7 +147,7 @@ function OrderCard({
         </div>
         <div>
           <p className="text-xs text-white/40 mb-1">Total Value</p>
-          <p className="font-semibold text-[#A2D5C6]">
+          <p className="font-semibold text-[#4988C4]">
             {formatUSDC((BigInt(order.amount) * BigInt(order.pricePerToken)).toString())}
           </p>
         </div>
@@ -157,19 +157,19 @@ function OrderCard({
       <div className="flex gap-2">
         <button
           onClick={() => onBuy(order)}
-          className="flex-1 py-3 bg-[#A2D5C6] text-black font-semibold rounded-2xl hover:bg-[#CFFFE2] transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3 bg-[#4988C4] text-black font-semibold rounded-2xl hover:bg-[#1C4D8D] transition-colors flex items-center justify-center gap-2"
         >
           Buy Tokens
         </button>
         <button
           onClick={() => onAnalyze(order, companyName)}
-          className="flex-shrink-0 p-3 border border-[#A2D5C6]/30 text-[#A2D5C6] rounded-2xl hover:bg-[#A2D5C6]/10 transition-colors flex items-center justify-center"
+          className="flex-shrink-0 p-3 border border-[#4988C4]/30 text-[#4988C4] rounded-2xl hover:bg-[#4988C4]/10 transition-colors flex items-center justify-center"
           title="Analyze with AI"
         >
           <Bot className="h-4 w-4" />
         </button>
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${order.transactionHash}`}
+          href={`https://sepolia.arbiscan.io/tx/${order.transactionHash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-shrink-0 p-3 border border-white/20 text-white/60 rounded-2xl hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center"
@@ -294,15 +294,15 @@ export default function Marketplace() {
 
           {/* Market Stats */}
           <div ref={statsRef} className="grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-1">Total Trades</p>
               <p className="text-2xl font-bold text-white">{platformStats?.totalTrades || 0}</p>
             </div>
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-1">Active Listings</p>
               <p className="text-2xl font-bold text-white">{orders?.length || 0}</p>
             </div>
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-1">Trade Volume</p>
               <p className="text-2xl font-bold text-white">
                 {platformStats?.totalTradeVolume ? formatUSDC(platformStats.totalTradeVolume) : '$0.00'}
@@ -319,7 +319,7 @@ export default function Marketplace() {
                   onClick={() => setActiveTab('orders')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeTab === 'orders'
-                      ? 'bg-[#A2D5C6] text-black'
+                      ? 'bg-[#4988C4] text-black'
                       : 'bg-white/10 text-white/60 hover:text-white'
                   }`}
                 >
@@ -330,7 +330,7 @@ export default function Marketplace() {
                     onClick={() => setActiveTab('my-orders')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       activeTab === 'my-orders'
-                        ? 'bg-[#A2D5C6] text-black'
+                        ? 'bg-[#4988C4] text-black'
                         : 'bg-white/10 text-white/60 hover:text-white'
                     }`}
                   >
@@ -341,7 +341,7 @@ export default function Marketplace() {
               {isConnected && (
                 <button
                   onClick={() => setIsSellModalOpen(true)}
-                  className="px-5 py-2.5 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors flex items-center gap-2"
+                  className="px-5 py-2.5 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-colors flex items-center gap-2"
                 >
                   List for Sale
                 </button>
@@ -351,7 +351,7 @@ export default function Marketplace() {
             {/* Loading State */}
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="h-12 w-12 animate-spin text-[#A2D5C6] mb-4" />
+                <Loader2 className="h-12 w-12 animate-spin text-[#4988C4] mb-4" />
                 <p className="text-white/60">Loading orders...</p>
               </div>
             )}
@@ -368,7 +368,7 @@ export default function Marketplace() {
                 {activeTab === 'orders' && (
                   <>
                     {!orders || orders.length === 0 ? (
-                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                      <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
                         <p className="text-white/50 mb-2">No active sell orders yet.</p>
                         <p className="text-white/30 text-sm">Create a sell order to list your equity tokens.</p>
                       </div>
@@ -393,7 +393,7 @@ export default function Marketplace() {
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                       Recent Trades
                     </h3>
-                    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden">
+                    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl overflow-hidden">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-white/10">
@@ -409,7 +409,7 @@ export default function Marketplace() {
                               <td className="p-4 text-sm text-white">{shortenAddress(trade.buyer)}</td>
                               <td className="p-4 text-sm text-white/70">{shortenAddress(trade.seller)}</td>
                               <td className="p-4 text-sm text-white text-right">{formatTokenAmount(trade.amount)}</td>
-                              <td className="p-4 text-sm text-[#A2D5C6] text-right">{formatUSDC(trade.totalPrice)}</td>
+                              <td className="p-4 text-sm text-[#4988C4] text-right">{formatUSDC(trade.totalPrice)}</td>
                             </tr>
                           ))}
                         </tbody>

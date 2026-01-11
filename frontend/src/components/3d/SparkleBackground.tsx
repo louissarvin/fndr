@@ -13,7 +13,7 @@ function SparkleScene() {
         scale={12}
         size={2.5}
         speed={0.3}
-        color="#CFFFE2"
+        color="#1C4D8D"
         opacity={0.6}
       />
       <Sparkles
@@ -21,7 +21,7 @@ function SparkleScene() {
         scale={8}
         size={1.5}
         speed={0.2}
-        color="#A2D5C6"
+        color="#4988C4"
         opacity={0.5}
       />
       <Sparkles
@@ -29,7 +29,7 @@ function SparkleScene() {
         scale={15}
         size={3}
         speed={0.15}
-        color="#CFFFE2"
+        color="#1C4D8D"
         opacity={0.3}
       />
     </>

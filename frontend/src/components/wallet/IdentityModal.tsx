@@ -277,10 +277,10 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
           {((!isRegistered && currentRole === UserRole.None) || currentStep === 'profile') && isConnected && (
             <div className="flex items-center justify-center gap-1">
               <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-                currentStep === 'zkpass' ? 'bg-[#A2D5C6]/20' : 'bg-[#1A1A1A]'
+                currentStep === 'zkpass' ? 'bg-[#4988C4]/20' : 'bg-[#1A1A1A]'
               }`}>
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  isZKVerified || currentStep !== 'zkpass' ? 'bg-[#A2D5C6] text-black' : 'bg-[#2A2A2A] text-white/50'
+                  isZKVerified || currentStep !== 'zkpass' ? 'bg-[#4988C4] text-black' : 'bg-[#2A2A2A] text-white/50'
                 }`}>
                   {isZKVerified || currentStep !== 'zkpass' ? <CheckCircle2 className="h-3 w-3" /> : '1'}
                 </div>
@@ -290,10 +290,10 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
               </div>
               <ArrowRight className="h-3 w-3 text-white/30" />
               <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-                currentStep === 'role' ? 'bg-[#A2D5C6]/20' : 'bg-[#1A1A1A]'
+                currentStep === 'role' ? 'bg-[#4988C4]/20' : 'bg-[#1A1A1A]'
               }`}>
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  currentStep === 'role' ? 'bg-[#A2D5C6] text-black' : currentStep === 'profile' ? 'bg-[#A2D5C6] text-black' : 'bg-[#2A2A2A] text-white/50'
+                  currentStep === 'role' ? 'bg-[#4988C4] text-black' : currentStep === 'profile' ? 'bg-[#4988C4] text-black' : 'bg-[#2A2A2A] text-white/50'
                 }`}>
                   {currentStep === 'profile' ? <CheckCircle2 className="h-3 w-3" /> : '2'}
                 </div>
@@ -305,10 +305,10 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                 <>
                   <ArrowRight className="h-3 w-3 text-white/30" />
                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-                    currentStep === 'profile' ? 'bg-[#A2D5C6]/20' : 'bg-[#1A1A1A]'
+                    currentStep === 'profile' ? 'bg-[#4988C4]/20' : 'bg-[#1A1A1A]'
                   }`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                      currentStep === 'profile' ? 'bg-[#A2D5C6] text-black' : 'bg-[#2A2A2A] text-white/50'
+                      currentStep === 'profile' ? 'bg-[#4988C4] text-black' : 'bg-[#2A2A2A] text-white/50'
                     }`}>
                       3
                     </div>
@@ -333,14 +333,14 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
 
           {/* Success Messages */}
           {showSuccess && (
-            <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
+            <div className="flex items-center gap-3 bg-[#4988C4]/20 text-[#4988C4] rounded-xl p-4">
               <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
               <p className="text-sm font-medium">Successfully registered!</p>
             </div>
           )}
 
           {isZKConfirmed && currentStep === 'zkpass' && (
-            <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
+            <div className="flex items-center gap-3 bg-[#4988C4]/20 text-[#4988C4] rounded-xl p-4">
               <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
               <p className="text-sm font-medium">ZKPassport verified! Proceeding to role selection...</p>
             </div>
@@ -385,7 +385,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                 <div className="space-y-4">
                   <div className="bg-[#1A1A1A]/60 rounded-xl p-4 border border-[#2A2A2A]">
                     <div className="flex items-center gap-3 mb-3">
-                      <QrCode className="h-5 w-5 text-[#A2D5C6]" />
+                      <QrCode className="h-5 w-5 text-[#4988C4]" />
                       <h3 className="font-semibold text-white">ZKPassport Verification</h3>
                     </div>
                     <p className="text-sm text-white/60 mb-4">
@@ -401,7 +401,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
 
                         {/* Status Message */}
                         {isZKLoading && (
-                          <div className="flex items-center justify-center gap-2 text-[#A2D5C6]">
+                          <div className="flex items-center justify-center gap-2 text-[#4988C4]">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             <span className="text-sm">{getZKLoadingMessage()}</span>
                           </div>
@@ -423,7 +423,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       <button
                         onClick={handleStartZKVerification}
                         disabled={isZKLoading}
-                        className="w-full py-4 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isZKLoading ? (
                           <>
@@ -446,8 +446,8 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
               {currentStep === 'role' && isZKVerified && (
                 <div className="space-y-4">
                   {/* ZK Verified Badge */}
-                  <div className="flex items-center gap-2 bg-[#A2D5C6]/10 rounded-lg px-3 py-2">
-                    <span className="text-sm text-[#A2D5C6]">ZKPassport Verified</span>
+                  <div className="flex items-center gap-2 bg-[#4988C4]/10 rounded-lg px-3 py-2">
+                    <span className="text-sm text-[#4988C4]">ZKPassport Verified</span>
                   </div>
 
                   <div className="space-y-3">
@@ -458,8 +458,8 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       onClick={() => setSelectedRole(UserRole.Investor)}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                         selectedRole === UserRole.Investor
-                          ? 'border-[#A2D5C6] bg-[#A2D5C6]/15'
-                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#A2D5C6]/30'
+                          ? 'border-[#4988C4] bg-[#4988C4]/15'
+                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#4988C4]/30'
                       }`}
                     >
                       <div className="flex items-center gap-4">
@@ -467,7 +467,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           selectedRole === UserRole.Investor
                         }`}>
                           <TrendingUp className={`h-6 w-6 ${
-                            selectedRole === UserRole.Investor ? 'text-[#A2D5C6]' : 'text-white/60'
+                            selectedRole === UserRole.Investor ? 'text-[#4988C4]' : 'text-white/60'
                           }`} />
                         </div>
                         <div>
@@ -477,7 +477,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           </p>
                         </div>
                         {selectedRole === UserRole.Investor && (
-                          <CheckCircle2 className="h-5 w-5 text-[#A2D5C6] ml-auto" />
+                          <CheckCircle2 className="h-5 w-5 text-[#4988C4] ml-auto" />
                         )}
                       </div>
                     </button>
@@ -487,8 +487,8 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       onClick={() => setSelectedRole(UserRole.Founder)}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                         selectedRole === UserRole.Founder
-                          ? 'border-[#A2D5C6] bg-[#A2D5C6]/15'
-                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#A2D5C6]/30'
+                          ? 'border-[#4988C4] bg-[#4988C4]/15'
+                          : 'border-[#2A2A2A] bg-[#1A1A1A]/60 hover:border-[#4988C4]/30'
                       }`}
                     >
                       <div className="flex items-center gap-4">
@@ -496,7 +496,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           selectedRole === UserRole.Founder
                         }`}>
                           <Briefcase className={`h-6 w-6 ${
-                            selectedRole === UserRole.Founder ? 'text-[#A2D5C6]' : 'text-white/60'
+                            selectedRole === UserRole.Founder ? 'text-[#4988C4]' : 'text-white/60'
                           }`} />
                         </div>
                         <div>
@@ -506,7 +506,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           </p>
                         </div>
                         {selectedRole === UserRole.Founder && (
-                          <CheckCircle2 className="h-5 w-5 text-[#A2D5C6] ml-auto" />
+                          <CheckCircle2 className="h-5 w-5 text-[#4988C4] ml-auto" />
                         )}
                       </div>
                     </button>
@@ -516,7 +516,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                   <button
                     onClick={handleRegister}
                     disabled={selectedRole === null || isRoleLoading}
-                    className="w-full py-4 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isRoleLoading ? (
                       <>
@@ -535,8 +535,8 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
               {/* Step 3: Founder Profile */}
               {currentStep === 'profile' && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 bg-[#A2D5C6]/10 rounded-lg px-3 py-2">
-                    <span className="text-sm text-[#A2D5C6]">Registering as Founder</span>
+                  <div className="flex items-center gap-2 bg-[#4988C4]/10 rounded-lg px-3 py-2">
+                    <span className="text-sm text-[#4988C4]">Registering as Founder</span>
                   </div>
 
                   <p className="text-white/70 text-sm font-medium">Complete your founder profile (one transaction):</p>
@@ -551,7 +551,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                   />
                   <div
                     onClick={() => profileImageInputRef.current?.click()}
-                    className="flex items-center gap-4 p-4 bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl cursor-pointer hover:border-[#A2D5C6]/30 transition-colors"
+                    className="flex items-center gap-4 p-4 bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl cursor-pointer hover:border-[#4988C4]/30 transition-colors"
                   >
                     {profileImagePreview ? (
                       <img src={profileImagePreview} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
@@ -575,7 +575,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
                       placeholder="John Doe"
-                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#A2D5C6]/50"
+                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#4988C4]/50"
                       required
                     />
                   </div>
@@ -588,7 +588,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       value={profileTitle}
                       onChange={(e) => setProfileTitle(e.target.value)}
                       placeholder="CEO & Co-founder"
-                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#A2D5C6]/50"
+                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#4988C4]/50"
                       required
                     />
                   </div>
@@ -601,7 +601,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                       onChange={(e) => setProfileBio(e.target.value)}
                       placeholder="Tell investors about your background and experience..."
                       rows={3}
-                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#A2D5C6]/50 resize-none"
+                      className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#4988C4]/50 resize-none"
                       required
                     />
                   </div>
@@ -617,7 +617,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           value={profileLinkedin}
                           onChange={(e) => setProfileLinkedin(e.target.value)}
                           placeholder="linkedin.com/in/..."
-                          className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#A2D5C6]/50 text-sm"
+                          className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#4988C4]/50 text-sm"
                         />
                       </div>
                     </div>
@@ -632,7 +632,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                           value={profileTwitter}
                           onChange={(e) => setProfileTwitter(e.target.value)}
                           placeholder="@handle"
-                          className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#A2D5C6]/50 text-sm"
+                          className="w-full bg-[#1A1A1A]/60 border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#4988C4]/50 text-sm"
                         />
                       </div>
                     </div>
@@ -657,7 +657,7 @@ export default function IdentityModal({ open, onOpenChange }: IdentityModalProps
                     <button
                       onClick={handleSubmitProfile}
                       disabled={!profileName || !profileTitle || !profileBio || isProfileLoading}
-                      className="flex-[2] py-3 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-[2] py-3 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isProfileLoading ? (
                         <>

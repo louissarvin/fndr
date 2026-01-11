@@ -73,7 +73,7 @@ export default function PitchDeckViewer({ pitchDeckHash, companyName }: PitchDec
               <div className="flex-1 relative bg-[#0A0A0A]">
                 {isLoading && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#4988C4]" />
                   </div>
                 )}
                 <iframe

@@ -27,28 +27,28 @@ const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(
                 ))}
               </h1>
               <p ref={subtitleRef} className="text-xl text-[#F6F6F6]/60 mb-10 hero-subtitle-text">
-                Tokenized startup equity with on-chain yield — built on Mantle.
+                Tokenized startup equity with on-chain yield — built on Arbitrum.
               </p>
               <div ref={buttonsRef} className="flex space-x-6 justify-center mb-12">
-                <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
+                <Link to="/browse" className="bg-[#4988C4] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#1C4D8D] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
                   Explore startups
                 </Link>
-                <Link to="/founder" className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
+                <Link to="/founder" className="bg-transparent text-[#4988C4] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#4988C4] hover:bg-[#4988C4]/10 hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:scale-105 hover:-translate-y-1 transition-all duration-300 opacity-0">
                   Tokenize your startup
                 </Link>
               </div>
 
               <div ref={statsRef} className="flex justify-center space-x-32 pt-8">
                 <div className="text-center opacity-0">
-                  <div className="text-4xl font-bold text-[#CFFFE2]">$2.5M+</div>
+                  <div className="text-4xl font-bold text-[#1C4D8D]">$2.5M+</div>
                   <div className="text-sm text-[#F6F6F6]/60 mt-1">Total Raised</div>
                 </div>
                 <div className="text-center opacity-0">
-                  <div className="text-4xl font-bold text-[#CFFFE2]">127</div>
+                  <div className="text-4xl font-bold text-[#1C4D8D]">127</div>
                   <div className="text-sm text-[#F6F6F6]/60 mt-1">Active Campaigns</div>
                 </div>
                 <div className="text-center opacity-0">
-                  <div className="text-4xl font-bold text-[#CFFFE2]">6%</div>
+                  <div className="text-4xl font-bold text-[#1C4D8D]">6%</div>
                   <div className="text-sm text-[#F6F6F6]/60 mt-1">Guaranteed Yield</div>
                 </div>
               </div>

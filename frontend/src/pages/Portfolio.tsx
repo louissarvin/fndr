@@ -85,16 +85,16 @@ function InvestmentCard({ investment, currentBalance }: { investment: Aggregated
   const hasSoldTokens = tokensSold > BigInt(0);
 
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
+    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
       <div className="flex items-start gap-4">
         {/* Round Image/Logo */}
-        <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-16 h-16 rounded-xl bg-[#4988C4]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {isLoadingMetadata ? (
-            <Loader2 className="h-6 w-6 animate-spin text-[#A2D5C6]/40" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#4988C4]/40" />
           ) : logoUrl ? (
             <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-2xl font-bold text-[#A2D5C6]">
+            <span className="text-2xl font-bold text-[#4988C4]">
               {companyName.charAt(0).toUpperCase()}
             </span>
           )}
@@ -136,10 +136,10 @@ function InvestmentCard({ investment, currentBalance }: { investment: Aggregated
 
         {/* Action Button - link to latest transaction */}
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${investment.transactionHashes[0]}`}
+          href={`https://sepolia.arbiscan.io/tx/${investment.transactionHashes[0]}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"
+          className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#4988C4]/20 transition-all"
         >
           <ExternalLink className="h-5 w-5" />
         </a>
@@ -167,11 +167,11 @@ function InvestmentCard({ investment, currentBalance }: { investment: Aggregated
         </div>
         <div className="flex items-center gap-2">
           {hasSoldTokens && (
-            <span className="text-xs bg-[#A2D5C6] text-black px-2 py-1 rounded-full">
+            <span className="text-xs bg-[#4988C4] text-black px-2 py-1 rounded-full">
               {Number(tokensSold).toLocaleString()} sold
             </span>
           )}
-          <span className="text-xs bg-[#A2D5C6]/20 text-[#A2D5C6] px-2 py-1 rounded-full">
+          <span className="text-xs bg-[#4988C4]/20 text-[#4988C4] px-2 py-1 rounded-full">
             {round?.state === 0 ? 'Active' : round?.state === 1 ? 'Completed' : 'Pending'}
           </span>
         </div>
@@ -197,16 +197,16 @@ function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?
   const hasSoldTokens = tokensSold > BigInt(0);
 
   return (
-    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
+    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5 transition-colors">
       <div className="flex items-start gap-4">
         {/* Token Image/Logo */}
-        <div className="w-16 h-16 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-16 h-16 rounded-xl bg-[#4988C4]/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {isLoadingMetadata ? (
-            <Loader2 className="h-6 w-6 animate-spin text-[#A2D5C6]/40" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#4988C4]/40" />
           ) : logoUrl ? (
             <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-2xl font-bold text-[#A2D5C6]">
+            <span className="text-2xl font-bold text-[#4988C4]">
               {companyName.charAt(0).toUpperCase()}
             </span>
           )}
@@ -235,7 +235,7 @@ function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?
             </div>
             <div>
               <p className="text-xs text-white/40 mb-0.5">Current Balance</p>
-              <p className={`font-semibold ${hasSoldTokens ? 'text-[#A2D5C6]' : 'text-white'}`}>
+              <p className={`font-semibold ${hasSoldTokens ? 'text-[#4988C4]' : 'text-white'}`}>
                 {currentBalance !== undefined ? Number(currentBalance).toLocaleString() : '...'}
               </p>
             </div>
@@ -248,10 +248,10 @@ function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?
 
         {/* Action Button */}
         <a
-          href={`https://sepolia.mantlescan.xyz/tx/${trade.transactionHash}`}
+          href={`https://sepolia.arbiscan.io/tx/${trade.transactionHash}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#A2D5C6]/20 transition-all"
+          className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-[#4988C4]/20 transition-all"
         >
           <ExternalLink className="h-5 w-5" />
         </a>
@@ -271,7 +271,7 @@ function PurchaseCard({ trade, currentBalance }: { trade: Trade; currentBalance?
         </div>
         <div className="flex items-center gap-2">
           {hasSoldTokens && (
-            <span className="text-xs bg-[#A2D5C6] text-[#A2D5C6] px-2 py-1 rounded-full">
+            <span className="text-xs bg-[#4988C4] text-[#4988C4] px-2 py-1 rounded-full">
               {Number(tokensSold).toLocaleString()} sold
             </span>
           )}
@@ -577,7 +577,7 @@ export default function Portfolio() {
           {/* Stats Cards */}
           <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {/* Total Invested */}
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-2">Total Invested</p>
               <p className="text-2xl font-bold text-white">
                 {formatCurrency(totalInvested)}
@@ -589,14 +589,14 @@ export default function Portfolio() {
             </div>
 
             {/* APY Rate */}
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <p className="text-white/50 text-sm mb-2">APY Rate</p>
               <p className="text-2xl font-bold text-white">6%</p>
               <p className="text-xs text-white/40 mt-1">Guaranteed yield</p>
             </div>
 
             {/* Your Tokens - Actual Balance */}
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-white/50 text-sm">Your Tokens</p>
                 <button
@@ -613,14 +613,14 @@ export default function Portfolio() {
               </p>
               <Link
                 to="/marketplace"
-                className="text-xs text-white/40 hover:text-[#CFFFE2] transition-colors mt-1 flex items-center gap-1"
+                className="text-xs text-white/40 hover:text-[#1C4D8D] transition-colors mt-1 flex items-center gap-1"
               >
                 Sell on Marketplace
               </Link>
             </div>
 
             {/* Pending Yield - with claim action */}
-            <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5">
+            <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-white/50 text-sm">Pending Yield</p>
                 <button
@@ -632,7 +632,7 @@ export default function Portfolio() {
                   <RefreshCw className={`h-3 w-3 ${(isLoadingYield || isLoadingVaultInfo) ? 'animate-spin' : ''}`} />
                 </button>
               </div>
-              <p className="text-2xl font-bold text-[#A2D5C6]">
+              <p className="text-2xl font-bold text-[#4988C4]">
                 {isLoadingYield ? '...' : formattedClaimableYield}
               </p>
               <p className="text-xs text-white/40 mt-1 mb-2">
@@ -641,7 +641,7 @@ export default function Portfolio() {
               <button
                 onClick={handleClaimYield}
                 disabled={isClaimPending || !isConnected || totalClaimableYield === BigInt(0)}
-                className="w-full py-2 px-3 bg-[#A2D5C6] text-black text-sm font-semibold rounded-sm hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2 px-3 bg-[#4988C4] text-black text-sm font-semibold rounded-sm hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isClaimPending ? 'Claiming...' : totalClaimableYield > BigInt(0) ? 'Claim' : 'No yield'}
               </button>
@@ -666,7 +666,7 @@ export default function Portfolio() {
                   )}
                   <Link
                     to="/browse"
-                    className="text-sm text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors flex items-center gap-1"
+                    className="text-sm text-[#4988C4] hover:text-[#1C4D8D] transition-colors flex items-center gap-1"
                   >
                     Browse More <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -676,7 +676,7 @@ export default function Portfolio() {
               {/* Loading State */}
               {isLoading && (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <Loader2 className="h-12 w-12 animate-spin text-[#A2D5C6] mb-4" />
+                  <Loader2 className="h-12 w-12 animate-spin text-[#4988C4] mb-4" />
                   <p className="text-white/60">Loading your investments...</p>
                 </div>
               )}
@@ -685,28 +685,28 @@ export default function Portfolio() {
               {!isLoading && (
                 <>
                   {!isConnected ? (
-                    <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                    <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
                       <Wallet className="h-12 w-12 text-white/20 mx-auto mb-4" />
                       <p className="text-white/50 mb-4">Connect your wallet to view investments.</p>
                     </div>
                   ) : aggregatedInvestments.length === 0 ? (
                     // Show empty state only if no investments AND no trades
                     (!buyerTrades || buyerTrades.length === 0) ? (
-                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-12 text-center">
-                        <div className="w-16 h-16 bg-[#A2D5C6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                          <Rocket className="h-8 w-8 text-[#A2D5C6]/40" />
+                      <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-12 text-center">
+                        <div className="w-16 h-16 bg-[#4988C4]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <Rocket className="h-8 w-8 text-[#4988C4]/40" />
                         </div>
                         <p className="text-white/50 mb-4">You haven't made any investments yet.</p>
                         <Link
                           to="/browse"
-                          className="inline-flex items-center gap-2 px-5 py-3 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-colors"
+                          className="inline-flex items-center gap-2 px-5 py-3 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-colors"
                         >
                           Browse Startups
                           <ArrowUpRight className="h-4 w-4" />
                         </Link>
                       </div>
                     ) : (
-                      <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-8 text-center">
+                      <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-8 text-center">
                         <p className="text-white/50">No primary investments. See your marketplace purchases below.</p>
                       </div>
                     )
@@ -737,7 +737,7 @@ export default function Portfolio() {
 
                 {isLoadingTrades ? (
                   <div className="flex flex-col items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6] mb-2" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#4988C4] mb-2" />
                     <p className="text-white/60 text-sm">Loading purchases...</p>
                   </div>
                 ) : (

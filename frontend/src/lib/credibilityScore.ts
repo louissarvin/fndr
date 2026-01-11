@@ -73,10 +73,10 @@ export function calculateCredibilityScore(round: Round): CredibilityScore {
   let color: string;
   if (finalScore >= 8) {
     label = 'Excellent';
-    color = 'bg-[#CFFFE2] text-black';
+    color = 'bg-[#1C4D8D] text-black';
   } else if (finalScore >= 6) {
     label = 'Good';
-    color = 'bg-[#A2D5C6] text-black';
+    color = 'bg-[#4988C4] text-black';
   } else if (finalScore >= 4) {
     label = 'Fair';
     color = 'bg-yellow-500 text-black';

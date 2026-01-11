@@ -188,13 +188,13 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden">
+            <div className="h-12 w-12 rounded-xl bg-[#4988C4]/20 flex items-center justify-center overflow-hidden">
               {isLoadingMetadata ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]/50" />
+                <Loader2 className="h-5 w-5 animate-spin text-[#4988C4]/50" />
               ) : logoUrl ? (
                 <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-bold text-[#A2D5C6]">
+                <span className="text-lg font-bold text-[#4988C4]">
                   {companyName.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -220,7 +220,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
               {/* Order Info */}
               <div className="bg-white/5 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-3 mb-3">
-                    <Wallet className="h-8 w-8 text-[#A2D5C6]" />
+                    <Wallet className="h-8 w-8 text-[#4988C4]" />
                   <div className="flex-1">
                     <p className="text-sm text-white/60">Seller</p>
                     <p className="text-white font-medium">{shortenAddress(order.seller)}</p>
@@ -238,7 +238,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                   </div>
                   <div>
                     <p className="text-xs text-white/40 mb-1">Price/Token</p>
-                    <p className="font-semibold text-[#A2D5C6]">{formatUSDC(order.pricePerToken)}</p>
+                    <p className="font-semibold text-[#4988C4]">{formatUSDC(order.pricePerToken)}</p>
                   </div>
                 </div>
               </div>
@@ -257,13 +257,13 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                     value={buyAmount}
                     onChange={(e) => setBuyAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pr-20 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pr-20 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     step="any"
                   />
                   <button
                     type="button"
                     onClick={handleMaxAmount}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2] bg-[#A2D5C6]/10 px-4 py-2 rounded rounded-sm"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#4988C4] hover:text-[#1C4D8D] bg-[#4988C4]/10 px-4 py-2 rounded rounded-sm"
                   >
                     MAX
                   </button>
@@ -276,7 +276,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                       key={pct}
                       type="button"
                       onClick={() => handleQuickAmount(pct)}
-                      className="flex-1 py-2 bg-[#A2D5C6]/10 text-[#A2D5C6] text-sm font-medium rounded-lg hover:bg-[#A2D5C6]/20 transition-colors"
+                      className="flex-1 py-2 bg-[#4988C4]/10 text-[#4988C4] text-sm font-medium rounded-lg hover:bg-[#4988C4]/20 transition-colors"
                     >
                       {pct}%
                     </button>
@@ -297,7 +297,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
                     <span className="font-semibold text-white">Total</span>
-                    <span className="font-bold text-[#A2D5C6] text-lg">{formatUSDC(totalWithFee)}</span>
+                    <span className="font-bold text-[#4988C4] text-lg">{formatUSDC(totalWithFee)}</span>
                   </div>
                 </div>
               )}
@@ -325,7 +325,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
               <button
                 type="submit"
                 disabled={!isValidAmount || !hasEnoughBalance}
-                className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-[#4988C4] text-black py-4 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {hasEnoughAllowance ? 'Buy Tokens' : 'Approve & Buy'}
                 <ArrowRight className="h-5 w-5" />
@@ -337,7 +337,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
             <div className="text-center py-8">
               {isApprovePending || isApproveConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isApprovePending ? 'Confirm in Wallet' : 'Approving USDC...'}
                   </h3>
@@ -356,7 +356,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                   </p>
                   <button
                     onClick={handleApprove}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
@@ -369,7 +369,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
             <div className="text-center py-8">
               {isBuyPending || isBuyConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isBuyPending ? 'Confirm in Wallet' : 'Processing Purchase...'}
                   </h3>
@@ -388,7 +388,7 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
                   </p>
                   <button
                     onClick={handleBuy}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
@@ -403,12 +403,12 @@ export default function IndexedBuyModal({ isOpen, onClose, order }: IndexedBuyMo
               <p className="text-white/60 mb-2">
                 You have successfully purchased {companyName} tokens.
               </p>
-              <p className="text-sm text-[#A2D5C6] mb-6">
+              <p className="text-sm text-[#4988C4] mb-6">
                 {buyAmount} tokens for {formatUSDC(totalWithFee)}
               </p>
               <button
                 onClick={onClose}
-                className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
               >
                 Done
               </button>

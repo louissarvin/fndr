@@ -16,7 +16,7 @@ contract DeployFndr is Script {
         address deployer = vm.addr(deployerPrivateKey);
 
         console.log("===========================================");
-        console.log("FNDR Protocol Deployment to Mantle Sepolia");
+        console.log("FNDR Protocol Deployment to Arbitrum Sepolia");
         console.log("===========================================");
         console.log("Deployer:", deployer);
         console.log("Platform Wallet:", PLATFORM_WALLET);

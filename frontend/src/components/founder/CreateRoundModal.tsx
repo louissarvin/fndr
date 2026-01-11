@@ -286,8 +286,8 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
         {txStep === 'form' && (
           <div className="px-6 pt-4">
             <div className="flex items-center gap-2">
-              <div className={`flex-1 h-1 rounded-full ${formStep === 'details' ? 'bg-[#A2D5C6]' : 'bg-[#A2D5C6]'}`} />
-              <div className={`flex-1 h-1 rounded-full ${formStep === 'metadata' ? 'bg-[#A2D5C6]' : 'bg-white/20'}`} />
+              <div className={`flex-1 h-1 rounded-full ${formStep === 'details' ? 'bg-[#4988C4]' : 'bg-[#4988C4]'}`} />
+              <div className={`flex-1 h-1 rounded-full ${formStep === 'metadata' ? 'bg-[#4988C4]' : 'bg-white/20'}`} />
             </div>
           </div>
         )}
@@ -308,7 +308,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                     value={companySymbol}
                     onChange={(e) => setCompanySymbol(e.target.value.toUpperCase().slice(0, 6))}
                     placeholder="e.g., ACME"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50"
                     required
                     maxLength={6}
                   />
@@ -328,7 +328,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                     value={targetRaise}
                     onChange={(e) => setTargetRaise(e.target.value)}
                     placeholder="100000"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50"
                     required
                     min="1000"
                     step="1"
@@ -348,7 +348,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                     value={equityPercentage}
                     onChange={(e) => setEquityPercentage(e.target.value)}
                     placeholder="10"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50"
                     required
                     min="0.01"
                     max="100"
@@ -370,7 +370,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                     value={sharePrice}
                     onChange={(e) => setSharePrice(e.target.value)}
                     placeholder="1"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50"
                     required
                     min="0.01"
                     step="0.01"
@@ -388,7 +388,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                   <select
                     value={deadlineDays}
                     onChange={(e) => setDeadlineDays(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 appearance-none cursor-pointer"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 appearance-none cursor-pointer"
                   >
                     <option value="7" className="bg-[#1A1A1A]">7 days</option>
                     <option value="14" className="bg-[#1A1A1A]">14 days</option>
@@ -403,7 +403,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
               <button
                 type="submit"
                 disabled={!isDetailsValid}
-                className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-[#4988C4] text-black py-4 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Next: Company Info
                 <ArrowRight className="h-5 w-5" />
@@ -423,7 +423,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Acme Corporation"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50"
                   required
                 />
               </div>
@@ -438,7 +438,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your company and what you're building..."
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 resize-none"
                   required
                 />
               </div>
@@ -457,7 +457,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                 />
                 <div
                   onClick={() => logoInputRef.current?.click()}
-                  className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-[#A2D5C6]/50 transition-colors"
+                  className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-[#4988C4]/50 transition-colors"
                 >
                   {logoPreview ? (
                     <img src={logoPreview} alt="Logo preview" className="w-16 h-16 rounded-lg object-cover" />
@@ -488,7 +488,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                 />
                 <div
                   onClick={() => pitchDeckInputRef.current?.click()}
-                  className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-[#A2D5C6]/50 transition-colors"
+                  className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-[#4988C4]/50 transition-colors"
                 >
                   <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
                     <FileText className="h-5 w-5 text-white/40" />
@@ -514,7 +514,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 text-sm"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 text-sm"
                     />
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                       value={twitter}
                       onChange={(e) => setTwitter(e.target.value)}
                       placeholder="@handle"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 text-sm"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 text-sm"
                     />
                   </div>
                 </div>
@@ -537,7 +537,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
 
               {/* Creation Fee Notice */}
               {creationFee && (
-                <div className="bg-[#A2D5C6]/10 rounded-xl p-4">
+                <div className="bg-[#4988C4]/10 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-white/60">Round Creation Fee</span>
                     <span className="text-sm font-semibold text-white">
@@ -573,7 +573,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                 <button
                   type="submit"
                   disabled={!hasEnoughBalance || !isMetadataValid}
-                  className="flex-[2] bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-[2] bg-[#4988C4] text-black py-4 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {hasEnoughAllowance ? 'Create Round' : 'Approve & Create'}
                   <ArrowRight className="h-5 w-5" />
@@ -584,7 +584,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
 
           {txStep === 'uploading' && (
             <div className="text-center py-8">
-              <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+              <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Uploading to IPFS...</h3>
               <p className="text-white/60">
                 Storing your company metadata on IPFS for permanent, decentralized storage.
@@ -596,7 +596,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
             <div className="text-center py-8">
               {isApprovePending || isApproveConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isApprovePending ? 'Confirm in Wallet' : 'Approving USDC...'}
                   </h3>
@@ -615,7 +615,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                   </p>
                   <button
                     onClick={handleApprove}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
@@ -628,7 +628,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
             <div className="text-center py-8">
               {isCreatePending || isCreateConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isCreatePending ? 'Confirm in Wallet' : 'Creating Round...'}
                   </h3>
@@ -647,14 +647,14 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
                   </p>
                   <button
                     onClick={() => handleCreateRound()}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
                 </>
               ) : !isCreatePending && !isCreateConfirming && !createError && hasEnoughAllowance ? (
                 <div>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">Preparing...</h3>
                 </div>
               ) : null}
@@ -669,7 +669,7 @@ export default function CreateRoundModal({ isOpen, onClose }: CreateRoundModalPr
               </p>
               <button
                 onClick={onClose}
-                className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
               >
                 View Dashboard
               </button>

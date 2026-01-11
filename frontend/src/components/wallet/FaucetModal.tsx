@@ -70,27 +70,27 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
             Test USDC Faucet
           </DialogTitle>
           <DialogDescription className="text-white/60">
-            Claim test USDC tokens to try out the platform on Mantle Sepolia testnet.
+            Claim test USDC tokens to try out the platform on Arbitrum Sepolia testnet.
           </DialogDescription>
         </DialogHeader>
 
         <div className=" space-y-6">
           {/* Balance Card */}
-          <div className="bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl p-5 ">
+          <div className="bg-[#4988C4]/10 backdrop-blur-md rounded-2xl p-5 ">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/50 text-sm mb-1">Your USDC Balance</p>
                 <p className="text-3xl font-bold text-white">{formattedBalance}</p>
               </div>
               <div className="p-3 rounded-xl">
-                <Wallet className="h-8 w-8 text-[#A2D5C6]" />
+                <Wallet className="h-8 w-8 text-[#4988C4]" />
               </div>
             </div>
           </div>
 
           {/* Status Messages */}
           {showSuccess && (
-            <div className="flex items-center gap-3 bg-[#A2D5C6]/20 text-[#A2D5C6] rounded-xl p-4">
+            <div className="flex items-center gap-3 bg-[#4988C4]/20 text-[#4988C4] rounded-xl p-4">
               <p className="text-sm font-medium">Successfully claimed 1,000 USDC!</p>
             </div>
           )}
@@ -119,7 +119,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
             <button
               onClick={handleClaim}
               disabled={isLoading}
-              className="w-full py-4 bg-[#A2D5C6] text-black font-semibold rounded-xl hover:bg-[#CFFFE2] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#4988C4] text-black font-semibold rounded-xl hover:bg-[#1C4D8D] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -137,7 +137,7 @@ export default function FaucetModal({ open, onOpenChange }: FaucetModalProps) {
           {/* Info */}
           <div className="text-center">
             <p className="text-white/40 text-xs">
-              These are test tokens on Mantle Sepolia with no real value.
+              These are test tokens on Arbitrum Sepolia with no real value.
             </p>
           </div>
         </div>

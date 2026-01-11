@@ -70,15 +70,15 @@ function TokenHoldingItem({
       <button
         type="button"
         onClick={onSelect}
-        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#A2D5C6]/10 transition-colors"
+        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#4988C4]/10 transition-colors"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[#4988C4]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
           {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+            <Loader2 className="h-4 w-4 animate-spin text-[#4988C4]/50" />
           ) : logoUrl ? (
             <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-sm font-bold text-[#A2D5C6]">
+            <span className="text-sm font-bold text-[#4988C4]">
               {companyName.charAt(0).toUpperCase()}
             </span>
           )}
@@ -90,7 +90,7 @@ function TokenHoldingItem({
           </p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-sm font-semibold text-[#A2D5C6]">
+          <p className="text-sm font-semibold text-[#4988C4]">
             {Number(holding.balance).toLocaleString()}
           </p>
           <p className="text-xs text-white/40">tokens</p>
@@ -102,13 +102,13 @@ function TokenHoldingItem({
   // Selected display
   return (
     <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-lg bg-[#A2D5C6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+      <div className="w-8 h-8 rounded-lg bg-[#4988C4]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-[#A2D5C6]/50" />
+          <Loader2 className="h-4 w-4 animate-spin text-[#4988C4]/50" />
         ) : logoUrl ? (
           <img src={logoUrl} alt={companyName} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-sm font-bold text-[#A2D5C6]">
+          <span className="text-sm font-bold text-[#4988C4]">
             {companyName.charAt(0).toUpperCase()}
           </span>
         )}
@@ -446,7 +446,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
             disabled={isProcessing}
             className="p-2 rounded-lg transition-colors disabled:opacity-50"
           >
-            <X className="h-5 w-5 text-white/60 hover:text-[#A2D5C6]" />
+            <X className="h-5 w-5 text-white/60 hover:text-[#4988C4]" />
           </button>
         </div>
 
@@ -510,14 +510,14 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     onChange={(e) => setSellAmount(e.target.value)}
                     placeholder="0"
                     disabled={!selectedToken}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     step="any"
                   />
                   {selectedToken && (
                     <button
                       type="button"
                       onClick={handleMaxAmount}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#A2D5C6] hover:text-[#CFFFE2]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#4988C4] hover:text-[#1C4D8D]"
                     >
                       MAX
                     </button>
@@ -535,7 +535,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     <button
                       type="button"
                       onClick={handleGetPriceSuggestion}
-                      className="flex items-center gap-1.5 text-xs text-[#A2D5C6] hover:text-[#CFFFE2] transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-[#4988C4] hover:text-[#1C4D8D] transition-colors"
                     >
                       <Bot className="h-3.5 w-3.5" />
                       Get AI Suggestion
@@ -551,7 +551,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     placeholder="0.00"
                     step="0.01"
                     disabled={!selectedToken}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#A2D5C6]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white text-lg placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#4988C4]/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -569,8 +569,8 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                       onClick={() => setDuration(opt.hours)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         duration === opt.hours
-                          ? 'bg-[#A2D5C6] text-black'
-                          : 'bg-[#A2D5C6]/10 text-[#A2D5C6] hover:bg-[#A2D5C6]/20'
+                          ? 'bg-[#4988C4] text-black'
+                          : 'bg-[#4988C4]/10 text-[#4988C4] hover:bg-[#4988C4]/20'
                       }`}
                     >
                       {opt.label}
@@ -581,7 +581,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
 
               {/* Order Summary */}
               {selectedToken && displayAmount > 0 && price > 0 && (
-                <div className="bg-[#A2D5C6]/10 rounded-xl p-4 space-y-2">
+                <div className="bg-[#4988C4]/10 rounded-xl p-4 space-y-2">
                   <h4 className="font-semibold text-white mb-2">Order Summary</h4>
                   <div className="flex justify-between text-sm">
                     <span className="text-white/50">Selling</span>
@@ -593,7 +593,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-white/10">
                     <span className="font-semibold text-white">Total Value</span>
-                    <span className="font-bold text-[#A2D5C6] text-lg">
+                    <span className="font-bold text-[#4988C4] text-lg">
                       ${Number(formatUnits(totalValue, USDC_DECIMALS)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -624,7 +624,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                     <div className="text-center py-2 bg-white/5 rounded-lg">
                       <p className="text-sm text-white/60">
                         You can sell in{' '}
-                        <span className="font-semibold text-[#A2D5C6]">
+                        <span className="font-semibold text-[#4988C4]">
                           {formatTimeRemaining(timeUntilCanSell)}
                         </span>
                       </p>
@@ -655,7 +655,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                 <button
                   type="submit"
                   disabled={!selectedToken || !isValidAmount || !isValidPrice}
-                  className="w-full bg-[#A2D5C6] text-black py-4 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#4988C4] text-black py-4 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Create Sell Order
                 </button>
@@ -674,7 +674,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
             <div className="text-center py-8">
               {isApprovePending || isApproveConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isApprovePending ? 'Confirm in Wallet' : 'Approving Tokens...'}
                   </h3>
@@ -693,7 +693,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                   </p>
                   <button
                     onClick={handleApprove}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
@@ -706,7 +706,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
             <div className="text-center py-8">
               {isCreatePending || isCreateConfirming ? (
                 <>
-                  <Loader2 className="h-16 w-16 animate-spin text-[#A2D5C6] mx-auto mb-4" />
+                  <Loader2 className="h-16 w-16 animate-spin text-[#4988C4] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {isCreatePending ? 'Confirm in Wallet' : 'Creating Order...'}
                   </h3>
@@ -725,7 +725,7 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
                   </p>
                   <button
                     onClick={handleCreate}
-                    className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                    className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
                   >
                     Try Again
                   </button>
@@ -740,12 +740,12 @@ export default function IndexedSellModal({ isOpen, onClose }: IndexedSellModalPr
               <p className="text-white/60 mb-2">
                 Your sell order has been successfully created.
               </p>
-              <p className="text-sm text-[#A2D5C6] mb-6">
+              <p className="text-sm text-[#4988C4] mb-6">
                 {sellAmount} tokens ${pricePerToken} each
               </p>
               <button
                 onClick={onClose}
-                className="bg-[#A2D5C6] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+                className="bg-[#4988C4] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#1C4D8D] transition-colors"
               >
                 Done
               </button>

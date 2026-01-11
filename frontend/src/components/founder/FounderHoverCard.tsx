@@ -40,7 +40,7 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
         >
         {isLoading ? (
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-5 w-5 animate-spin text-[#A2D5C6]" />
+            <Loader2 className="h-5 w-5 animate-spin text-[#4988C4]" />
           </div>
         ) : hasProfile && profile ? (
           <div className="space-y-3">
@@ -53,16 +53,16 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-[#2A2A2A] flex items-center justify-center border-2 border-[#A2D5C6]/30">
+                <div className="w-12 h-12 rounded-full bg-[#2A2A2A] flex items-center justify-center border-2 border-[#4988C4]/30">
                   <User className="h-5 w-5 text-white/40" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h4 className="font-semibold text-white truncate">{profile.name}</h4>
-                  <BadgeCheck className="h-4 w-4 text-[#A2D5C6] flex-shrink-0" />
+                  <BadgeCheck className="h-4 w-4 text-[#4988C4] flex-shrink-0" />
                 </div>
-                <p className="text-sm text-[#A2D5C6] truncate">{profile.title}</p>
+                <p className="text-sm text-[#4988C4] truncate">{profile.title}</p>
               </div>
             </div>
 
@@ -77,7 +77,7 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
                     href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-white/50 hover:text-[#A2D5C6] transition-colors"
+                    className="flex items-center gap-1 text-xs text-white/50 hover:text-[#4988C4] transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Linkedin className="h-3.5 w-3.5" />
@@ -89,7 +89,7 @@ export default function FounderHoverCard({ founderAddress, children }: FounderHo
                     href={profile.twitter.startsWith('http') ? profile.twitter : `https://x.com/${profile.twitter.replace('@', '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-white/50 hover:text-[#A2D5C6] transition-colors"
+                    className="flex items-center gap-1 text-xs text-white/50 hover:text-[#4988C4] transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">

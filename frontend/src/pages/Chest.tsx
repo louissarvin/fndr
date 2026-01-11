@@ -344,8 +344,8 @@ const Chest = () => {
   const howItWorksCardsData = [
     {
       icon: investIcon,
-      bgColor: 'bg-[#CFFFE2]',
-      hoverBgColor: 'bg-[#CFFFE2]',
+      bgColor: 'bg-[#1C4D8D]',
+      hoverBgColor: 'bg-[#1C4D8D]',
       hoverTextColor: 'group-hover:text-[#000000]',
       hoverDescColor: 'group-hover:text-[#000000]/70',
       title: 'Invest',
@@ -371,8 +371,8 @@ const Chest = () => {
     },
     {
       icon: trackIcon,
-      bgColor: 'bg-[#CFFFE2]',
-      hoverBgColor: 'bg-[#CFFFE2]',
+      bgColor: 'bg-[#1C4D8D]',
+      hoverBgColor: 'bg-[#1C4D8D]',
       hoverTextColor: 'group-hover:text-[#000000]',
       hoverDescColor: 'group-hover:text-[#000000]/70',
       title: 'Track',
@@ -394,7 +394,7 @@ const Chest = () => {
       hoverTextColor: 'group-hover:text-[#000000]',
       hoverDescColor: 'group-hover:text-[#000000]/70',
       title: 'Instant',
-      description: 'Instant settlement on Mantle. Low fees, fast transactions, no middlemen.'
+      description: 'Instant settlement on Arbitrum. Low fees, fast transactions, no middlemen.'
     },
   ];
 
@@ -412,13 +412,13 @@ const Chest = () => {
     },
     {
       quote: "Trade your startup equity on a liquid secondary market after 180 days.",
-      bg: 'bg-[#A2D5C6]',
+      bg: 'bg-[#4988C4]',
       textColor: 'text-[#000000]',
     },
     {
       quote: "Transparent, on-chain fundraising. Every transaction verifiable.",
       bg: 'bg-[#000000]',
-      textColor: 'text-[#CFFFE2]',
+      textColor: 'text-[#1C4D8D]',
     },
   ];
 

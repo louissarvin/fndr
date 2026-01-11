@@ -1,6 +1,6 @@
 # Fndr Backend - Blockchain Indexing & API Service
 
-A sophisticated blockchain indexing backend for the Fndr decentralized startup fundraising platform, built with Ponder framework. It indexes on-chain events from Mantle Sepolia and provides GraphQL/SQL APIs with AI-powered investment analysis.
+A sophisticated blockchain indexing backend for the Fndr decentralized startup fundraising platform, built with Ponder framework. It indexes on-chain events from Arbitrum Sepolia and provides GraphQL/SQL APIs with AI-powered investment analysis.
 
 ## Overview
 
@@ -28,7 +28,7 @@ The backend serves as the data layer for Fndr, transforming raw blockchain event
 | StartupSecondaryMarket | `0x7fB1E1C25F47acf921d9d89480586111dEf65CBb` | Equity token trading |
 | RoundManager | Dynamic (via factory) | Individual round management |
 
-**Network:** Mantle Sepolia (Chain ID: 5003)
+**Network:** Arbitrum Sepolia (Chain ID: 421614)
 **Start Block:** 32935200
 
 ## Data Schema
@@ -123,7 +123,7 @@ Create a `.env` file:
 
 ```env
 # Required
-PONDER_RPC_URL_5003=https://rpc.sepolia.mantle.xyz
+PONDER_RPC_URL_421614=https://sepolia-rollup.arbitrum.io/rpc
 PINATA_JWT=your_pinata_jwt_token
 GROQ_API_KEY=your_groq_api_key
 

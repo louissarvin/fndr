@@ -37,7 +37,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
       />
-    <div className="group bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer ">
+    <div className="group bg-[#4988C4]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer ">
       {/* Image */}
       <div className="relative aspect-video overflow-hidden">
         <img
@@ -53,14 +53,14 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
         </span>
 
         {/* APY Badge */}
-        <span className="absolute top-3 right-3 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+        <span className="absolute top-3 right-3 bg-[#4988C4] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
           {campaign.apy}% APY
         </span>
 
         {/* Featured Badge */}
         {campaign.featured && (
-          <span className="absolute bottom-3 left-3 bg-[#CFFFE2] text-black text-xs font-bold px-3 py-1 rounded-full">
+          <span className="absolute bottom-3 left-3 bg-[#1C4D8D] text-black text-xs font-bold px-3 py-1 rounded-full">
             Featured
           </span>
         )}
@@ -76,13 +76,13 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
           />
           <span className="text-sm text-white/60">{campaign.founder.name}</span>
           {campaign.founder.verified && (
-            <BadgeCheck className="h-4 w-4 text-[#A2D5C6]" />
+            <BadgeCheck className="h-4 w-4 text-[#4988C4]" />
           )}
         </div>
 
         {/* Title & Tagline */}
         <div>
-          <h3 className="font-bold text-lg text-white group-hover:text-[#CFFFE2] transition-colors">
+          <h3 className="font-bold text-lg text-white group-hover:text-[#1C4D8D] transition-colors">
             {campaign.name}
           </h3>
           <p className="text-sm text-white/60 line-clamp-2 mt-1">
@@ -103,7 +103,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
           {/* Custom Progress Bar */}
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#A2D5C6] rounded-full transition-all duration-500"
+              className="h-full bg-[#4988C4] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -127,7 +127,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
         {/* CTA Button */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="block w-full bg-[#A2D5C6] text-black text-center py-3 rounded-2xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+          className="block w-full bg-[#4988C4] text-black text-center py-3 rounded-2xl font-semibold hover:bg-[#1C4D8D] transition-colors"
         >
           View Startup
         </button>

@@ -446,7 +446,7 @@ function Scene({ stage, onChestClick }: TreasureChestProps) {
             scale={10}
             size={2}
             speed={0.3}
-            color="#CFFFE2"
+            color="#1C4D8D"
             opacity={0.5}
           />
           <Sparkles
@@ -454,7 +454,7 @@ function Scene({ stage, onChestClick }: TreasureChestProps) {
             scale={6}
             size={1}
             speed={0.2}
-            color="#A2D5C6"
+            color="#4988C4"
             opacity={0.4}
           />
         </>

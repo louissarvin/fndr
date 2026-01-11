@@ -55,13 +55,13 @@ function shortenAddress(address: string): string {
 function getRoundStateLabel(state: number): { label: string; color: string } {
   switch (state) {
     case 0:
-      return { label: "Fundraising", color: "bg-[#A2D5C6] text-black" };
+      return { label: "Fundraising", color: "bg-[#4988C4] text-black" };
     case 1:
-      return { label: "Completed", color: "bg-[#A2D5C6] text-black" };
+      return { label: "Completed", color: "bg-[#4988C4] text-black" };
     case 2:
-      return { label: "Cancelled", color: "bg-[#A2D5C6] text-black" };
+      return { label: "Cancelled", color: "bg-[#4988C4] text-black" };
     default:
-      return { label: "Unknown", color: "bg-[#A2D5C6] text-black" };
+      return { label: "Unknown", color: "bg-[#4988C4] text-black" };
   }
 }
 
@@ -97,15 +97,15 @@ export default function RoundCard({ round }: RoundCardProps) {
 
   return (
     <div
-      className="group bg-[#A2D5C6]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 "
+      className="group bg-[#4988C4]/10 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 "
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image */}
       <div className="relative aspect-video overflow-hidden">
         {isLoadingMetadata ? (
-          <div className="w-full h-full bg-[#A2D5C6]/10 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#A2D5C6]/40" />
+          <div className="w-full h-full bg-[#4988C4]/10 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#4988C4]/40" />
           </div>
         ) : (
           <img
@@ -126,13 +126,13 @@ export default function RoundCard({ round }: RoundCardProps) {
         </span>
 
         {/* APY Badge */}
-        <span className="absolute top-3 right-3 bg-[#A2D5C6] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+        <span className="absolute top-3 right-3 bg-[#4988C4] text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
           6% APY
         </span>
 
         {/* Equity Badge */}
         {round.equityPercentage && (
-          <span className="absolute bottom-3 left-3 bg-[#A2D5C6] backdrop-blur-sm text-black text-xs font-bold px-3 py-1 rounded-full">
+          <span className="absolute bottom-3 left-3 bg-[#4988C4] backdrop-blur-sm text-black text-xs font-bold px-3 py-1 rounded-full">
             {Number(round.equityPercentage) / 100}% Equity
           </span>
         )}
@@ -151,7 +151,7 @@ export default function RoundCard({ round }: RoundCardProps) {
           <FounderHoverCard founderAddress={round.founder as `0x${string}`}>
             <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="h-6 w-6 flex items-center justify-center">
-                <Wallet className="h-4 w-4 text-[#A2D5C6]" />
+                <Wallet className="h-4 w-4 text-[#4988C4]" />
               </div>
               <span className="text-sm text-white/60">
                 {shortenAddress(round.founder)}
@@ -159,7 +159,7 @@ export default function RoundCard({ round }: RoundCardProps) {
             </div>
           </FounderHoverCard>
           <a
-            href={`https://sepolia.mantlescan.xyz/address/${round.id}`}
+            href={`https://sepolia.arbiscan.io/address/${round.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-lg text-white/40 hover:text-white transition-all"
@@ -190,7 +190,7 @@ export default function RoundCard({ round }: RoundCardProps) {
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#A2D5C6] rounded-full transition-all duration-500"
+              className="h-full bg-[#4988C4] rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -218,7 +218,7 @@ export default function RoundCard({ round }: RoundCardProps) {
           {isActive && (
             <button
               onClick={() => setIsInvestModalOpen(true)}
-              className="flex-1 bg-[#A2D5C6] text-black text-center py-3 rounded-2xl font-semibold hover:bg-[#CFFFE2] transition-colors"
+              className="flex-1 bg-[#4988C4] text-black text-center py-3 rounded-2xl font-semibold hover:bg-[#1C4D8D] transition-colors"
             >
               Invest Now
             </button>

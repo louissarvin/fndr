@@ -32,10 +32,10 @@ const CTASection = forwardRef<HTMLElement, CTASectionProps>(
               Join thousands of investors already earning yield while supporting the next generation of startups.
             </p>
             <div className="flex justify-center gap-4 pointer-events-auto">
-              <Link to="/browse" className="bg-[#A2D5C6] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300">
+              <Link to="/browse" className="bg-[#4988C4] text-[#000000] px-8 py-3 rounded-full text-lg font-semibold hover:bg-[#1C4D8D] hover:scale-105 hover:-translate-y-1 transition-all duration-300">
                 Launch App
               </Link>
-              <Link to="/browse" className="bg-transparent text-[#A2D5C6] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#A2D5C6] hover:bg-[#A2D5C6]/10 hover:border-[#CFFFE2] hover:text-[#CFFFE2] hover:scale-105 hover:-translate-y-1 transition-all duration-300">
+              <Link to="/browse" className="bg-transparent text-[#4988C4] px-8 py-3 rounded-full text-lg font-semibold border-2 border-[#4988C4] hover:bg-[#4988C4]/10 hover:border-[#1C4D8D] hover:text-[#1C4D8D] hover:scale-105 hover:-translate-y-1 transition-all duration-300">
                 Learn More
               </Link>
             </div>

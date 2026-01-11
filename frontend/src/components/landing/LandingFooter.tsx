@@ -3,7 +3,7 @@ const LandingFooter = () => {
     <footer className="pt-12 px-8 relative overflow-hidden bg-[#000000]">
       <div className="max-w-5xl mx-auto relative">
         {/* Footer Card Container */}
-        <div className="bg-[#A2D5C6]/10 backdrop-blur-md shadow-lg rounded-t-3xl p-10 relative overflow-hidden">
+        <div className="bg-[#4988C4]/10 backdrop-blur-md shadow-lg rounded-t-3xl p-10 relative overflow-hidden">
           {/* Main Footer Content */}
           <div className="flex flex-col md:flex-row md:items-start gap-12 mb-16 relative z-10">
             {/* Logo */}

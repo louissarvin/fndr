@@ -52,7 +52,7 @@ const HowItWorksSection = forwardRef<HTMLElement, HowItWorksSectionProps>(
           {/* Main Container Card - white glassmorphism */}
           <div className="bg-[#F6F6F6]/20 backdrop-blur-xl rounded-[2rem] p-8 shadow-lg">
             {/* Marquee Section - white glassmorphism */}
-            <div className="bg-[#A2D5C6]/40 backdrop-blur-md rounded-[1.5rem] py-8 mb-4 overflow-hidden relative h-[200px]">
+            <div className="bg-[#4988C4]/40 backdrop-blur-md rounded-[1.5rem] py-8 mb-4 overflow-hidden relative h-[200px]">
               {/* Center Treasure Illustration - positioned absolutely */}
               <div ref={treasureRef} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
                 <img src={treasureImg} alt="Treasure" className="w-72 h-auto drop-shadow-2xl treasure-img" />
@@ -112,7 +112,7 @@ const HowItWorksSection = forwardRef<HTMLElement, HowItWorksSectionProps>(
               {cardsData.map((item, index) => (
                 <div
                   key={index}
-                  className="feature-card group bg-[#A2D5C6]/40 backdrop-blur-md rounded-2xl p-5 cursor-pointer relative overflow-hidden"
+                  className="feature-card group bg-[#4988C4]/40 backdrop-blur-md rounded-2xl p-5 cursor-pointer relative overflow-hidden"
                 >
                   {/* Wipe fill background - expands from icon circle on hover */}
                   <div

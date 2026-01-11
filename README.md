@@ -177,12 +177,12 @@ npm run test:integration
 ## 🌐 Deployments
 
 ### Mainnet (Production)
-- **Network**: Mantle Network
+- **Network**: Arbitrum Sepolia Network
 - **Status**: Coming Soon
 - **Frontend**: `https://fndr.site`
 
-### Testnet - Mantle Sepolia
-- **Network**: Mantle Sepolia (Chain ID: 5003)
+### Testnet - Arbitrum Sepolia
+- **Network**: Arbitrum Sepolia (Chain ID: 421614)
 - **MockUSDC**: `0xc6C927c77D9BFaFb7b9e003db6D96F3605ba2514`
 - **MockVault**: `0xE8163650f9e5bdAcd1e449f2fB70a5677bbA62ED`
 - **FndrIdentity**: `0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE`

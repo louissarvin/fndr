@@ -1,6 +1,6 @@
 # Fndr Smart Contracts - Yield-Enhanced Startup Fundraising Protocol
 
-A decentralized platform that transforms startup fundraising by combining tokenized equity with automatic yield generation on idle capital. Built on Mantle Sepolia.
+A decentralized platform that transforms startup fundraising by combining tokenized equity with automatic yield generation on idle capital. Built on Arbitrum Sepolia.
 
 ## Overview
 
@@ -15,7 +15,7 @@ A decentralized platform that transforms startup fundraising by combining tokeni
 - **Secondary Market**: Post-holding period trading for investor liquidity
 - **Round Isolation**: Each startup gets dedicated contract infrastructure
 
-## Deployed Contracts (Mantle Sepolia)
+## Deployed Contracts (Arbitrum Sepolia)
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
@@ -25,7 +25,7 @@ A decentralized platform that transforms startup fundraising by combining tokeni
 | RoundFactory | `0x9D05244Bf4D091734da61e21396c74Cd92346E6f` | Funding round deployment factory |
 | StartupSecondaryMarket | `0x7fB1E1C25F47acf921d9d89480586111dEf65CBb` | Equity token trading platform |
 
-**Network:** Mantle Sepolia (Chain ID: 5003)
+**Network:** Arbitrum Sepolia (Chain ID: 421614)
 **Platform Wallet:** `0x564323aE0D8473103F3763814c5121Ca9e48004B`
 
 ## Smart Contract Architecture
@@ -258,8 +258,8 @@ forge test --gas-report
 
 ### Deploy
 ```bash
-# Deploy to Mantle Sepolia
-forge script script/Deploy.s.sol --rpc-url https://rpc.sepolia.mantle.xyz --broadcast
+# Deploy to Arbitrum Sepolia
+forge script script/Deploy.s.sol --rpc-url https://sepolia-rollup.arbitrum.io/rpc --broadcast
 ```
 
 ## Project Structure

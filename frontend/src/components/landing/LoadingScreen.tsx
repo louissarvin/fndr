@@ -75,7 +75,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
               style={{
                 width: `${size}px`,
                 height: `${size}px`,
-                background: i % 3 === 0 ? '#CFFFE2' : i % 3 === 1 ? '#A2D5C6' : '#FFD700',
+                background: i % 3 === 0 ? '#1C4D8D' : i % 3 === 1 ? '#4988C4' : '#FFD700',
                 transform: `translate(-50%, -50%) translate(${currentX}px, ${currentY}px)`,
                 opacity: 0.1 + progress * 0.5,
                 transition: 'transform 0.5s ease-out, opacity 0.3s ease',
@@ -121,7 +121,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
 
         {/* Orbit trail ring */}
         <div
-          className="absolute w-72 h-72 rounded-full border border-[#A2D5C6]/20"
+          className="absolute w-72 h-72 rounded-full border border-[#4988C4]/20"
           style={{
             boxShadow: `0 0 ${15 + loadingProgress * 0.3}px rgba(162, 213, 198, ${0.1 + loadingProgress * 0.004})`
           }}
@@ -156,7 +156,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
               style={{
                 opacity: loadingProgress >= 5 ? 1 : 0,
                 transform: `translateY(${loadingProgress >= 5 ? 0 : -40}px) rotate(${loadingProgress >= 5 ? 0 : -180}deg)`,
-                color: '#A2D5C6'
+                color: '#4988C4'
               }}
             >
               ✦
@@ -205,7 +205,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
 
           {/* Underline that grows */}
           <div
-            className="h-0.5 bg-gradient-to-r from-[#A2D5C6] to-[#CFFFE2] rounded-full mt-1 mx-auto transition-all duration-500"
+            className="h-0.5 bg-gradient-to-r from-[#4988C4] to-[#1C4D8D] rounded-full mt-1 mx-auto transition-all duration-500"
             style={{
               width: `${Math.min(loadingProgress * 1.2, 100)}%`,
               opacity: loadingProgress >= 15 ? 1 : 0
@@ -218,7 +218,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
           <div
             className="text-4xl font-bold mb-2"
             style={{
-              background: 'linear-gradient(135deg, #A2D5C6 0%, #CFFFE2 50%, #A2D5C6 100%)',
+              background: 'linear-gradient(135deg, #4988C4 0%, #1C4D8D 50%, #4988C4 100%)',
               backgroundSize: '200% 200%',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -240,7 +240,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
 
       {/* Outer pulsing rings */}
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A2D5C6]/10 pointer-events-none"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#4988C4]/10 pointer-events-none"
         style={{
           width: `${320 - loadingProgress * 0.5}px`,
           height: `${320 - loadingProgress * 0.5}px`,
@@ -248,7 +248,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
         }}
       />
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#CFFFE2]/5 pointer-events-none"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#1C4D8D]/5 pointer-events-none"
         style={{
           width: `${380 - loadingProgress * 0.8}px`,
           height: `${380 - loadingProgress * 0.8}px`,
