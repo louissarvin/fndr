@@ -8,9 +8,9 @@ import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
 // Contract addresses on Arbitrum Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x47B320A4ED999989AE3065Be28B208f177a7546D",
-  RoundFactory: "0xecB93f03515DE67EA43272797Ea8eDa059985894",
-  StartupSecondaryMarket: "0xd8EcF5D6D77bF2852c5e9313F87f31cc99c38dE9",
+  FndrIdentity: "0xEEEdca533402B75dDF338ECF3EF1E1136C8f20cF",
+  RoundFactory: "0x900bB95Ad371178EF48759E0305BECF649ecE553",
+  StartupSecondaryMarket: "0xE7edb8902A71aB6709a99d34695edaE612afEB11",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(

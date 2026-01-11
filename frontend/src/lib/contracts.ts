@@ -16,11 +16,11 @@ export const arbitrumSepolia = defineChain({
 
 // Contract Addresses on Arbitrum Sepolia
 export const CONTRACTS = {
-  MockUSDC: '0xBbe362BB261657bbD7202EB623DDBe6ED6a156b6',
-  MockVault: '0x94ed9110AA1d38FAFbBe989C4f4E5bF04382B762',
-  FndrIdentity: '0x47B320A4ED999989AE3065Be28B208f177a7546D',
-  RoundFactory: '0xecB93f03515DE67EA43272797Ea8eDa059985894',
-  StartupSecondaryMarket: '0xd8EcF5D6D77bF2852c5e9313F87f31cc99c38dE9',
+  MockUSDC: '0xed852d3Ef6a5B57005acDf1054d15af1CF09489c',
+  MockVault: '0xf31e7B8E0a820DCd1a283315DB0aD641dFe7Db84',
+  FndrIdentity: '0xEEEdca533402B75dDF338ECF3EF1E1136C8f20cF',
+  RoundFactory: '0x900bB95Ad371178EF48759E0305BECF649ecE553',
+  StartupSecondaryMarket: '0xE7edb8902A71aB6709a99d34695edaE612afEB11',
 } as const;
 
 // ABIs
