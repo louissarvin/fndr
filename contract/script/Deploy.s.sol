@@ -83,7 +83,7 @@ contract DeployFndr is Script {
         console.log("StartupSecondaryMarket:", address(market));
         console.log("-------------------------------------------");
         console.log("");
-        console.log("Network: Mantle Sepolia (Chain ID: 5003)");
-        console.log("Explorer: https://explorer.sepolia.mantle.xyz");
+        console.log("Network: Arbitrum Sepolia (Chain ID: 421614)");
+        console.log("Explorer: https://sepolia.arbiscan.io/");
     }
 }

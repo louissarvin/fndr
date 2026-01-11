@@ -234,7 +234,7 @@ export default function Docs() {
               </div>
 
               <p className="text-lg text-[#F6F6F6]/60 mb-8">
-                Welcome to <strong className="text-white">fndr</strong>, the decentralized startup fundraising platform built on Mantle blockchain that transforms how startups raise capital and how investors grow their wealth.
+                Welcome to <strong className="text-white">fndr</strong>, the decentralized startup fundraising platform built on Arbitrum that transforms how startups raise capital and how investors grow their wealth.
               </p>
 
               <div className="space-y-8">
@@ -314,9 +314,9 @@ export default function Docs() {
                   </p>
                   <div className="p-4 rounded-xl bg-[#0A0A0A]">
                     <p className="text-sm font-mono text-[#F6F6F6]/60">
-                      <span className="text-[#A2D5C6]">Network:</span> Mantle Sepolia<br />
-                      <span className="text-[#A2D5C6]">Chain ID:</span> 5003<br />
-                      <span className="text-[#A2D5C6]">RPC:</span> https://rpc.sepolia.mantle.xyz
+                      <span className="text-[#A2D5C6]">Network:</span> Arbitrum Sepolia<br />
+                      <span className="text-[#A2D5C6]">Chain ID:</span> 421614<br />
+                      <span className="text-[#A2D5C6]">RPC:</span> https://arbitrum-sepolia.drpc.org
                     </p>
                   </div>
                 </div>
@@ -673,7 +673,7 @@ export default function Docs() {
                 <div>
                   <h2 className="text-xl font-semibold mb-4 text-[#A2D5C6]">System Overview</h2>
                   <div className="p-4 rounded-xl bg-[#0A0A0A] font-mono text-sm overflow-x-auto">
-                    <pre className="text-[#F6F6F6]/60">{`Frontend (React)  →  Backend (Ponder)  →  Blockchain (Mantle)
+                    <pre className="text-[#F6F6F6]/60">{`Frontend (React)  →  Backend (Ponder)  →  Blockchain (Arbitrum)
       │                      │                      │
    Wagmi              GraphQL API           Smart Contracts
 RainbowKit              AI/LLM                 Foundry`}</pre>
@@ -715,11 +715,11 @@ RainbowKit              AI/LLM                 Foundry`}</pre>
                   <h2 className="text-xl font-semibold mb-4 text-[#A2D5C6]">Contract Addresses</h2>
                   <div className="space-y-3">
                     {[
-                      { name: 'MockUSDC', address: '0xc6C927c77D9BFaFb7b9e003db6D96F3605ba2514', desc: 'Test stablecoin' },
-                      { name: 'MockVault', address: '0xE8163650f9e5bdAcd1e449f2fB70a5677bbA62ED', desc: '6% APY vault' },
-                      { name: 'FndrIdentity', address: '0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE', desc: 'ZK verification' },
-                      { name: 'RoundFactory', address: '0x9D05244Bf4D091734da61e21396c74Cd92346E6f', desc: 'Deploys rounds' },
-                      { name: 'SecondaryMarket', address: '0x7fB1E1C25F47acf921d9d89480586111dEf65CBb', desc: 'Token trading' },
+                      { name: 'MockUSDC', address: '0xBbe362BB261657bbD7202EB623DDBe6ED6a156b6', desc: 'Test stablecoin' },
+                      { name: 'MockVault', address: '0x94ed9110AA1d38FAFbBe989C4f4E5bF04382B762', desc: '6% APY vault' },
+                      { name: 'FndrIdentity', address: '0x47B320A4ED999989AE3065Be28B208f177a7546D', desc: 'ZK verification' },
+                      { name: 'RoundFactory', address: '0xecB93f03515DE67EA43272797Ea8eDa059985894', desc: 'Deploys rounds' },
+                      { name: 'SecondaryMarket', address: '0xd8EcF5D6D77bF2852c5e9313F87f31cc99c38dE9', desc: 'Token trading' },
                     ].map((contract) => (
                       <div key={contract.name} className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A]">
                         <div className="flex items-center justify-between mb-2">

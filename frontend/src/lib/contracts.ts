@@ -1,26 +1,26 @@
 import { defineChain } from 'viem';
 
-// Mantle Sepolia Chain Configuration
-export const mantleSepolia = defineChain({
-  id: 5003,
-  name: 'Mantle Sepolia',
-  nativeCurrency: { name: 'MNT', symbol: 'MNT', decimals: 18 },
+// Arbitrum Sepolia Chain Configuration
+export const arbitrumSepolia = defineChain({
+  id: 421614,
+  name: 'Arbitrum Sepolia',
+  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.sepolia.mantle.xyz'] },
+    default: { http: ['https://arbitrum-sepolia.drpc.org'] },
   },
   blockExplorers: {
-    default: { name: 'Mantle Explorer', url: 'https://sepolia.mantlescan.xyz' },
+    default: { name: 'Arbiscan', url: 'https://sepolia.arbiscan.io' },
   },
   testnet: true,
 });
 
-// Contract Addresses on Mantle Sepolia
+// Contract Addresses on Arbitrum Sepolia
 export const CONTRACTS = {
-  MockUSDC: '0xc6C927c77D9BFaFb7b9e003db6D96F3605ba2514',
-  MockVault: '0xE8163650f9e5bdAcd1e449f2fB70a5677bbA62ED',
-  FndrIdentity: '0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE',
-  RoundFactory: '0x9D05244Bf4D091734da61e21396c74Cd92346E6f',
-  StartupSecondaryMarket: '0x7fB1E1C25F47acf921d9d89480586111dEf65CBb',
+  MockUSDC: '0xBbe362BB261657bbD7202EB623DDBe6ED6a156b6',
+  MockVault: '0x94ed9110AA1d38FAFbBe989C4f4E5bF04382B762',
+  FndrIdentity: '0x47B320A4ED999989AE3065Be28B208f177a7546D',
+  RoundFactory: '0xecB93f03515DE67EA43272797Ea8eDa059985894',
+  StartupSecondaryMarket: '0xd8EcF5D6D77bF2852c5e9313F87f31cc99c38dE9',
 } as const;
 
 // ABIs

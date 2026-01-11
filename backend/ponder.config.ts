@@ -6,36 +6,36 @@ import { RoundFactoryABI } from "./abis/RoundFactoryAbi";
 import { RoundManagerABI } from "./abis/RoundManagerAbi";
 import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
-// Contract addresses on Mantle Sepolia
+// Contract addresses on Arbitrum Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0x342F7e47E9F62cf1f0f1E0e62c9F7F641de114DE",
-  RoundFactory: "0x9D05244Bf4D091734da61e21396c74Cd92346E6f",
-  StartupSecondaryMarket: "0x7fB1E1C25F47acf921d9d89480586111dEf65CBb",
+  FndrIdentity: "0x47B320A4ED999989AE3065Be28B208f177a7546D",
+  RoundFactory: "0xecB93f03515DE67EA43272797Ea8eDa059985894",
+  StartupSecondaryMarket: "0xd8EcF5D6D77bF2852c5e9313F87f31cc99c38dE9",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 32935200;
+const START_BLOCK = 110000000;
 
 export default createConfig({
   chains: {
-    mantleSepoliaTestnet: {
-      id: 5003,
-      rpc: process.env.PONDER_RPC_URL_5003,
+    arbitrumSepolia: {
+      id: 421614,
+      rpc: process.env.PONDER_RPC_URL_421614,
     },
   },
   contracts: {
     FndrIdentity: {
-      chain: "mantleSepoliaTestnet",
+      chain: "arbitrumSepolia",
       abi: FndrIdentityABI,
       address: CONTRACTS.FndrIdentity,
       startBlock: START_BLOCK,
     },
 
     RoundFactory: {
-      chain: "mantleSepoliaTestnet",
+      chain: "arbitrumSepolia",
       abi: RoundFactoryABI,
       address: CONTRACTS.RoundFactory,
       startBlock: START_BLOCK,
@@ -43,7 +43,7 @@ export default createConfig({
 
     // Factory pattern automatically detects all rounds deployed via RoundFactory
     RoundManager: {
-      chain: "mantleSepoliaTestnet",
+      chain: "arbitrumSepolia",
       abi: RoundManagerABI,
       address: factory({
         address: CONTRACTS.RoundFactory,
@@ -54,7 +54,7 @@ export default createConfig({
     },
 
     StartupSecondaryMarket: {
-      chain: "mantleSepoliaTestnet",
+      chain: "arbitrumSepolia",
       abi: StartupSecondaryMarketABI,
       address: CONTRACTS.StartupSecondaryMarket,
       startBlock: START_BLOCK,
