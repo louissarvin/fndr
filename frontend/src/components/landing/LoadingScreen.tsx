@@ -79,7 +79,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
                 transform: `translate(-50%, -50%) translate(${currentX}px, ${currentY}px)`,
                 opacity: 0.1 + progress * 0.5,
                 transition: 'transform 0.5s ease-out, opacity 0.3s ease',
-                boxShadow: `0 0 ${6 + progress * 12}px ${i % 3 === 2 ? 'rgba(255, 215, 0, 0.5)' : 'rgba(162, 213, 198, 0.5)'}`,
+                boxShadow: `0 0 ${6 + progress * 12}px ${i % 3 === 2 ? 'rgba(255, 215, 0, 0.5)' : 'rgba(28, 77, 141, 0.5)'}`,
                 filter: `blur(${(1 - progress) * 1.5}px)`
               }}
             />
@@ -111,7 +111,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
                 className="w-10 h-10 object-contain"
                 style={{
                   animation: `counterOrbit ${6 - loadingProgress * 0.03}s linear infinite`,
-                  filter: `drop-shadow(0 0 ${8 + loadingProgress * 0.15}px rgba(162, 213, 198, 0.6))`,
+                  filter: `drop-shadow(0 0 ${8 + loadingProgress * 0.15}px rgba(28, 77, 141, 0.6))`,
                   opacity: 0.7 + loadingProgress * 0.003
                 }}
               />
@@ -123,7 +123,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
         <div
           className="absolute w-72 h-72 rounded-full border border-[#4988C4]/20"
           style={{
-            boxShadow: `0 0 ${15 + loadingProgress * 0.3}px rgba(162, 213, 198, ${0.1 + loadingProgress * 0.004})`
+            boxShadow: `0 0 ${15 + loadingProgress * 0.3}px rgba(28, 77, 141, ${0.1 + loadingProgress * 0.004})`
           }}
         />
       </div>
@@ -134,8 +134,8 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
         style={{
           width: `${60 + loadingProgress * 0.8}px`,
           height: `${60 + loadingProgress * 0.8}px`,
-          background: `radial-gradient(circle, rgba(207, 255, 226, ${loadingProgress * 0.006}) 0%, transparent 70%)`,
-          boxShadow: `0 0 ${loadingProgress * 0.8}px rgba(162, 213, 198, ${loadingProgress * 0.008})`,
+          background: `radial-gradient(circle, rgba(73, 136, 196, ${loadingProgress * 0.006}) 0%, transparent 70%)`,
+          boxShadow: `0 0 ${loadingProgress * 0.8}px rgba(28, 77, 141, ${loadingProgress * 0.008})`,
           transition: 'all 0.3s ease'
         }}
       />
@@ -146,7 +146,7 @@ const LoadingScreen = ({ loadingProgress, onLoadingComplete }: LoadingScreenProp
           ref={loadingLogoRef}
           className="opacity-0 relative mb-6"
           style={{
-            filter: `drop-shadow(0 0 ${loadingProgress * 0.3}px rgba(162, 213, 198, ${loadingProgress * 0.006}))`
+            filter: `drop-shadow(0 0 ${loadingProgress * 0.3}px rgba(28, 77, 141, ${loadingProgress * 0.006}))`
           }}
         >
           {/* Logo letters assembling - F N D R */}
