@@ -5,7 +5,7 @@
 ## 🎯 What Is Fndr?
 
 Fndr transforms startup fundraising by solving three critical problems:
-1. **Idle Capital** - Invested funds generate 6% APY while supporting startup growth
+1. **Idle Capital** - Invested funds generate 6% APY while supporting startup growth.
 2. **Lack of Liquidity** - Secondary market trading after holding periods
 3. **Compliance Complexity** - Built-in KYC/AML and regulatory compliance
 
