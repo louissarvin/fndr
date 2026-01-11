@@ -17,7 +17,7 @@ const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 232600000;
+const START_BLOCK = 232549894;
 
 export default createConfig({
   chains: {
