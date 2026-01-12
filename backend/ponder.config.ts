@@ -8,16 +8,16 @@ import { StartupSecondaryMarketABI } from "./abis/StartupSecondaryMarketAbi";
 
 // Contract addresses on Arbitrum Sepolia
 const CONTRACTS = {
-  FndrIdentity: "0xEEEdca533402B75dDF338ECF3EF1E1136C8f20cF",
-  RoundFactory: "0x900bB95Ad371178EF48759E0305BECF649ecE553",
-  StartupSecondaryMarket: "0xE7edb8902A71aB6709a99d34695edaE612afEB11",
+  FndrIdentity: "0x11d2c7178Cf55ee1b2a85f7EBC29Fa1F81cf7e71",
+  RoundFactory: "0x56c34f3f859101Fd650B4968D4b9dFdC1A3CF630",
+  StartupSecondaryMarket: "0xD44a29d95Fd6F39cbe3e5De7A64fD8EC10588f9D",
 } as const;
 
 const roundDeployedEvent = parseAbiItem(
   "event RoundDeployed(address indexed roundAddress, address indexed founder, uint256 targetRaise, string metadataURI)"
 );
 
-const START_BLOCK = 232549894;
+const START_BLOCK = 232802980;
 
 export default createConfig({
   chains: {
